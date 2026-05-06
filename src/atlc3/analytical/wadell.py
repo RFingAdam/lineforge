@@ -124,33 +124,60 @@ def stripline_asymmetric(
     In the symmetric limit H1 = H2 = h, H_eff = h and the formula reduces to
     the symmetric IPC-2141A formula with B = 2h (good when T << h).
 
-    Reference: IPC-2141A eq. (4-19), Wadell §3.5.2.
+    When the geometry supplies ``er_above`` / ``er_below`` (different dielectric
+    above and below the strip — common when an inner signal layer sits
+    between a plane on Core and a plane on Prepreg), the formula uses a
+    capacitance-weighted effective permittivity:
+
+        εr_eff = (εr_above/H1 + εr_below/H2) / (1/H1 + 1/H2)
+
+    Each half-cavity acts like a parallel-plate capacitor (Cohn parallel-plate
+    decomposition); the strip's total parallel-plate capacitance is the sum,
+    so the εr that produces the correct C is the C-weighted average.
+
+    References: IPC-2141A eq. (4-19), Wadell §3.5.2.
     """
-    W, T, H1, H2, er = (
-        geometry.W,
-        geometry.T,
-        geometry.H1,
-        geometry.H2,
-        geometry.er,
+    W, T, H1, H2 = geometry.W, geometry.T, geometry.H1, geometry.H2
+
+    er_above = geometry.er_above if geometry.er_above is not None else geometry.er
+    er_below = geometry.er_below if geometry.er_below is not None else geometry.er
+    tan_above = (
+        geometry.tan_delta_above if geometry.tan_delta_above is not None else geometry.tan_delta
     )
+    tan_below = (
+        geometry.tan_delta_below if geometry.tan_delta_below is not None else geometry.tan_delta
+    )
+
+    # Capacitance-weighted (Cohn parallel-plate decomposition). Each half-cavity
+    # acts like a parallel-plate cap with C ∝ ε / H; series-combine inversely.
+    er_eff = (er_above / H1 + er_below / H2) / (1.0 / H1 + 1.0 / H2)
+    # Loss tangent: weight by the same C contributions.
+    c_above_norm = er_above / H1
+    c_below_norm = er_below / H2
+    tan_eff = (tan_above * c_above_norm + tan_below * c_below_norm) / (c_above_norm + c_below_norm)
 
     H_eff = 2.0 * H1 * H2 / (H1 + H2)
     d = 0.8 * W + T
-    z0 = (60.0 / math.sqrt(er)) * math.log(8.0 * H_eff / (0.67 * math.pi * d))
+    z0 = (60.0 / math.sqrt(er_eff)) * math.log(8.0 * H_eff / (0.67 * math.pi * d))
 
-    eps_eff = er
-    vp = C0 / math.sqrt(eps_eff)
+    vp = C0 / math.sqrt(er_eff)
     td_per_in = INCH_M / vp
+
+    method = (
+        "ipc2141-stripline-asymmetric-split-er"
+        if (geometry.er_above is not None or geometry.er_below is not None)
+        else "ipc2141-stripline-asymmetric"
+    )
 
     return TLineResult(
         z0=z0,
-        eps_eff=eps_eff,
+        eps_eff=er_eff,
         vp=vp,
         td_per_inch=td_per_in,
         L_per_m=z0 / vp,
         C_per_m=1.0 / (z0 * vp),
-        dielectric_loss_db_per_in=_dielectric_loss(er, geometry.tan_delta, frequency_hz),
-        method="ipc2141-stripline-asymmetric",
+        dielectric_loss_db_per_in=_dielectric_loss(er_eff, tan_eff, frequency_hz),
+        method=method,
         frequency_hz=frequency_hz,
     )
 

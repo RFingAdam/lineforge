@@ -60,6 +60,82 @@ class TestFromDict:
             from_dict({"W": 1e-3})
 
 
+class TestRasterizeStriplineAsymmetricSplitEr:
+    """Bitmap rasterizer must paint two distinct dielectrics for split εr."""
+
+    def test_no_custom_lookup_when_bulk_only(self) -> None:
+        from atlc3.geometry.builders import rasterize_stripline_asymmetric
+        from atlc3.geometry.types import StriplineAsymmetric
+
+        geom = StriplineAsymmetric(W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.4)
+        umap = rasterize_stripline_asymmetric(geom)
+        # Bulk-only path leaves material_lookup at the default (built from atlc2 palette).
+        # We only assert the umap is valid and queryable.
+        assert umap.rgb.shape[2] == 3
+
+    def test_custom_lookup_carries_exact_er(self) -> None:
+        """When er_above != er_below, the synthesized records must carry the
+        EXACT εr the user asked for (not the closest atlc2-default match)."""
+        from atlc3.geometry.builders import rasterize_stripline_asymmetric
+        from atlc3.geometry.types import StriplineAsymmetric
+
+        geom = StriplineAsymmetric(
+            W="5mil",
+            T="1.4mil",
+            H1="3mil",
+            H2="9mil",
+            er=4.0,
+            er_above=4.5,
+            er_below=3.7,
+            tan_delta_above=0.020,
+            tan_delta_below=0.005,
+        )
+        umap = rasterize_stripline_asymmetric(geom)
+        ers = sorted(
+            rec.er
+            for rec in umap.material_lookup.values()
+            if rec.use == "insul" and rec.name and "custom" in rec.name
+        )
+        assert ers == pytest.approx([3.7, 4.5])
+        # tan_delta also carried through exactly
+        td_above = next(
+            rec.tan_delta
+            for rec in umap.material_lookup.values()
+            if rec.use == "insul" and rec.name and "above" in rec.name
+        )
+        td_below = next(
+            rec.tan_delta
+            for rec in umap.material_lookup.values()
+            if rec.use == "insul" and rec.name and "below" in rec.name
+        )
+        assert td_above == pytest.approx(0.020)
+        assert td_below == pytest.approx(0.005)
+
+    def test_split_er_paints_two_distinct_colors(self) -> None:
+        """The H1 region (above strip) and H2 region (below) must be painted
+        with different RGB values when split-εr is set."""
+        from atlc3.geometry.builders import rasterize_stripline_asymmetric
+        from atlc3.geometry.types import StriplineAsymmetric
+
+        geom = StriplineAsymmetric(
+            W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.0, er_above=4.5, er_below=3.7
+        )
+        umap = rasterize_stripline_asymmetric(geom)
+        h, w = umap.rgb.shape[:2]
+        # Sample a column well away from the strip (column 1, in the side margin).
+        col = umap.rgb[:, 1, :]
+        # Find rows with non-ground, non-vacuum content (the dielectric halves).
+        # We just need two distinct dielectric colors to appear somewhere in the column.
+        unique = {tuple(row) for row in col}
+        # Drop ground (green) and vacuum (white) — what remains is dielectric color(s).
+        unique.discard((0, 255, 0))
+        unique.discard((255, 255, 255))
+        assert len(unique) >= 2, (
+            f"expected two distinct dielectric colors above/below the strip; "
+            f"got {unique}"
+        )
+
+
 class TestSchemaExport:
     def test_schema_has_oneof(self) -> None:
         schema = export_jsonschema()

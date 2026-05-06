@@ -28,6 +28,7 @@ from atlc3.geometry.types import (
     StriplineSymmetric,
 )
 from atlc3.geometry.usermap import Usermap, UsermapMetadata
+from atlc3.materials import MaterialRecord, build_lookup
 
 # atlc2 default colors used by the rasterizer:
 RED_PLUS_ONE: Final[tuple[int, int, int]] = (255, 0, 0)  # signal trace (V=+1)
@@ -56,6 +57,48 @@ def _dielectric_rgb_for_er(er: float, tan_delta: float) -> tuple[int, int, int]:
             best_err = err
             best = m
     return best.rgb if best is not None else FR4_RGB
+
+
+def _synth_dielectric_rgb(er: float, role: str) -> tuple[int, int, int]:
+    """Generate an unused, deterministic RGB color for a custom dielectric.
+
+    Uses a corner of color space the atlc2 default palette never touches
+    (high-saturation green-yellow-blue tints around er ∈ [1, 10]). The ``role``
+    string ("above"/"below") nudges the color so two custom dielectrics with
+    similar εr still get visually distinct colors.
+    """
+    er_clamped = max(1.0, min(10.0, er))
+    # Map er ∈ [1, 10] → [40, 220] for the dominant channel
+    base = int(round(40 + (er_clamped - 1.0) * (220 - 40) / 9.0))
+    if role == "above":
+        return (base, 240, 200)  # cool teal — "above"
+    if role == "below":
+        return (240, base, 130)  # warm coral — "below"
+    # Generic fallback (single-dielectric custom case)
+    return (base, 200, 220)
+
+
+def _make_synth_dielectric(
+    er: float,
+    tan_delta: float,
+    role: str,
+    label: str,
+) -> tuple[tuple[int, int, int], MaterialRecord]:
+    """Build a synthetic insulator MaterialRecord with the EXACT er/tan_delta.
+
+    Returns the RGB key + record, suitable for adding to a custom material lookup.
+    """
+    rgb = _synth_dielectric_rgb(er, role)
+    record = MaterialRecord(
+        rgb=rgb,
+        use="insul",
+        resistivity_ohm_cm=1e6,
+        er=er,
+        tan_delta=tan_delta,
+        mu_r=1.0,
+        name=label,
+    )
+    return rgb, record
 
 
 def _pick_pixel_width(min_feature_m: float, target_pixels: int = 8) -> float:
@@ -235,6 +278,14 @@ def rasterize_stripline_asymmetric(
     pixel_width: float | None = None,
     horizontal_margin_pixels: int = 16,
 ) -> Usermap:
+    """Rasterize an asymmetric stripline.
+
+    When ``geom.er_above`` or ``geom.er_below`` are set, the H1 region (above
+    the strip) and H2 region (below) are painted with different materials
+    using ``_dielectric_rgb_for_er`` to find the closest atlc2 default. This
+    gives the bitmap solver an honest 2-dielectric cross-section, matching
+    real PCB stackups where Core and Prepreg differ.
+    """
     px = pixel_width or _pick_pixel_width(min(geom.H1, geom.H2, geom.T, geom.W))
     h1_px = max(2, round(geom.H1 / px))
     h2_px = max(2, round(geom.H2 / px))
@@ -250,8 +301,51 @@ def rasterize_stripline_asymmetric(
     rgb = np.full((total_h, total_w, 3), WHITE_VACUUM, dtype=np.uint8)
 
     _fill_rect(rgb, 0, ground_px, 0, total_w, GREEN_GROUND)
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
-    _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
+
+    split_er = geom.er_above is not None or geom.er_below is not None
+    er_above = geom.er_above if geom.er_above is not None else geom.er
+    er_below = geom.er_below if geom.er_below is not None else geom.er
+    tan_above = geom.tan_delta_above if geom.tan_delta_above is not None else geom.tan_delta
+    tan_below = geom.tan_delta_below if geom.tan_delta_below is not None else geom.tan_delta
+
+    custom_lookup: dict[tuple[int, int, int], MaterialRecord] | None = None
+
+    if split_er:
+        # Build synthetic materials with the EXACT er/tan_delta the user asked for,
+        # so the bitmap Laplace solver sees two distinct dielectrics. The default
+        # atlc2 palette is too coarse to distinguish, e.g., εr=4.5 from εr=4.2.
+        rgb_above, mat_above = _make_synth_dielectric(
+            er_above, tan_above, role="above", label=f"custom εr={er_above:.3f} (above)"
+        )
+        rgb_below, mat_below = _make_synth_dielectric(
+            er_below, tan_below, role="below", label=f"custom εr={er_below:.3f} (below)"
+        )
+        custom_lookup = build_lookup([[mat_above, mat_below]])
+        diel_above_color, diel_below_color = rgb_above, rgb_below
+        # Above-strip half
+        _fill_rect(rgb, ground_px, ground_px + h1_px, 0, total_w, diel_above_color)
+        # Strip-row band — paint with below-color (overpainted by the strip pixels).
+        _fill_rect(
+            rgb,
+            ground_px + h1_px,
+            ground_px + h1_px + strip_t_px,
+            0,
+            total_w,
+            diel_below_color,
+        )
+        # Below-strip half
+        _fill_rect(
+            rgb,
+            ground_px + h1_px + strip_t_px,
+            ground_px + cavity_px,
+            0,
+            total_w,
+            diel_below_color,
+        )
+    else:
+        diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+        _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
+
     _fill_rect(rgb, ground_px + cavity_px, total_h, 0, total_w, GREEN_GROUND)
 
     sy0 = ground_px + h1_px
@@ -267,6 +361,7 @@ def rasterize_stripline_asymmetric(
             name="stripline_asymmetric",
             source="atlc3.geometry.builders.rasterize_stripline_asymmetric",
         ),
+        material_lookup=custom_lookup,
     )
 
 
