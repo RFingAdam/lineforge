@@ -55,7 +55,8 @@ jobs:
       - name: cargo fmt
         run: cargo fmt --all -- --check
       - name: cargo clippy
-        run: cargo clippy --all-targets --all-features -- -D warnings
+        # See cargo test note re: --all-features and extension-module.
+        run: cargo clippy --all-targets -- -D warnings
 
   test:
     name: Test (${{ matrix.os }} / py${{ matrix.python-version }})
@@ -92,7 +93,11 @@ jobs:
           pip install -e ".[dev]"
 
       - name: cargo test
-        run: cargo test --all-features --workspace
+        # Don't use --all-features: that enables `pyo3/extension-module`,
+        # which leaves Python symbols undefined at link time (intentionally
+        # for wheels, but breaks `cargo test` since there's no host Python
+        # to resolve them at runtime).
+        run: cargo test --workspace
 
       - name: pytest
         run: pytest -v --cov=atlc3 --cov-report=xml
