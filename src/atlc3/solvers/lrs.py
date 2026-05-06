@@ -15,6 +15,7 @@ import warnings
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
+from atlc3.cache import cached
 from atlc3.geometry.usermap import Usermap
 from atlc3.results import SolverWarning
 from atlc3.solvers.cgp import solve_cgp
@@ -79,6 +80,7 @@ def solve_lrs(
     return _solve_lrs_inner(usermap, frequency_hz=frequency_hz, method=method, tol=tol)
 
 
+@cached("solve_full")
 def solve_full(
     usermap: Usermap,
     *,

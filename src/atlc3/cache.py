@@ -17,6 +17,7 @@ Disable globally with the ``ATLC3_NO_CACHE=1`` environment variable.
 
 from __future__ import annotations
 
+import contextlib
 import hashlib
 import json
 import os
@@ -64,14 +65,34 @@ def is_disabled() -> bool:
 def _hash_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
     """Build a deterministic hash key from positional + keyword args.
 
-    Pydantic models are serialized via ``model_dump_json``; numpy arrays via
-    their bytes; everything else is JSON-encoded.
+    Coercion order:
+        1. :class:`atlc3.geometry.usermap.Usermap` → ``(rgb-hash, meta-json)``.
+        2. Pydantic models → ``model_dump_json()``.
+        3. NumPy arrays → ``(shape, dtype, sha1(bytes))``.
+        4. Containers → recurse.
+        5. Anything else → ``str(...)``.
     """
 
     def coerce(v: Any) -> Any:
+        # Usermap — we hash the immutable RGB + metadata. Materials are derived
+        # from RGB so they're implicitly covered.
+        try:
+            from atlc3.geometry.usermap import Usermap
+
+            if isinstance(v, Usermap):
+                return (
+                    "Usermap",
+                    v.rgb.shape,
+                    hashlib.sha1(v.rgb.tobytes()).hexdigest(),
+                    v.meta.model_dump_json(),
+                )
+        except ImportError:
+            pass
+
         # Pydantic
         if hasattr(v, "model_dump_json"):
             return v.model_dump_json()
+
         # numpy
         try:
             import numpy as np
@@ -80,6 +101,7 @@ def _hash_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
                 return ("np", v.shape, v.dtype.str, hashlib.sha1(v.tobytes()).hexdigest())
         except ImportError:
             pass
+
         if isinstance(v, dict):
             return {k: coerce(val) for k, val in sorted(v.items())}
         if isinstance(v, (list, tuple)):
@@ -98,23 +120,39 @@ def _hash_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
     return hashlib.sha256(payload.encode("utf-8")).hexdigest()
 
 
-def cached(prefix: str) -> Callable[[F], F]:
+def cached(
+    prefix: str,
+    *,
+    skip_when: Callable[..., bool] | None = None,
+) -> Callable[[F], F]:
     """Decorator: memoize a function via diskcache.
 
     Disabled if ``ATLC3_NO_CACHE=1``. Cache key includes the package version.
+
+    Parameters
+    ----------
+    prefix
+        Cache key prefix — distinguishes between memoized functions.
+    skip_when
+        Optional predicate ``(*args, **kwargs) -> bool``. If it returns True
+        for a given call, the cache is bypassed (call passes through). Used
+        to skip caching when ``return_fields=True`` for solvers (whose
+        workspace fields are large numpy arrays not worth disk-caching).
     """
 
     def decorator(fn: F) -> F:
         @wraps(fn)
         def wrapper(*args: Any, **kwargs: Any) -> Any:
-            if is_disabled():
+            if is_disabled() or (skip_when is not None and skip_when(*args, **kwargs)):
                 return fn(*args, **kwargs)
             cache = get_cache()
             key = f"{prefix}:{_hash_args(args, kwargs)}"
             if key in cache:
                 return cache[key]
             result = fn(*args, **kwargs)
-            cache[key] = result
+            # Best-effort: return without caching if result isn't picklable.
+            with contextlib.suppress(TypeError, ValueError):
+                cache[key] = result
             return result
 
         return wrapper  # type: ignore[return-value]
