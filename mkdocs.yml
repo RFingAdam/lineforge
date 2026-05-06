@@ -1,0 +1,78 @@
+site_name: atlc3.0
+site_description: Open-source MCP-enabled transmission line calculator
+site_url: https://atlc3.readthedocs.io
+repo_url: https://github.com/atlc3-project/atlc3
+repo_name: atlc3-project/atlc3
+
+theme:
+  name: material
+  features:
+    - navigation.instant
+    - navigation.tracking
+    - navigation.tabs
+    - navigation.sections
+    - navigation.indexes
+    - navigation.top
+    - search.suggest
+    - search.highlight
+    - content.code.copy
+    - content.code.annotate
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: indigo
+      accent: indigo
+      toggle:
+        icon: material/brightness-4
+        name: Switch to light mode
+
+plugins:
+  - search
+  - mkdocstrings:
+      handlers:
+        python:
+          options:
+            show_root_heading: true
+            show_source: true
+            docstring_style: numpy
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.arithmatex:
+      generic: true
+  - tables
+  - footnotes
+  - attr_list
+  - md_in_html
+
+extra_javascript:
+  - https://polyfill.io/v3/polyfill.min.js?features=es6
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Home: index.md
+  - Quick Start: quickstart.md
+  - Tutorials:
+      - Python API: tutorials/python.md
+      - CLI: tutorials/cli.md
+      - MCP server: tutorials/mcp.md
+  - Geometry reference: reference/geometries.md
+  - Theory:
+      - Analytical formulas: theory/analytical.md
+      - Laplace solver: theory/laplace_solver.md
+      - Faraday solver: theory/faraday_solver.md
+      - Skin effect: theory/skin_effect.md
+      - 3-wire decomposition: theory/three_wire.md
+  - Changelog: changelog.md
+  - Plan: plan.md
