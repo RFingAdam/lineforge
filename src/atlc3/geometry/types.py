@@ -121,6 +121,14 @@ class StriplineAsymmetric(_BaseGeometry):
 
     H1 is the dielectric thickness above the strip, H2 below. The strip itself
     is at the boundary between H1 and H2; total cavity = H1 + T + H2.
+
+    For real PCB stackups where the dielectric above and below the strip differ
+    (e.g. Core above, Prepreg below — common when routing on an inner signal
+    layer between a plane and a power layer), pass ``er_above`` / ``er_below``
+    (and optionally ``tan_delta_above`` / ``tan_delta_below``). When supplied,
+    these override the single ``er`` / ``tan_delta`` values: the closed-form
+    solver uses a capacitance-weighted εr_eff, and the bitmap rasterizer
+    paints the two halves with different materials.
     """
 
     type: Literal["stripline_asymmetric"] = "stripline_asymmetric"
@@ -128,9 +136,33 @@ class StriplineAsymmetric(_BaseGeometry):
     T: Length = Field(..., description="Strip thickness.")
     H1: Length = Field(..., description="Dielectric thickness above the strip.")
     H2: Length = Field(..., description="Dielectric thickness below the strip.")
-    er: float = Field(..., ge=1)
+    er: float = Field(
+        ...,
+        description="Bulk relative permittivity (used when er_above/er_below not given).",
+        ge=1,
+    )
     tan_delta: float = Field(0.0, ge=0)
     rho: float = Field(COPPER_RHO, gt=0)
+    er_above: float | None = Field(
+        None,
+        description="Optional εr of the dielectric above the strip (overrides er for that half).",
+        ge=1,
+    )
+    er_below: float | None = Field(
+        None,
+        description="Optional εr of the dielectric below the strip (overrides er for that half).",
+        ge=1,
+    )
+    tan_delta_above: float | None = Field(
+        None,
+        description="Optional loss tangent above the strip.",
+        ge=0,
+    )
+    tan_delta_below: float | None = Field(
+        None,
+        description="Optional loss tangent below the strip.",
+        ge=0,
+    )
 
 
 class CPWG(_BaseGeometry):

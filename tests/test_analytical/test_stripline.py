@@ -86,3 +86,99 @@ class TestStriplineAsymmetric:
         )
         # Offsetting changes the impedance noticeably.
         assert abs(offset.z0 - centered.z0) / centered.z0 > 0.05
+
+
+class TestStriplineAsymmetricSplitEr:
+    """Split-εr (Core above ≠ Prepreg below) — capacitance-weighted εr_eff."""
+
+    def test_split_er_collapses_to_bulk_when_equal(self) -> None:
+        """er_above == er_below == er must reproduce the bulk-only result exactly."""
+        bulk = stripline_asymmetric(
+            StriplineAsymmetric(W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.4)
+        )
+        split = stripline_asymmetric(
+            StriplineAsymmetric(
+                W="5mil",
+                T="1.4mil",
+                H1="3mil",
+                H2="9mil",
+                er=4.4,
+                er_above=4.4,
+                er_below=4.4,
+            )
+        )
+        assert split.z0 == pytest.approx(bulk.z0, rel=1e-12)
+        assert split.eps_eff == pytest.approx(bulk.eps_eff, rel=1e-12)
+
+    def test_split_er_method_tag_flips(self) -> None:
+        bulk = stripline_asymmetric(
+            StriplineAsymmetric(W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.4)
+        )
+        split = stripline_asymmetric(
+            StriplineAsymmetric(
+                W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.4, er_above=4.5, er_below=3.7
+            )
+        )
+        assert bulk.method == "ipc2141-stripline-asymmetric"
+        assert split.method == "ipc2141-stripline-asymmetric-split-er"
+
+    def test_eps_eff_capacitance_weighted(self) -> None:
+        """εr_eff = (εr_above/H1 + εr_below/H2) / (1/H1 + 1/H2)."""
+        H1_mil, H2_mil = 8.0, 4.0
+        er_above, er_below = 4.2, 3.7
+        result = stripline_asymmetric(
+            StriplineAsymmetric(
+                W="5mil",
+                T="1.4mil",
+                H1=f"{H1_mil}mil",
+                H2=f"{H2_mil}mil",
+                er=4.0,  # ignored when split er_above/er_below are present
+                er_above=er_above,
+                er_below=er_below,
+            )
+        )
+        expected_eps_eff = (er_above / H1_mil + er_below / H2_mil) / (1.0 / H1_mil + 1.0 / H2_mil)
+        assert result.eps_eff == pytest.approx(expected_eps_eff, rel=1e-9)
+        # The closer (smaller-H) dielectric must dominate.
+        assert result.eps_eff < (er_above + er_below) / 2  # H2 < H1 → er_below pulls harder
+
+    def test_loss_tangent_capacitance_weighted(self) -> None:
+        """tan_delta_eff weights by the same C contributions as εr_eff."""
+        H1_mil, H2_mil = 8.0, 4.0
+        er_above, er_below = 4.2, 3.7
+        td_above, td_below = 0.020, 0.005
+        result = stripline_asymmetric(
+            StriplineAsymmetric(
+                W="5mil",
+                T="1.4mil",
+                H1=f"{H1_mil}mil",
+                H2=f"{H2_mil}mil",
+                er=4.0,
+                tan_delta=0.01,
+                er_above=er_above,
+                er_below=er_below,
+                tan_delta_above=td_above,
+                tan_delta_below=td_below,
+            ),
+            frequency_hz=1e9,
+        )
+        # The closer (smaller H2) dielectric (low-loss prepreg) should pull
+        # tan_delta_eff toward td_below.
+        unweighted_avg = (td_above + td_below) / 2
+        assert result.dielectric_loss_db_per_in is not None
+        # Compare against a bulk-only run with the unweighted average:
+        ref = stripline_asymmetric(
+            StriplineAsymmetric(
+                W="5mil",
+                T="1.4mil",
+                H1=f"{H1_mil}mil",
+                H2=f"{H2_mil}mil",
+                er=result.eps_eff,
+                tan_delta=unweighted_avg,
+            ),
+            frequency_hz=1e9,
+        )
+        assert ref.dielectric_loss_db_per_in is not None
+        # split run should have LOWER loss than the unweighted-avg run, because
+        # the high-loss core (td_above) gets weighted DOWN by 1/H1 (larger H).
+        assert result.dielectric_loss_db_per_in < ref.dielectric_loss_db_per_in
