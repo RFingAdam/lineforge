@@ -122,14 +122,18 @@ class TestStriplineAsymmetricSplitEr:
         assert bulk.method == "ipc2141-stripline-asymmetric"
         assert split.method == "ipc2141-stripline-asymmetric-split-er"
 
-    def test_eps_eff_capacitance_weighted(self) -> None:
-        """εr_eff = (εr_above/H1 + εr_below/H2) / (1/H1 + 1/H2)."""
+    def test_eps_eff_capacitance_weighted_50ohm_core_prepreg(self) -> None:
+        """εr_eff = (εr_above/H1 + εr_below/H2) / (1/H1 + 1/H2).
+
+        Geometry is a real 50Ω inner-layer trace: 4mil/0.7mil (½-oz Cu)
+        between an 8mil Core (εr=4.2) above and 4mil Prepreg (εr=3.7) below.
+        """
         H1_mil, H2_mil = 8.0, 4.0
-        er_above, er_below = 4.2, 3.7
+        er_above, er_below = 4.2, 3.7  # Core / Prepreg
         result = stripline_asymmetric(
             StriplineAsymmetric(
-                W="5mil",
-                T="1.4mil",
+                W="4mil",
+                T="0.7mil",
                 H1=f"{H1_mil}mil",
                 H2=f"{H2_mil}mil",
                 er=4.0,  # ignored when split er_above/er_below are present
@@ -137,20 +141,28 @@ class TestStriplineAsymmetricSplitEr:
                 er_below=er_below,
             )
         )
+        # Z0 should land in the 50Ω neighborhood (designed-for-50Ω trace).
+        assert result.z0 == pytest.approx(50.0, abs=2.0)
         expected_eps_eff = (er_above / H1_mil + er_below / H2_mil) / (1.0 / H1_mil + 1.0 / H2_mil)
         assert result.eps_eff == pytest.approx(expected_eps_eff, rel=1e-9)
         # The closer (smaller-H) dielectric must dominate.
         assert result.eps_eff < (er_above + er_below) / 2  # H2 < H1 → er_below pulls harder
 
-    def test_loss_tangent_capacitance_weighted(self) -> None:
-        """tan_delta_eff weights by the same C contributions as εr_eff."""
+    def test_loss_tangent_capacitance_weighted_50ohm_core_prepreg(self) -> None:
+        """tan_delta_eff weights by the same C contributions as εr_eff.
+
+        Same 50Ω inner-layer Core/Prepreg geometry as the previous test;
+        Core is the lossy side (td=0.020), Prepreg is low-loss (td=0.005).
+        Because Core is farther from the strip (H1>H2), its loss contribution
+        gets weighted DOWN — total dielectric loss is below the unweighted average.
+        """
         H1_mil, H2_mil = 8.0, 4.0
         er_above, er_below = 4.2, 3.7
         td_above, td_below = 0.020, 0.005
         result = stripline_asymmetric(
             StriplineAsymmetric(
-                W="5mil",
-                T="1.4mil",
+                W="4mil",
+                T="0.7mil",
                 H1=f"{H1_mil}mil",
                 H2=f"{H2_mil}mil",
                 er=4.0,
@@ -162,15 +174,14 @@ class TestStriplineAsymmetricSplitEr:
             ),
             frequency_hz=1e9,
         )
-        # The closer (smaller H2) dielectric (low-loss prepreg) should pull
-        # tan_delta_eff toward td_below.
+        assert result.z0 == pytest.approx(50.0, abs=2.0)
         unweighted_avg = (td_above + td_below) / 2
         assert result.dielectric_loss_db_per_in is not None
         # Compare against a bulk-only run with the unweighted average:
         ref = stripline_asymmetric(
             StriplineAsymmetric(
-                W="5mil",
-                T="1.4mil",
+                W="4mil",
+                T="0.7mil",
                 H1=f"{H1_mil}mil",
                 H2=f"{H2_mil}mil",
                 er=result.eps_eff,
