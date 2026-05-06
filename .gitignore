@@ -28,6 +28,13 @@ target/
 Cargo.lock.bak
 **/*.rs.bk
 
+# maturin / PyO3 build artifacts
+src/atlc3/_kernel*.so
+src/atlc3/_kernel*.pyd
+src/atlc3/_kernel*.dylib
+src/atlc3/atlc3_kernel*.pdb
+**/*.pdb
+
 # maturin build artifacts
 *.whl
 .maturin/
