@@ -1,0 +1,57 @@
+{
+  "name": "pcb-extended",
+  "version": "1.0.0",
+  "description": "Common PCB substrate materials beyond atlc2's defaults. Use for modern high-frequency stackups.",
+  "materials": [
+    {
+      "rgb": [180, 220, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.66, "tan_delta": 0.0037, "mu_r": 1.0,
+      "name": "Rogers RO4350B"
+    },
+    {
+      "rgb": [180, 200, 220], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.48, "tan_delta": 0.0037, "mu_r": 1.0,
+      "name": "Rogers RO4003C"
+    },
+    {
+      "rgb": [200, 180, 220], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 6.15, "tan_delta": 0.0027, "mu_r": 1.0,
+      "name": "Rogers RO3006"
+    },
+    {
+      "rgb": [200, 220, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 10.2, "tan_delta": 0.0023, "mu_r": 1.0,
+      "name": "Rogers RO3010"
+    },
+    {
+      "rgb": [220, 180, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 4.4, "tan_delta": 0.02, "mu_r": 1.0,
+      "name": "FR4 nominal (er=4.4)"
+    },
+    {
+      "rgb": [180, 240, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.0, "tan_delta": 0.001, "mu_r": 1.0,
+      "name": "Megtron 6 (Panasonic R-5775)"
+    },
+    {
+      "rgb": [240, 200, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.4, "tan_delta": 0.005, "mu_r": 1.0,
+      "name": "Isola 370HR"
+    },
+    {
+      "rgb": [240, 180, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.27, "tan_delta": 0.0037, "mu_r": 1.0,
+      "name": "Isola I-Tera MT40"
+    },
+    {
+      "rgb": [200, 240, 220], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.5, "tan_delta": 0.005, "mu_r": 1.0,
+      "name": "polyimide (Kapton)"
+    },
+    {
+      "rgb": [220, 240, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 9.8, "tan_delta": 0.0001, "mu_r": 1.0,
+      "name": "alumina (Al2O3, 99%)"
+    }
+  ]
+}

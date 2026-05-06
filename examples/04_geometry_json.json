@@ -1,0 +1,8 @@
+{
+  "type": "microstrip",
+  "W": "6mil",
+  "H": "4mil",
+  "T": "1.4mil",
+  "er": 4.4,
+  "tan_delta": 0.02
+}

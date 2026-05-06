@@ -1,0 +1,184 @@
+[build-system]
+requires = ["maturin>=1.7,<2.0"]
+build-backend = "maturin"
+
+[project]
+name = "atlc3"
+description = "Open-source MCP-enabled transmission line calculator (atlc3.0)"
+readme = "README.md"
+license = { text = "GPL-3.0-or-later" }
+requires-python = ">=3.11"
+authors = [
+    { name = "atlc3.0 contributors" },
+]
+keywords = [
+    "transmission-line",
+    "impedance",
+    "microstrip",
+    "stripline",
+    "cpwg",
+    "pcb",
+    "rf",
+    "electromagnetics",
+    "mcp",
+]
+classifiers = [
+    "Development Status :: 2 - Pre-Alpha",
+    "Intended Audience :: Science/Research",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: GNU General Public License v3 or later (GPLv3+)",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS",
+    "Operating System :: Microsoft :: Windows",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Programming Language :: Rust",
+    "Topic :: Scientific/Engineering",
+    "Topic :: Scientific/Engineering :: Electronic Design Automation (EDA)",
+    "Topic :: Scientific/Engineering :: Physics",
+]
+dynamic = ["version"]
+
+dependencies = [
+    "numpy>=1.26",
+    "scipy>=1.13",
+    "pyamg>=5.1",
+    "pydantic>=2.7",
+    "pillow>=10.3",
+    "pint>=0.24",
+    "typer>=0.12",
+    "rich>=13.7",
+    "mcp>=1.0",
+    "anyio>=4.4",
+    "diskcache>=5.6",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.2",
+    "pytest-cov>=5.0",
+    "pytest-asyncio>=0.23",
+    "hypothesis>=6.100",
+    "ruff>=0.5",
+    "black>=24.4",
+    "mypy>=1.10",
+    "types-pillow",
+    "scikit-rf>=1.1",
+    "maturin>=1.7",
+]
+docs = [
+    "mkdocs>=1.6",
+    "mkdocs-material>=9.5",
+    "mkdocstrings[python]>=0.25",
+    "mktestdocs>=0.2",
+]
+
+[project.urls]
+Homepage = "https://github.com/atlc3-project/atlc3"
+Documentation = "https://atlc3.readthedocs.io"
+Issues = "https://github.com/atlc3-project/atlc3/issues"
+Source = "https://github.com/atlc3-project/atlc3"
+
+[project.scripts]
+atlc3 = "atlc3.cli:app"
+
+[tool.maturin]
+module-name = "atlc3._kernel"
+manifest-path = "crates/atlc3_kernel/Cargo.toml"
+python-source = "src"
+features = ["pyo3/extension-module"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src", "tests"]
+
+[tool.ruff.lint]
+select = [
+    "E",      # pycodestyle errors
+    "W",      # pycodestyle warnings
+    "F",      # pyflakes
+    "I",      # isort
+    "B",      # flake8-bugbear
+    "C4",     # flake8-comprehensions
+    "UP",     # pyupgrade
+    "N",      # pep8-naming
+    "SIM",    # flake8-simplify
+    "RUF",    # ruff-specific
+]
+ignore = [
+    "E501",   # line too long (handled by black)
+    "N803",   # argument name should be lowercase (we use W, H, T, S, etc., as physics dictates)
+    "N806",   # variable name should be lowercase (same reason)
+    "N802",   # function name should be lowercase (we use Z0, Zdiff, etc. for clarity)
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**/*.py" = ["B011"]
+"examples/**/*.py" = ["F401", "F403"]
+
+[tool.black]
+line-length = 100
+target-version = ["py311", "py312", "py313"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+warn_redundant_casts = true
+warn_unused_ignores = true
+disallow_untyped_defs = true
+disallow_incomplete_defs = true
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+warn_unreachable = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = [
+    "pyamg.*",
+    "diskcache.*",
+    "skrf.*",
+    "atlc3._kernel",
+]
+ignore_missing_imports = true
+
+[tool.pydantic-mypy]
+init_forbid_extra = true
+init_typed = true
+warn_required_dynamic_aliases = true
+
+[tool.pytest.ini_options]
+minversion = "8.0"
+testpaths = ["tests"]
+addopts = [
+    "-ra",
+    "--strict-markers",
+    "--strict-config",
+    "--cov-config=pyproject.toml",
+]
+asyncio_mode = "auto"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "atlc2_parity: tests that compare against published atlc2 values",
+    "needs_rust: tests that exercise the Rust kernel",
+]
+
+[tool.coverage.run]
+source = ["src/atlc3"]
+branch = true
+omit = [
+    "*/tests/*",
+    "*/_kernel.pyi",
+]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "raise NotImplementedError",
+    "if TYPE_CHECKING:",
+    "@overload",
+]
+show_missing = true

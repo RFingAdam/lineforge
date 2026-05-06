@@ -1,0 +1,61 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+*.egg
+build/
+dist/
+wheels/
+.tox/
+.coverage
+.coverage.*
+.cache
+htmlcov/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.hypothesis/
+.venv/
+venv/
+env/
+ENV/
+
+# Rust
+target/
+Cargo.lock.bak
+**/*.rs.bk
+
+# maturin build artifacts
+*.whl
+.maturin/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+
+# atlc3.0 outputs
+*.atlc3-cache/
+solver-output/
+field-plots/
+sweep-results.csv
+
+# Docs build
+site/
+docs/_build/
+.docs-cache/
+
+# Type stubs we generate
+src/atlc3/_kernel.pyi.bak
+
+# Local secrets / env
+.env
+.env.local
+.env.*.local
