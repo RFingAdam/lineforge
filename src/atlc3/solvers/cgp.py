@@ -241,7 +241,6 @@ def solve_cgp(
         max_iter=max_iter,
     )
 
-    px = ws.pixel_width_m
     V_drive = 2.0  # +1V to -1V
     has_minus = extended.conductor_mask("-1").any()
     if not has_minus:
@@ -249,15 +248,19 @@ def solve_cgp(
         V_drive = 1.0
 
     # Capacitance: C = ε₀/V² · ∫ εr |E|² dA
+    #
+    # The pixel-unit gradients (V_diff between adjacent pixels) and pixel-unit
+    # areas (1 per pixel) cancel out the dx factors automatically — verify
+    # with a parallel-plate problem: discrete sum εr·(V/h_px)²·W_px·h_px
+    # = εr·V²·W_px/h_px = εr·V²·W_phys/h_phys = ∫ εr|E_phys|² dA.
     integral_with_er = _energy_integral(ws.v_field, er_field)
-    # Convert from pixel² to m²: multiply by px²
-    C_per_m = EPS0 / (V_drive * V_drive) * integral_with_er * (px * px)
+    C_per_m = EPS0 / (V_drive * V_drive) * integral_with_er
 
     # Gp = ω · ε₀/V² · ∫ εr · tanδ · |E|² dA
     if frequency_hz and tan_delta_field.any():
         omega = 2 * np.pi * frequency_hz
         integral_loss = _energy_integral(ws.v_field, er_field, tan_delta_field)
-        Gp_per_m = omega * EPS0 / (V_drive * V_drive) * integral_loss * (px * px)
+        Gp_per_m = omega * EPS0 / (V_drive * V_drive) * integral_loss
     else:
         Gp_per_m = 0.0
 
@@ -272,7 +275,7 @@ def solve_cgp(
         max_iter=max_iter,
     )
     integral_vac = _energy_integral(ws_vac.v_field, er_vac)
-    C_vacuum = EPS0 / (V_drive * V_drive) * integral_vac * (px * px)
+    C_vacuum = EPS0 / (V_drive * V_drive) * integral_vac
 
     if C_vacuum <= 0:
         raise RuntimeError("vacuum C solve produced non-positive capacitance")
