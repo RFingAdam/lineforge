@@ -242,6 +242,7 @@ def build_server() -> FastMCP:
         pixel_width: str | float | None = None,
         use_charge_shift: bool = True,
         method: str = "auto",
+        extend_grid: bool = True,
         render_fields: list[str] | None = None,
     ) -> dict[str, Any]:
         """Solve C and Gp asynchronously via the bitmap Laplace solver.
@@ -264,6 +265,10 @@ def build_server() -> FastMCP:
             atlc2 "Skip E prediction" toggled off when True.
         method
             ``"sor"`` | ``"amg"`` | ``"auto"``.
+        extend_grid
+            Pad the usermap for open-boundary simulation (atlc2 default).
+            Set False for shielded geometries (coax) or for fast tests —
+            unshielded lines need True for accurate Z₀.
         render_fields
             Subset of ``["V", "E", "D", "T"]`` to render as PNGs and attach to
             the result.
@@ -292,6 +297,7 @@ def build_server() -> FastMCP:
                 frequency_hz=freq_hz,
                 use_charge_shift=use_charge_shift,
                 method=method,
+                extend_grid=extend_grid,
                 return_fields=True,
             )
 
