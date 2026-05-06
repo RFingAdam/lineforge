@@ -71,6 +71,4 @@ class TestDispatcher:
         result_sor = solve_laplace(er, mask, val, method="sor", tol=1e-9)
         # Check on free pixels
         free = ~mask
-        np.testing.assert_allclose(
-            result.v_field[free], result_sor.v_field[free], atol=0.05
-        )
+        np.testing.assert_allclose(result.v_field[free], result_sor.v_field[free], atol=0.05)

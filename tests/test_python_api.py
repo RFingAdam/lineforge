@@ -25,26 +25,39 @@ class TestTopLevel:
 
     def test_edge_coupled_diff_microstrip(self) -> None:
         r = atlc3.edge_coupled_diff(
-            W="4mil", S="6mil", H="4mil", T="1.4mil", er=4.4, on="microstrip",
+            W="4mil",
+            S="6mil",
+            H="4mil",
+            T="1.4mil",
+            er=4.4,
+            on="microstrip",
         )
         assert isinstance(r, DiffResult)
 
     def test_edge_coupled_diff_stripline(self) -> None:
         r = atlc3.edge_coupled_diff(
-            W="4mil", S="6mil", H="14mil", T="1.4mil", er=4.4, on="stripline",
+            W="4mil",
+            S="6mil",
+            H="14mil",
+            T="1.4mil",
+            er=4.4,
+            on="stripline",
         )
         assert isinstance(r, DiffResult)
 
     def test_edge_coupled_diff_invalid_on(self) -> None:
         with pytest.raises(ValueError):
             atlc3.edge_coupled_diff(
-                W="4mil", S="6mil", H="4mil", T="1.4mil", er=4.4, on="laser",
+                W="4mil",
+                S="6mil",
+                H="4mil",
+                T="1.4mil",
+                er=4.4,
+                on="laser",
             )
 
     def test_solve_with_dict(self) -> None:
-        r = atlc3.solve(
-            {"type": "microstrip", "W": "6mil", "H": "4mil", "T": "1.4mil", "er": 4.4}
-        )
+        r = atlc3.solve({"type": "microstrip", "W": "6mil", "H": "4mil", "T": "1.4mil", "er": 4.4})
         assert isinstance(r, TLineResult)
 
     def test_solve_with_geometry_model(self) -> None:
@@ -54,7 +67,12 @@ class TestTopLevel:
 
     def test_frequency_string_parsed(self) -> None:
         r = atlc3.microstrip(
-            W="6mil", H="4mil", T="1.4mil", er=4.4, tan_delta=0.02, frequency="1GHz",
+            W="6mil",
+            H="4mil",
+            T="1.4mil",
+            er=4.4,
+            tan_delta=0.02,
+            frequency="1GHz",
         )
         assert r.frequency_hz == pytest.approx(1e9)
         assert r.dielectric_loss_db_per_in is not None

@@ -46,7 +46,10 @@ def test_unknown_rgb_returns_none() -> None:
 
 def test_records_are_immutable() -> None:
     m = ATLC2_DEFAULTS[0]
-    with pytest.raises(Exception):
+    # Pydantic v2 with frozen=True raises ValidationError on assignment
+    from pydantic import ValidationError
+
+    with pytest.raises(ValidationError):
         m.er = 99  # type: ignore[misc]
 
 

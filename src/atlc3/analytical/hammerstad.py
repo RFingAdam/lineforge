@@ -46,9 +46,11 @@ def _eps_eff_thin_strip(W: float, H: float, er: float) -> float:
     From IPC-2141A eq. (4-10) / Wadell §3.3.1.
     """
     u = W / H
-    a = 1.0 + (1.0 / 49.0) * math.log(
-        (u**4 + (u / 52.0) ** 2) / (u**4 + 0.432)
-    ) + (1.0 / 18.7) * math.log(1.0 + (u / 18.1) ** 3)
+    a = (
+        1.0
+        + (1.0 / 49.0) * math.log((u**4 + (u / 52.0) ** 2) / (u**4 + 0.432))
+        + (1.0 / 18.7) * math.log(1.0 + (u / 18.1) ** 3)
+    )
     b = 0.564 * ((er - 0.9) / (er + 3.0)) ** 0.053
     return (er + 1.0) / 2.0 + ((er - 1.0) / 2.0) * (1.0 + 10.0 / u) ** (-a * b)
 
@@ -94,7 +96,9 @@ def _conductor_loss_db_per_in(z0: float, W_eff: float, T: float, rho: float) -> 
     return alpha_neper_per_m * 8.6858896 * INCH_M
 
 
-def _dielectric_loss_db_per_in(eps_eff: float, er: float, tan_delta: float, freq_hz: float) -> float:
+def _dielectric_loss_db_per_in(
+    eps_eff: float, er: float, tan_delta: float, freq_hz: float
+) -> float:
     """Wheeler's dielectric loss formula (filled εr factor).
 
     Returns 0 if ``tan_delta == 0`` or ``freq_hz`` not given.

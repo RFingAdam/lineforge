@@ -180,17 +180,22 @@ class Usermap:
         return mask, value
 
     def resistivity_field_ohm_m(self) -> np.ndarray:
-        """Per-pixel resistivity in Ω·m (atlc2 stores Ω·cm; we convert)."""
+        """Per-pixel resistivity in Ω·m.
+
+        atlc2's database stores resistivity in **µΩ·cm** despite the column
+        being labeled "Ohms:" — for copper the value is 1.7241, which is
+        1.7241 µΩ·cm = 1.7241e-8 Ω·m (CRC handbook). Conversion factor: 1e-8.
+        """
         out = np.full(self.shape, 1e8, dtype=np.float64)  # large for insulators
         for idx, mat in enumerate(self.materials):
-            out[self.codes == idx] = mat.resistivity_ohm_cm * 1e-2
+            out[self.codes == idx] = mat.resistivity_ohm_cm * 1e-8
         return out
 
     # ------------------------------------------------------------------
     # Edge replication (atlc2 §"pixels at the edge of the Usermap are special")
     # ------------------------------------------------------------------
 
-    def replicate_edges(self, pad: int) -> "Usermap":
+    def replicate_edges(self, pad: int) -> Usermap:
         """Pad the usermap by ``pad`` pixels in each direction by replicating edges.
 
         The four corner pixels are replicated diagonally, matching atlc2's docs.
@@ -233,7 +238,7 @@ class Usermap:
         *,
         pixel_width: str | float,
         material_lookup: dict[tuple[int, int, int], MaterialRecord] | None = None,
-    ) -> "Usermap":
+    ) -> Usermap:
         return cls._from_image(path, "bmp", pixel_width, material_lookup)
 
     @classmethod
@@ -243,7 +248,7 @@ class Usermap:
         *,
         pixel_width: str | float,
         material_lookup: dict[tuple[int, int, int], MaterialRecord] | None = None,
-    ) -> "Usermap":
+    ) -> Usermap:
         return cls._from_image(path, "png", pixel_width, material_lookup)
 
     @classmethod
@@ -253,7 +258,7 @@ class Usermap:
         *,
         pixel_width: str | float,
         material_lookup: dict[tuple[int, int, int], MaterialRecord] | None = None,
-    ) -> "Usermap":
+    ) -> Usermap:
         return cls._from_image(path, "tiff", pixel_width, material_lookup)
 
     @classmethod
@@ -263,7 +268,7 @@ class Usermap:
         fmt: str,
         pixel_width: str | float,
         material_lookup: dict[tuple[int, int, int], MaterialRecord] | None,
-    ) -> "Usermap":
+    ) -> Usermap:
         path = Path(path)
         with Image.open(path) as img:
             if img.mode != "RGB":
@@ -287,7 +292,7 @@ class Usermap:
         Image.fromarray(self.rgb, mode="RGB").save(path, format="TIFF")
 
     @classmethod
-    def from_json(cls, path: str | Path) -> "Usermap":
+    def from_json(cls, path: str | Path) -> Usermap:
         """Load a usermap from the atlc3-native JSON format."""
         blob: dict[str, Any] = json.loads(Path(path).read_text())
         rgb = np.array(blob["rgb"], dtype=np.uint8)

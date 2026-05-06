@@ -32,11 +32,13 @@ class TestFaradaySmoke:
         """Wider separation between conductors → more flux linkage → higher L."""
         l_close = solve_lrs(
             _two_strip_usermap(separation_px=4),
-            frequency_hz=1e6, method="dense",
+            frequency_hz=1e6,
+            method="dense",
         ).L_per_m
         l_far = solve_lrs(
             _two_strip_usermap(separation_px=20),
-            frequency_hz=1e6, method="dense",
+            frequency_hz=1e6,
+            method="dense",
         ).L_per_m
         assert l_far > l_close
 
@@ -49,17 +51,17 @@ class TestFaradaySmoke:
 
 class TestRLGCFull:
     def test_rlgc_pipeline_produces_positive_quantities(self) -> None:
-        from atlc3.solvers.lrs import solve_full
-
         # Use a small but proper microstrip cross-section
         from atlc3.geometry.builders import rasterize_microstrip
         from atlc3.geometry.types import Microstrip
+        from atlc3.solvers.lrs import solve_full
 
         geom = Microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4)
         usermap = rasterize_microstrip(geom)
 
         result = solve_full(
-            usermap, frequency_hz=1e8,
+            usermap,
+            frequency_hz=1e8,
             restrict_to_skin_depth=False,  # keep equation count low for speed
             extend_grid_for_cgp=False,
         )

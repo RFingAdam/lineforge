@@ -71,7 +71,6 @@ def _conductor_pixel_indices(usermap: Usermap) -> tuple[np.ndarray, np.ndarray, 
     plus = usermap.conductor_mask("+1")
     minus = usermap.conductor_mask("-1")
     ground = usermap.conductor_mask("0")
-    float_mask = usermap.conductor_mask("float")
 
     cid = np.full(usermap.shape, -1, dtype=np.int32)
     next_id = 0
@@ -273,17 +272,14 @@ def solve_lrs(
         ``z0_complex = √((R + jωL) / (G + jωC))`` is left for the higher-level
         :class:`atlc3.results.RLGCResult` to combine with the C/Gp solve.
     """
-    ys, xs, label_map = _conductor_pixel_indices(usermap)
-    N = len(ys)
-    if N == 0:
+    ys_initial, _xs_initial, _label_map = _conductor_pixel_indices(usermap)
+    if len(ys_initial) == 0:
         raise ValueError("no conductor pixels in usermap")
 
     plus = usermap.conductor_mask("+1")
     minus = usermap.conductor_mask("-1")
-    if not (plus.any() and minus.any()):
-        # Can't define a 2-wire line — try treating ground as the return
-        if not (plus.any() and usermap.conductor_mask("0").any()):
-            raise ValueError("need both +1 and (-1 or 0) conductor pixels for L/Rs solve")
+    if not (plus.any() and minus.any()) and not (plus.any() and usermap.conductor_mask("0").any()):
+        raise ValueError("need both +1 and (-1 or 0) conductor pixels for L/Rs solve")
 
     cid = np.full(usermap.shape, -1, dtype=np.int32)
     next_id = 0
@@ -312,20 +308,15 @@ def solve_lrs(
 
     # Re-extract pixel indices using the (possibly remapped) cid array
     ys, xs = np.where(cid >= 0)
-    pixel_cid = cid[ys, xs]
+    N = len(ys)
 
-    Z, b = _build_system(
-        ys, xs, cid, rho_field, px, omega, n_cond, drive
-    )
+    Z, b = _build_system(ys, xs, cid, rho_field, px, omega, n_cond, drive)
 
     chosen = method
     if method == "auto":
         chosen = "bicgstab" if Z.shape[0] >= 500 else "dense"
 
-    x = (
-        _solve_bicgstab_with_ilu(Z, b, tol=tol)
-        if chosen == "bicgstab" else _solve_dense(Z, b)
-    )
+    x = _solve_bicgstab_with_ilu(Z, b, tol=tol) if chosen == "bicgstab" else _solve_dense(Z, b)
 
     # Extract V values for each conductor
     V_per_conductor = x[N:]

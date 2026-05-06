@@ -25,7 +25,7 @@ from dataclasses import dataclass
 from typing import Any
 
 import numpy as np
-from scipy.optimize import minimize_scalar, minimize
+from scipy.optimize import minimize, minimize_scalar
 
 from atlc3.analytical import solve as analytical_solve
 from atlc3.geometry import from_dict
@@ -138,7 +138,8 @@ def optimize_for(
         lo, hi = bounds[0]
         scalar_res = minimize_scalar(
             lambda x: objective(np.array([x])),
-            bounds=(lo, hi), method="bounded",
+            bounds=(lo, hi),
+            method="bounded",
             options={"maxiter": max_iter},
         )
         x_opt = np.array([scalar_res.x])
@@ -147,7 +148,10 @@ def optimize_for(
     else:
         x0 = np.array([(lo + hi) / 2 for lo, hi in bounds])
         res = minimize(
-            objective, x0, method="L-BFGS-B", bounds=bounds,
+            objective,
+            x0,
+            method="L-BFGS-B",
+            bounds=bounds,
             options={"maxiter": max_iter},
         )
         x_opt = res.x
@@ -165,6 +169,7 @@ def optimize_for(
     else:
         from atlc3.geometry.builders import rasterize as _ras
         from atlc3.solvers.cgp import solve_cgp as _cgp
+
         usermap = _ras(geom)
         final = _cgp(usermap, frequency_hz=frequency_hz)
 

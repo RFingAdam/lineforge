@@ -47,7 +47,6 @@ from atlc3.solvers.cgp import solve_cgp as run_cgp
 from atlc3.units import parse_frequency, parse_length
 from atlc3.version import __version__
 
-
 # ---------------------------------------------------------------------------
 # In-process resource stores
 # ---------------------------------------------------------------------------
@@ -110,8 +109,7 @@ def build_server() -> FastMCP:
                 {
                     "type": type_name,
                     "class": cls.__name__,
-                    "doc": (cls.__doc__ or "").splitlines()[0].strip()
-                    if cls.__doc__ else "",
+                    "doc": (cls.__doc__ or "").splitlines()[0].strip() if cls.__doc__ else "",
                     "required_fields": [
                         name
                         for name, field in cls.model_fields.items()
@@ -189,8 +187,8 @@ def build_server() -> FastMCP:
         """
         from io import BytesIO
 
-        from PIL import Image
         import numpy as np
+        from PIL import Image
 
         try:
             blob = base64.b64decode(bmp_base64)
@@ -202,8 +200,9 @@ def build_server() -> FastMCP:
             return {"error": f"could not decode BMP: {exc}"}
 
         meta = UsermapMetadata(
-            pixel_width_m=parse_length(pixel_width)
-            if isinstance(pixel_width, str) else float(pixel_width),
+            pixel_width_m=(
+                parse_length(pixel_width) if isinstance(pixel_width, str) else float(pixel_width)
+            ),
             name=name,
             source="mcp:import_usermap",
         )
@@ -226,10 +225,7 @@ def build_server() -> FastMCP:
         except (KeyError, ValueError) as exc:
             return {"error": str(exc)}
 
-        px = (
-            parse_length(pixel_width)
-            if isinstance(pixel_width, str) else pixel_width
-        )
+        px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
         usermap = rasterize_geom(geom, pixel_width=px)
         uid = usermap_store.add(usermap)
         return {
@@ -283,17 +279,12 @@ def build_server() -> FastMCP:
                 geom = from_dict(geometry)
             except (KeyError, ValueError) as exc:
                 return {"error": str(exc)}
-            px = (
-                parse_length(pixel_width)
-                if isinstance(pixel_width, str) else pixel_width
-            )
+            px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
             usermap = rasterize_geom(geom, pixel_width=px)
         else:
             return {"error": "either `geometry` or `usermap_uri` is required"}
 
-        freq_hz = (
-            parse_frequency(frequency) if isinstance(frequency, str) else frequency
-        )
+        freq_hz = parse_frequency(frequency) if isinstance(frequency, str) else frequency
 
         def _run(task_obj: Any) -> dict[str, Any]:
             cgp_result, ws = run_cgp(
@@ -313,8 +304,7 @@ def build_server() -> FastMCP:
                         kind=kind.upper(),  # type: ignore[arg-type]
                         v_field=ws.v_field,
                         er_field=ws.er_field,
-                        tan_delta_field=usermap.tan_delta_field()
-                        if kind.upper() == "T" else None,
+                        tan_delta_field=usermap.tan_delta_field() if kind.upper() == "T" else None,
                     )
                     task_obj.field_plots[kind.upper()] = png_to_bytes(img)
 
@@ -377,7 +367,9 @@ def build_server() -> FastMCP:
             from atlc3.solvers.lrs import solve_lrs as _solve
 
             result = _solve(
-                usermap, frequency_hz=float(freq_hz), method=method,
+                usermap,
+                frequency_hz=float(freq_hz),
+                method=method,
                 restrict_to_skin_depth=restrict_to_skin_depth,
             )
             import dataclasses
@@ -423,7 +415,8 @@ def build_server() -> FastMCP:
             from atlc3.solvers.lrs import solve_full as _solve
 
             result = _solve(
-                usermap, frequency_hz=float(freq_hz),
+                usermap,
+                frequency_hz=float(freq_hz),
                 restrict_to_skin_depth=restrict_to_skin_depth,
             )
             out = result.model_dump()
@@ -459,16 +452,16 @@ def build_server() -> FastMCP:
 
             try:
                 points = _sweep_fn(
-                    geom, parameter=parameter, values=values,
-                    solver="analytical", frequency_hz=freq_hz,
+                    geom,
+                    parameter=parameter,
+                    values=values,
+                    solver="analytical",
+                    frequency_hz=freq_hz,
                 )
             except Exception as exc:  # noqa: BLE001
                 return {"error": f"sweep failed: {exc}"}
             return {
-                "points": [
-                    {"params": p.params, "result": p.result.model_dump()}
-                    for p in points
-                ],
+                "points": [{"params": p.params, "result": p.result.model_dump()} for p in points],
             }
 
         # Numerical solver: async
@@ -476,15 +469,19 @@ def build_server() -> FastMCP:
             from atlc3.sweep import sweep as _sweep_fn
 
             points = _sweep_fn(
-                geom, parameter=parameter, values=values,
-                solver=solver, frequency_hz=freq_hz,
+                geom,
+                parameter=parameter,
+                values=values,
+                solver=solver,
+                frequency_hz=freq_hz,
             )
             return {
                 "points": [
                     {
                         "params": p.params,
                         "result": (
-                            p.result.model_dump() if hasattr(p.result, "model_dump")
+                            p.result.model_dump()
+                            if hasattr(p.result, "model_dump")
                             else {"L_per_m": p.result.L_per_m, "R_per_m": p.result.R_per_m}
                         ),
                     }
@@ -531,9 +528,7 @@ def build_server() -> FastMCP:
     )
     def material_by_name(name: str) -> str:
         needle = name.lower()
-        matches = [
-            m.model_dump() for m in list_atlc2_default() if needle in m.name.lower()
-        ]
+        matches = [m.model_dump() for m in list_atlc2_default() if needle in m.name.lower()]
         if not matches:
             return json.dumps({"error": f"no materials matching {name!r}"})
         return json.dumps(matches, indent=2)
@@ -586,8 +581,10 @@ def build_server() -> FastMCP:
         png = t.field_plots.get(kind.upper())
         if png is None:
             return json.dumps(
-                {"error": f"no {kind} plot for this result; "
-                          f"render_fields not requested at solve time"}
+                {
+                    "error": f"no {kind} plot for this result; "
+                    f"render_fields not requested at solve time"
+                }
             )
         return json.dumps({"png_base64": base64.b64encode(png).decode("ascii")})
 

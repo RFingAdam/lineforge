@@ -23,11 +23,19 @@ class TestStriplineSymmetric:
         ],
     )
     def test_golden(
-        self, W_mil: float, T_mil: float, B_mil: float, er: float,
-        z0_expected: float, tol: float,
+        self,
+        W_mil: float,
+        T_mil: float,
+        B_mil: float,
+        er: float,
+        z0_expected: float,
+        tol: float,
     ) -> None:
         geom = StriplineSymmetric(
-            W=W_mil * 25.4e-6, T=T_mil * 25.4e-6, B=B_mil * 25.4e-6, er=er,
+            W=W_mil * 25.4e-6,
+            T=T_mil * 25.4e-6,
+            B=B_mil * 25.4e-6,
+            er=er,
         )
         result = stripline_symmetric(geom)
         assert result.z0 == pytest.approx(z0_expected, rel=tol), (
@@ -42,18 +50,12 @@ class TestStriplineSymmetric:
         assert result.eps_eff == pytest.approx(4.4, rel=1e-9)
 
     def test_thicker_strip_lowers_z0(self) -> None:
-        thin = stripline_symmetric(
-            StriplineSymmetric(W="5mil", T="0.7mil", B="14mil", er=4.4)
-        )
-        thick = stripline_symmetric(
-            StriplineSymmetric(W="5mil", T="2.8mil", B="14mil", er=4.4)
-        )
+        thin = stripline_symmetric(StriplineSymmetric(W="5mil", T="0.7mil", B="14mil", er=4.4))
+        thick = stripline_symmetric(StriplineSymmetric(W="5mil", T="2.8mil", B="14mil", er=4.4))
         assert thick.z0 < thin.z0
 
     def test_z0_squared_equals_l_over_c(self) -> None:
-        result = stripline_symmetric(
-            StriplineSymmetric(W="5mil", T="1.4mil", B="14mil", er=4.4)
-        )
+        result = stripline_symmetric(StriplineSymmetric(W="5mil", T="1.4mil", B="14mil", er=4.4))
         assert result.L_per_m is not None
         assert result.C_per_m is not None
         z0_from_lc = (result.L_per_m / result.C_per_m) ** 0.5
@@ -64,9 +66,7 @@ class TestStriplineAsymmetric:
     """Asymmetric stripline reduces to symmetric when H1 == H2."""
 
     def test_symmetric_limit(self) -> None:
-        sym = stripline_symmetric(
-            StriplineSymmetric(W="5mil", T="1.4mil", B="14mil", er=4.4)
-        )
+        sym = stripline_symmetric(StriplineSymmetric(W="5mil", T="1.4mil", B="14mil", er=4.4))
         # H1 = H2 = (B - T) / 2 reproduces the symmetric case
         H_each_m = (14.0 - 1.4) / 2 * 25.4e-6
         T_m = 1.4 * 25.4e-6

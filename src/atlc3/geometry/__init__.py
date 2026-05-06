@@ -10,8 +10,8 @@ from __future__ import annotations
 from typing import Any
 
 from atlc3.geometry.types import (
-    GEOMETRY_TYPES,
     CPWG,
+    GEOMETRY_TYPES,
     BroadsideCoupledDiffStripline,
     EdgeCoupledDiffMicrostrip,
     EdgeCoupledDiffStripline,
@@ -59,8 +59,7 @@ def from_dict(data: dict[str, Any]) -> GeometryUnion:
     geom_type = data["type"]
     if geom_type not in GEOMETRY_TYPES:
         raise ValueError(
-            f"unknown geometry type {geom_type!r}; "
-            f"valid types: {sorted(GEOMETRY_TYPES.keys())}"
+            f"unknown geometry type {geom_type!r}; " f"valid types: {sorted(GEOMETRY_TYPES.keys())}"
         )
 
     model_class = GEOMETRY_TYPES[geom_type]
@@ -68,12 +67,12 @@ def from_dict(data: dict[str, Any]) -> GeometryUnion:
 
 
 __all__ = [
-    "BroadsideCoupledDiffStripline",
     "CPWG",
+    "GEOMETRY_TYPES",
+    "BroadsideCoupledDiffStripline",
     "EdgeCoupledDiffMicrostrip",
     "EdgeCoupledDiffStripline",
     "EmbeddedMicrostrip",
-    "GEOMETRY_TYPES",
     "GeometryUnion",
     "Microstrip",
     "StriplineAsymmetric",

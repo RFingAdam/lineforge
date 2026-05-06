@@ -32,7 +32,6 @@ from rich.table import Table
 
 from atlc3.analytical import solve as analytical_solve
 from atlc3.geometry import GEOMETRY_TYPES, export_jsonschema, from_dict
-from atlc3.geometry.builders import rasterize
 from atlc3.geometry.usermap import Usermap
 from atlc3.results import DiffResult, TLineResult
 from atlc3.units import parse_frequency, parse_length
@@ -246,24 +245,14 @@ def _print_cgp(result: Any) -> None:
 
 @app.command()
 def solve(
-    type_: str = typer.Option(
-        None, "--type", help="Geometry type (e.g. 'microstrip')."
-    ),
-    json_path: Path = typer.Option(
-        None, "--json", help="Read geometry from a JSON file."
-    ),
-    bmp_path: Path = typer.Option(
-        None, "--bmp", help="Use a BMP usermap (forces --method=cgp)."
-    ),
-    method: str = typer.Option(
-        "auto", "--method", help="Solver: analytical | cgp | auto."
-    ),
+    type_: str = typer.Option(None, "--type", help="Geometry type (e.g. 'microstrip')."),
+    json_path: Path = typer.Option(None, "--json", help="Read geometry from a JSON file."),
+    bmp_path: Path = typer.Option(None, "--bmp", help="Use a BMP usermap (forces --method=cgp)."),
+    method: str = typer.Option("auto", "--method", help="Solver: analytical | cgp | auto."),
     pixel_width: str = typer.Option(
         None, "--pixel-width", help="Pixel size for bitmap solves (e.g. '0.1mm')."
     ),
-    output: str = typer.Option(
-        "rich", "--output", "-o", help="Output format: rich | json"
-    ),
+    output: str = typer.Option("rich", "--output", "-o", help="Output format: rich | json"),
     frequency: str = typer.Option(
         None, "--frequency", "-f", help="Frequency for loss / Gp (e.g. '1GHz')."
     ),
@@ -300,8 +289,17 @@ def solve(
 
     overrides: dict[str, Any] = {}
     for key, val in {
-        "W": W, "H": H, "H1": H1, "H2": H2, "H_between": H_between, "T": T,
-        "S": S, "B": B, "er": er, "er2": er2, "tan_delta": tan_delta,
+        "W": W,
+        "H": H,
+        "H1": H1,
+        "H2": H2,
+        "H_between": H_between,
+        "T": T,
+        "S": S,
+        "B": B,
+        "er": er,
+        "er2": er2,
+        "tan_delta": tan_delta,
     }.items():
         if val is not None:
             overrides[key] = val
@@ -316,7 +314,9 @@ def solve(
         from atlc3.solvers.dispatcher import solve as dispatch
 
         result = dispatch(
-            geometry, method="cgp", frequency_hz=freq_hz,
+            geometry,
+            method="cgp",
+            frequency_hz=freq_hz,
             pixel_width=parse_length(pixel_width) if pixel_width else None,
         )
         if output == "json":
@@ -382,8 +382,7 @@ def render(
         kind=field.upper(),  # type: ignore[arg-type]
         v_field=ws.v_field,
         er_field=ws.er_field,
-        tan_delta_field=usermap.tan_delta_field()
-        if field.upper() == "T" else None,
+        tan_delta_field=usermap.tan_delta_field() if field.upper() == "T" else None,
     )
     img.save(output)
     console.print(f"Wrote [green]{output}[/green]")
@@ -423,14 +422,24 @@ def lrs(
             raise typer.Exit(code=2)
         usermap = Usermap.from_bmp(bmp_path, pixel_width=pixel_width)
         result = _api.solve_lrs(
-            usermap, frequency=freq_hz,
+            usermap,
+            frequency=freq_hz,
             restrict_to_skin_depth=not skip_skin_depth,
         )
     else:
         overrides = {
-            k: v for k, v in {
-                "W": W, "H": H, "T": T, "S": S, "B": B, "H1": H1, "H2": H2, "er": er,
-            }.items() if v is not None
+            k: v
+            for k, v in {
+                "W": W,
+                "H": H,
+                "T": T,
+                "S": S,
+                "B": B,
+                "H1": H1,
+                "H2": H2,
+                "er": er,
+            }.items()
+            if v is not None
         }
         try:
             geom = _build_geometry(type_, json_path, overrides)
@@ -438,7 +447,8 @@ def lrs(
             err_console.print(f"{exc}")
             raise typer.Exit(code=2) from exc
         result = _api.solve_lrs(
-            geom, frequency=freq_hz,
+            geom,
+            frequency=freq_hz,
             pixel_width=parse_length(pixel_width) if pixel_width else None,
             restrict_to_skin_depth=not skip_skin_depth,
         )
@@ -450,7 +460,8 @@ def lrs(
         return
 
     table = Table(title=f"L and Rs at {freq_hz:.3e} Hz")
-    table.add_column("Quantity", style="cyan"); table.add_column("Value", justify="right")
+    table.add_column("Quantity", style="cyan")
+    table.add_column("Value", justify="right")
     table.add_row("L", f"{result.L_per_m * 1e9:.3f} nH/m")
     table.add_row("R (Rs)", f"{result.R_per_m:.4e} Ω/m")
     table.add_row("conductor pixels", str(result.n_conductor_pixels))
@@ -463,7 +474,9 @@ def lrs(
 def optimize(
     type_: str = typer.Option(..., "--type"),
     target: str = typer.Option(..., "--target", help="key=value, comma-separated. e.g. 'z0=50'."),
-    vary: str = typer.Option(..., "--vary", help="key=lo:hi, comma-separated. e.g. 'W=0.5mil:30mil'."),
+    vary: str = typer.Option(
+        ..., "--vary", help="key=lo:hi, comma-separated. e.g. 'W=0.5mil:30mil'."
+    ),
     fixed: str = typer.Option("", "--fixed", help="key=value, comma-separated fixed fields."),
     solver: str = typer.Option("analytical", "--solver"),
     frequency: str = typer.Option(None, "--frequency", "-f"),
@@ -491,12 +504,16 @@ def optimize(
         vary_dict[k.strip()] = (lo.strip(), hi.strip())
 
     result = _api.optimize_for(
-        template=template, vary=vary_dict, target=target_dict,
-        solver=solver, frequency=frequency,
+        template=template,
+        vary=vary_dict,
+        target=target_dict,
+        solver=solver,
+        frequency=frequency,
     )
 
     table = Table(title="Optimization result")
-    table.add_column("Field", style="cyan"); table.add_column("Value", justify="right")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value", justify="right")
     for k in vary_dict:
         v = getattr(result.geometry, k, None)
         if v is not None:
@@ -530,8 +547,7 @@ def sweep(
     freq_hz = parse_frequency(frequency) if frequency else None
 
     overrides = {
-        k: v for k, v in {"W": W, "H": H, "T": T, "S": S, "B": B, "er": er}.items()
-        if v is not None
+        k: v for k, v in {"W": W, "H": H, "T": T, "S": S, "B": B, "er": er}.items() if v is not None
     }
     geom = _build_geometry(type_, None, overrides)
 
@@ -547,8 +563,11 @@ def sweep(
                 parsed_values.append(parse_frequency(tok))
 
     points = _api.sweep(
-        geom, parameter=parameter, values=parsed_values,
-        solver=solver, frequency=freq_hz,
+        geom,
+        parameter=parameter,
+        values=parsed_values,
+        solver=solver,
+        frequency=freq_hz,
     )
 
     table = Table(title=f"Sweep over {parameter}")
@@ -556,10 +575,14 @@ def sweep(
     keys: list[str] = []
     for p in points:
         # determine result keys lazily
-        d = p.result.model_dump() if hasattr(p.result, "model_dump") else {
-            "L_per_m": getattr(p.result, "L_per_m", None),
-            "R_per_m": getattr(p.result, "R_per_m", None),
-        }
+        d = (
+            p.result.model_dump()
+            if hasattr(p.result, "model_dump")
+            else {
+                "L_per_m": getattr(p.result, "L_per_m", None),
+                "R_per_m": getattr(p.result, "R_per_m", None),
+            }
+        )
         if not keys:
             keys = sorted(k for k in d if isinstance(d[k], (int, float)))
             for k in keys:
@@ -642,7 +665,9 @@ def material_list() -> None:
 
 
 @material_app.command("show")
-def material_show(name: str = typer.Argument(..., help="Substring match (case-insensitive).")) -> None:
+def material_show(
+    name: str = typer.Argument(..., help="Substring match (case-insensitive).")
+) -> None:
     """Show materials matching a name."""
     from atlc3.materials import find_by_name
 

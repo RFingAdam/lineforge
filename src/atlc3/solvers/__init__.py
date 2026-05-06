@@ -9,7 +9,7 @@ from __future__ import annotations
 
 from atlc3.solvers.cgp import CGPResult, solve_cgp
 from atlc3.solvers.dispatcher import solve
-from atlc3.solvers.faraday import FaradayResult, solve_lrs as _solve_lrs_inner
+from atlc3.solvers.faraday import FaradayResult
 from atlc3.solvers.lrs import RLGCResult, solve_full, solve_lrs
 
 __all__ = [

@@ -78,9 +78,7 @@ def run_case(case: ParityCase, *, verbose: bool = True) -> tuple[bool, dict[str,
     if cgp is not None:
         deviations["z0_pct"] = abs(cgp.z0 - case.expected_z0) / case.expected_z0 * 100
 
-    passing = all(
-        v < case.z0_tol * 100 for v in [deviations.get("z0_pct", 0)]
-    )
+    passing = all(v < case.z0_tol * 100 for v in [deviations.get("z0_pct", 0)])
 
     if verbose:
         status = "PASS" if passing else "FAIL"

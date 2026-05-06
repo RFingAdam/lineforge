@@ -45,7 +45,9 @@ def compute_delta(material: MaterialRecord, frequency_hz: float) -> float:
     """
     if material.is_insulator or frequency_hz <= 0:
         return 1e6
-    rho = material.resistivity_ohm_cm * 1e-2  # convert to Ω·m
+    # atlc2's DB stores resistivity in µΩ·cm despite the field name.
+    # For copper (1.7241 in atlc2 terms) → 1.7241e-8 Ω·m. Conversion: × 1e-8.
+    rho = material.resistivity_ohm_cm * 1e-8
     omega = 2.0 * np.pi * frequency_hz
     mu = MU0 * material.mu_r
     return float(np.sqrt(2.0 * rho / (omega * mu)))
@@ -107,7 +109,6 @@ def mask_skin_depth(
             if mj.is_conductor:
                 conductor_mask_global |= usermap.codes == j
 
-        non_cond = ~conductor_mask_global
         # distance_transform_edt returns distance from each True pixel to the
         # nearest False pixel, in pixel units (with anisotropy 1.0 by default).
         distances = distance_transform_edt(conductor_mask_global)

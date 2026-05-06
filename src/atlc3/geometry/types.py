@@ -243,10 +243,10 @@ GEOMETRY_TYPES: dict[str, type[BaseModel]] = {
 
 
 __all__ = [
+    "COPPER_RHO",
+    "CPWG",
     "GEOMETRY_TYPES",
     "BroadsideCoupledDiffStripline",
-    "CPWG",
-    "COPPER_RHO",
     "EdgeCoupledDiffMicrostrip",
     "EdgeCoupledDiffStripline",
     "EmbeddedMicrostrip",

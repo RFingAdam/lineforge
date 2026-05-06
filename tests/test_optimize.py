@@ -12,7 +12,9 @@ class TestOptimizer:
         result = atlc3.optimize_for(
             template={
                 "type": "microstrip",
-                "H": "4mil", "T": "1.4mil", "er": 4.4,
+                "H": "4mil",
+                "T": "1.4mil",
+                "er": 4.4,
             },
             vary={"W": ("0.5mil", "30mil")},
             target={"z0": 50.0},

@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-import os
 from pathlib import Path
 
 import pytest
 
-from atlc3.cache import _hash_args, cached, clear_cache, get_cache, is_disabled
+from atlc3.cache import _hash_args, cached, clear_cache, is_disabled
 
 
 def test_hash_is_stable() -> None:
@@ -33,6 +32,7 @@ def test_cached_decorator_memoizes(tmp_path: Path, monkeypatch: pytest.MonkeyPat
 
     # Reset module-level cache singleton
     import atlc3.cache as cache_module
+
     cache_module._cache = None
 
     call_count = 0
@@ -57,6 +57,7 @@ def test_clear_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.delenv("ATLC3_NO_CACHE", raising=False)
 
     import atlc3.cache as cache_module
+
     cache_module._cache = None
 
     @cached("clear-test")

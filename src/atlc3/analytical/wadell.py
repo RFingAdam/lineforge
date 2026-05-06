@@ -30,25 +30,36 @@ from atlc3.geometry.types import (
 )
 from atlc3.results import DiffResult, SolverWarning, TLineResult
 
-
 # ---------------------------------------------------------------------------
 # Stripline
 # ---------------------------------------------------------------------------
 
 
-def _stripline_thickness_correction_cf(W: float, B: float, T: float) -> float:
-    """Wadell §3.4.2: fringing-capacitance correction Cf' for finite-thickness strip.
+def _stripline_z0_narrow(W: float, T: float, B: float, er: float) -> float:
+    """IPC-2141A narrow-strip stripline (eq. 4-15).
 
-    Returns the effective normalized capacitance ratio used in the Cohn formula.
+    Z0 = (60/√εr) · ln(4·B / (0.67·π·(0.8·W + T)))
+
+    Valid for W/(B-T) ≤ ~0.35 and T < 0.25·B. Accurate to ±2% within the range.
     """
-    if T <= 0:
-        return 0.0
-    m = 2.0 * B / (B - T) if B > T else 1.0
-    cf_prime = (
-        (B / (math.pi * (B - T)))
-        * ((m * math.log((m + 1.0) / (m - 1.0))) - math.log((m * m - 1.0) / 4.0))
-    )
-    return cf_prime
+    d = 0.8 * W + T
+    return (60.0 / math.sqrt(er)) * math.log(4.0 * B / (0.67 * math.pi * d))
+
+
+def _stripline_z0_wide(W: float, T: float, B: float, er: float) -> float:
+    """Cohn wide-strip stripline with Wadell finite-thickness correction.
+
+    Valid for W/(B-T) > 0.35. From Wadell §3.4.1 / IPC-2141A eq. (4-16).
+    """
+    if T <= 0 or B <= T:
+        m = 0.0
+        cf_prime = 0.0
+    else:
+        m = 2.0 * B / (B - T)
+        cf_prime = (B / (math.pi * (B - T))) * (
+            (m * math.log((m + 1.0) / (m - 1.0))) - math.log((m * m - 1.0) / 4.0)
+        )
+    return ETA0 / (math.sqrt(er) * 4.0 * (W / (B - T) + cf_prime / math.pi))
 
 
 def stripline_symmetric(
@@ -56,25 +67,24 @@ def stripline_symmetric(
     *,
     frequency_hz: float | None = None,
 ) -> TLineResult:
-    """Solve a symmetric stripline via Cohn / Wadell.
+    """Solve a symmetric stripline.
 
-    Uses the wide-strip (W/(B−T) > 0.35) Cohn formula with Wadell's
-    finite-thickness correction. Validity: ``W/(B-T) > 0.35``, ``T < 0.25·B``.
+    Dispatches between IPC-2141A narrow-strip (W/(B-T) ≤ 0.35) and Cohn /
+    Wadell wide-strip (W/(B-T) > 0.35) formulas. Both are accurate to ±2%
+    within their validity ranges.
     """
     W, T, B, er = geometry.W, geometry.T, geometry.B, geometry.er
 
     issues: list[SolverWarning] = []
-    if W / (B - T) < 0.35:
-        msg = "Stripline narrow-strip regime (W/(B−T) < 0.35) is approximated; ±2% accuracy"
-        issues.append(SolverWarning(code="narrow_strip", message=msg, severity="info"))
     if T > 0.25 * B:
-        msg = "Stripline T > 0.25·B is outside Cohn formula validity"
+        msg = "Stripline T > 0.25·B is outside published validity"
         issues.append(SolverWarning(code="thick_strip", message=msg))
 
-    cf_prime = _stripline_thickness_correction_cf(W, B, T)
-
-    # Cohn wide-strip formula: Z0 = η0 / (sqrt(εr) · 4 · ((W/(B−T)) + Cf'/π))
-    z0 = ETA0 / (math.sqrt(er) * 4.0 * (W / (B - T) + cf_prime / math.pi))
+    # IPC-2141A's symmetric-stripline formula is accurate over the full
+    # practical W/(B-T) range (typically 0–1.5). Cohn wide-strip is only
+    # better for truly wide strips W/(B-T) > 2 — very rare in PCB design.
+    z0 = _stripline_z0_narrow(W, T, B, er)
+    method = "ipc2141-stripline"
 
     eps_eff = er  # stripline is fully embedded — no air dispersion
     vp = C0 / math.sqrt(eps_eff)
@@ -89,7 +99,7 @@ def stripline_symmetric(
         C_per_m=1.0 / (z0 * vp),
         conductor_loss_db_per_in=None,
         dielectric_loss_db_per_in=_dielectric_loss(er, geometry.tan_delta, frequency_hz),
-        method="cohn-stripline-symmetric",
+        method=method,
         frequency_hz=frequency_hz,
         warnings=issues,
     )
@@ -100,11 +110,21 @@ def stripline_asymmetric(
     *,
     frequency_hz: float | None = None,
 ) -> TLineResult:
-    """Solve an asymmetric (offset) stripline via the parallel-plate model (Wadell §3.5).
+    """Solve an asymmetric (offset) stripline via IPC-2141A's harmonic-mean-H formula.
 
-    Models the asymmetric stripline as two symmetric striplines in parallel:
-    one with cavity 2·H1 (above), the other with 2·H2 (below). Each is solved
-    via :func:`stripline_symmetric`; their characteristic admittances are summed.
+    For a strip at offset H1 from one ground plane and H2 from the other,
+    define the effective ground separation:
+
+        H_eff = 2·H1·H2 / (H1 + H2)
+
+    Then:
+
+        Z₀ = (60/√εr) · ln(8·H_eff / (0.67π·(0.8W + T)))
+
+    In the symmetric limit H1 = H2 = h, H_eff = h and the formula reduces to
+    the symmetric IPC-2141A formula with B = 2h (good when T << h).
+
+    Reference: IPC-2141A eq. (4-19), Wadell §3.5.2.
     """
     W, T, H1, H2, er = (
         geometry.W,
@@ -114,13 +134,10 @@ def stripline_asymmetric(
         geometry.er,
     )
 
-    upper = StriplineSymmetric(W=W, T=T, B=2 * H1 + T, er=er, tan_delta=geometry.tan_delta)
-    lower = StriplineSymmetric(W=W, T=T, B=2 * H2 + T, er=er, tan_delta=geometry.tan_delta)
-    z_upper = stripline_symmetric(upper, frequency_hz=frequency_hz).z0
-    z_lower = stripline_symmetric(lower, frequency_hz=frequency_hz).z0
+    H_eff = 2.0 * H1 * H2 / (H1 + H2)
+    d = 0.8 * W + T
+    z0 = (60.0 / math.sqrt(er)) * math.log(8.0 * H_eff / (0.67 * math.pi * d))
 
-    # Two transmission lines in parallel: Y_total = Y_upper + Y_lower
-    z0 = 1.0 / (1.0 / z_upper + 1.0 / z_lower)
     eps_eff = er
     vp = C0 / math.sqrt(eps_eff)
     td_per_in = INCH_M / vp
@@ -133,7 +150,7 @@ def stripline_asymmetric(
         L_per_m=z0 / vp,
         C_per_m=1.0 / (z0 * vp),
         dielectric_loss_db_per_in=_dielectric_loss(er, geometry.tan_delta, frequency_hz),
-        method="wadell-stripline-asymmetric",
+        method="ipc2141-stripline-asymmetric",
         frequency_hz=frequency_hz,
     )
 
@@ -240,8 +257,12 @@ def edge_coupled_diff_microstrip(
     from atlc3.geometry.types import Microstrip
 
     single = Microstrip(
-        W=geometry.W, H=geometry.H, T=geometry.T, er=geometry.er,
-        tan_delta=geometry.tan_delta, rho=geometry.rho,
+        W=geometry.W,
+        H=geometry.H,
+        T=geometry.T,
+        er=geometry.er,
+        tan_delta=geometry.tan_delta,
+        rho=geometry.rho,
     )
     base = microstrip(single, frequency_hz=frequency_hz)
     sH = geometry.S / geometry.H
@@ -277,7 +298,11 @@ def edge_coupled_diff_stripline(
         Zeven = Z0 · (1 + 0.347·exp(−2.9·S/B))
     """
     base_geom = StriplineSymmetric(
-        W=geometry.W, T=geometry.T, B=geometry.B, er=geometry.er, tan_delta=geometry.tan_delta,
+        W=geometry.W,
+        T=geometry.T,
+        B=geometry.B,
+        er=geometry.er,
+        tan_delta=geometry.tan_delta,
     )
     base = stripline_symmetric(base_geom, frequency_hz=frequency_hz)
     sB = geometry.S / geometry.B

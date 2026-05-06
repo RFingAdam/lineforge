@@ -102,9 +102,7 @@ def parse_morecolors_text(text: str) -> list[MaterialRecord]:
             raise MoreColorsParseError(lineno, f"invalid RGB integers: {exc}") from exc
 
         if not all(0 <= ch <= 255 for ch in (r, g, b)):
-            raise MoreColorsParseError(
-                lineno, f"RGB values must be in 0–255, got ({r}, {g}, {b})"
-            )
+            raise MoreColorsParseError(lineno, f"RGB values must be in 0–255, got ({r}, {g}, {b})")
 
         use = _parse_use(tokens[3], lineno)
 
