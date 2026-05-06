@@ -27,7 +27,8 @@ def _normalize(arr: np.ndarray, mode: str = "linear") -> np.ndarray:
     finite = arr[np.isfinite(arr)]
     if finite.size == 0:
         return np.zeros_like(arr)
-    lo = float(finite.min()); hi = float(finite.max())
+    lo = float(finite.min())
+    hi = float(finite.max())
     if hi == lo:
         return np.zeros_like(arr)
     norm = (arr - lo) / (hi - lo)

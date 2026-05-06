@@ -17,8 +17,6 @@ only matters for very large unshielded usermaps.
 
 from __future__ import annotations
 
-import numpy as np
-
 from atlc3.geometry.usermap import Usermap
 
 

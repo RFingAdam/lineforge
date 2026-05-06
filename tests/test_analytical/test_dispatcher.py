@@ -24,7 +24,12 @@ class TestDispatcher:
         [
             Microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4),
             EmbeddedMicrostrip(
-                W="6mil", H="4mil", H2="4mil", T="1.4mil", er=4.4, er2=3.5,
+                W="6mil",
+                H="4mil",
+                H2="4mil",
+                T="1.4mil",
+                er=4.4,
+                er2=3.5,
             ),
             StriplineSymmetric(W="5mil", T="1.4mil", B="14mil", er=4.4),
             StriplineAsymmetric(W="5mil", T="1.4mil", H1="4mil", H2="8mil", er=4.4),
@@ -42,7 +47,11 @@ class TestDispatcher:
             EdgeCoupledDiffMicrostrip(W="4mil", S="6mil", H="4mil", T="1.4mil", er=4.4),
             EdgeCoupledDiffStripline(W="4mil", S="6mil", B="14mil", T="1.4mil", er=4.4),
             BroadsideCoupledDiffStripline(
-                W="5mil", H1="4mil", H_between="4mil", T="0.7mil", er=4.4,
+                W="5mil",
+                H1="4mil",
+                H_between="4mil",
+                T="0.7mil",
+                er=4.4,
             ),
         ],
     )

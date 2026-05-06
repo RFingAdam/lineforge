@@ -15,7 +15,6 @@ Then press U/V/E/D/T to switch field modes, +/- to zoom, S to save.
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Literal
 
 from rich.console import Console
 
@@ -64,11 +63,12 @@ def run_viewer(bmp_path: Path, *, pixel_width: str) -> None:
 
         if cmd in {"U", "V", "E", "D", "T"}:
             current_mode = cmd  # type: ignore[assignment]
-            tan_d = (
-                usermap.tan_delta_field() if cmd == "T" else None
-            )
+            tan_d = usermap.tan_delta_field() if cmd == "T" else None
             img = render_field(
-                kind=cmd, v_field=ws.v_field, er_field=ws.er_field, tan_delta_field=tan_d,
+                kind=cmd,
+                v_field=ws.v_field,
+                er_field=ws.er_field,
+                tan_delta_field=tan_d,
             )
             out = Path(f"atlc3_view_{cmd.lower()}.png")
             img.save(out)

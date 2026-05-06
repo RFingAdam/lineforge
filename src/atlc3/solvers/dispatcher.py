@@ -18,7 +18,6 @@ from atlc3.geometry.usermap import Usermap
 from atlc3.results import DiffResult, TLineResult
 from atlc3.solvers.cgp import CGPResult, solve_cgp
 
-
 SolverChoice = Literal["analytical", "cgp", "auto"]
 
 

@@ -8,10 +8,14 @@ import pytest
 from atlc3.materials.database import MaterialRecord
 from atlc3.solvers.skin_depth import compute_delta, mask_skin_depth
 
-
 COPPER = MaterialRecord(
-    rgb=(255, 0, 0), use="+1",
-    resistivity_ohm_cm=1.7241, er=1, tan_delta=0, mu_r=1, name="copper",
+    rgb=(255, 0, 0),
+    use="+1",
+    resistivity_ohm_cm=1.7241,
+    er=1,
+    tan_delta=0,
+    mu_r=1,
+    name="copper",
 )
 
 
@@ -28,8 +32,13 @@ class TestComputeDelta:
 
     def test_insulator_returns_huge(self) -> None:
         insul = MaterialRecord(
-            rgb=(0, 0, 0), use="insul",
-            resistivity_ohm_cm=1e6, er=1.0, tan_delta=0, mu_r=1, name="vacuum",
+            rgb=(0, 0, 0),
+            use="insul",
+            resistivity_ohm_cm=1e6,
+            er=1.0,
+            tan_delta=0,
+            mu_r=1,
+            name="vacuum",
         )
         assert compute_delta(insul, 1e9) > 1e3
 

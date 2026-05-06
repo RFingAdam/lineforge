@@ -72,11 +72,6 @@ frequency .001
 class TestRunScriptFile:
     def test_run_file(self, tmp_path: Path) -> None:
         path = tmp_path / "script.txt"
-        path.write_text(
-            "name TestRun\n"
-            "twinlead\n"
-            "frequency 1e9\n"
-            "terminate\n"
-        )
+        path.write_text("name TestRun\n" "twinlead\n" "frequency 1e9\n" "terminate\n")
         interp = run_script_file(path, dry_run=True)
         assert interp.state.name == "TestRun"

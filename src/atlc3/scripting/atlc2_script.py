@@ -36,7 +36,6 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
-from atlc3.geometry.types import GeometryUnion
 from atlc3.units import parse_length
 
 log = logging.getLogger(__name__)
@@ -285,7 +284,7 @@ class ScriptInterpreter:
             log.info(f"[dry-run] would sweep {attr} for {runs} runs at factor {factor}")
             return
 
-        for i in range(runs):
+        for _ in range(runs):
             current = getattr(self.state, attr)
             self._cmd_solve("full")
             setattr(self.state, attr, current * factor)
@@ -302,9 +301,7 @@ class ScriptInterpreter:
                 raise ScriptError("`open <file>` was not specified before solve")
             if self.state.pixel_width is None:
                 raise ScriptError("`pixel <px>` is required when using a usermap file")
-            return Usermap.from_bmp(
-                self.state.usermap_path, pixel_width=self.state.pixel_width
-            )
+            return Usermap.from_bmp(self.state.usermap_path, pixel_width=self.state.pixel_width)
 
         # Internal-geometry generators map to atlc3 builders + parameters
         if kind == "twinlead":

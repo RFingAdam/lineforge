@@ -26,10 +26,9 @@ from typing import Literal
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
-from atlc3.analytical._constants import C0, EPS0, MU0
+from atlc3.analytical._constants import EPS0, MU0
 from atlc3.geometry.usermap import Usermap
-from atlc3.solvers import laplace, extension
-
+from atlc3.solvers import extension, laplace
 
 Mode = Literal["odd", "even", "diff", "common"]
 
@@ -94,7 +93,6 @@ def _solve_with_strip_voltages(
     if C_vac_per_m <= 0:
         return 0.0, 0.0
     eps_eff = C_per_m / C_vac_per_m
-    L_per_m = MU0 * EPS0 / C_vac_per_m
     return C_per_m, eps_eff
 
 

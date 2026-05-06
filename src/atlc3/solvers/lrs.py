@@ -18,7 +18,8 @@ from pydantic import BaseModel, ConfigDict, Field
 from atlc3.geometry.usermap import Usermap
 from atlc3.results import SolverWarning
 from atlc3.solvers.cgp import solve_cgp
-from atlc3.solvers.faraday import FaradayResult, solve_lrs as _solve_lrs_inner
+from atlc3.solvers.faraday import FaradayResult
+from atlc3.solvers.faraday import solve_lrs as _solve_lrs_inner
 from atlc3.solvers.skin_depth import mask_skin_depth
 
 
@@ -103,14 +104,15 @@ def solve_full(
 
     lrs_input = (
         mask_skin_depth(usermap, frequency_hz, factor=skin_factor)
-        if restrict_to_skin_depth else usermap
+        if restrict_to_skin_depth
+        else usermap
     )
     try:
-        faraday = _solve_lrs_inner(
-            lrs_input, frequency_hz=frequency_hz, method=method, tol=tol
-        )
+        faraday = _solve_lrs_inner(lrs_input, frequency_hz=frequency_hz, method=method, tol=tol)
     except Exception as exc:  # noqa: BLE001
-        warnings.warn(f"Faraday solve failed: {exc}; using analytical L from C_vacuum", stacklevel=2)
+        warnings.warn(
+            f"Faraday solve failed: {exc}; using analytical L from C_vacuum", stacklevel=2
+        )
         # Fallback: use C/Gp's L_per_m (computed from C_vacuum)
         faraday = FaradayResult(
             L_per_m=cgp_result.L_per_m,

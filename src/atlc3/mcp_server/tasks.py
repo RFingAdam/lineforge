@@ -17,8 +17,9 @@ import base64
 import io
 import time
 import uuid
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Any, Callable, Literal
+from typing import Any, Literal
 
 TaskStatus = Literal["submitted", "working", "completed", "failed", "cancelled"]
 
@@ -61,6 +62,7 @@ class TaskRegistry:
     def __init__(self, keep_alive_seconds: float = 3600.0) -> None:
         self._tasks: dict[str, Task] = {}
         self._handles: dict[str, asyncio.Task[Any]] = {}
+        self._cleanup_handles: set[asyncio.Task[None]] = set()
         self._lock = asyncio.Lock()
         self.keep_alive_seconds = keep_alive_seconds
 
@@ -89,8 +91,12 @@ class TaskRegistry:
                 task.status = "failed"
             finally:
                 task.completed_at = time.time()
-                # Schedule cleanup after keep-alive window
-                asyncio.create_task(self._cleanup_after(task.id))
+                # Schedule cleanup after keep-alive window. Hold a strong
+                # reference so the cleanup task isn't garbage-collected before
+                # it runs (RUF006).
+                cleanup_handle = asyncio.create_task(self._cleanup_after(task.id))
+                self._cleanup_handles.add(cleanup_handle)
+                cleanup_handle.add_done_callback(self._cleanup_handles.discard)
 
         self._handles[task.id] = asyncio.create_task(_run())
         return task

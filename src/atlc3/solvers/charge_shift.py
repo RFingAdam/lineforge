@@ -35,11 +35,14 @@ def _surface_pixels(mask: np.ndarray) -> np.ndarray:
     one non-conductor neighbor."""
     if not mask.any():
         return np.zeros_like(mask)
-    h, w = mask.shape
-    nE = np.zeros_like(mask); nE[:, :-1] = mask[:, 1:]
-    nW = np.zeros_like(mask); nW[:, 1:] = mask[:, :-1]
-    nN = np.zeros_like(mask); nN[1:, :] = mask[:-1, :]
-    nS = np.zeros_like(mask); nS[:-1, :] = mask[1:, :]
+    nE = np.zeros_like(mask)
+    nE[:, :-1] = mask[:, 1:]
+    nW = np.zeros_like(mask)
+    nW[:, 1:] = mask[:, :-1]
+    nN = np.zeros_like(mask)
+    nN[1:, :] = mask[:-1, :]
+    nS = np.zeros_like(mask)
+    nS[:-1, :] = mask[1:, :]
     interior_only = nE & nW & nN & nS
     surface = mask & ~interior_only
     return surface
@@ -84,9 +87,7 @@ def predict_v_field(
 
     # Get coordinates of every surface pixel
     ys, xs = np.where(surface_mask)
-    target_v = np.where(
-        plus_surface[ys, xs], 1.0, np.where(minus_surface[ys, xs], -1.0, 0.0)
-    )
+    target_v = np.where(plus_surface[ys, xs], 1.0, np.where(minus_surface[ys, xs], -1.0, 0.0))
 
     n = len(ys)
     if n == 0:
@@ -95,9 +96,12 @@ def predict_v_field(
     # 2D Green's function for line charge: V(r) = -(1/2π) ln(r/r0)
     # We work in pixel units; r0 is just an additive constant absorbed into
     # the linear system.
-    yi = ys[:, None]; xi = xs[:, None]
-    yj = ys[None, :]; xj = xs[None, :]
-    dy = yi - yj; dx = xi - xj
+    yi = ys[:, None]
+    xi = xs[:, None]
+    yj = ys[None, :]
+    xj = xs[None, :]
+    dy = yi - yj
+    dx = xi - xj
     r2 = dy * dy + dx * dx
     # Avoid log(0) on the diagonal (self-term); use the pixel-self-potential
     # approximation: ln(0.5) for a unit-square pixel.
@@ -126,7 +130,8 @@ def predict_v_field(
 
     # Now compute V at every grid pixel from this σ distribution
     yy, xx = np.meshgrid(np.arange(h), np.arange(w), indexing="ij")
-    yy_flat = yy.ravel(); xx_flat = xx.ravel()
+    yy_flat = yy.ravel()
+    xx_flat = xx.ravel()
     dy = yy_flat[:, None] - ys[None, :]
     dx = xx_flat[:, None] - xs[None, :]
     r2_full = dy * dy + dx * dx

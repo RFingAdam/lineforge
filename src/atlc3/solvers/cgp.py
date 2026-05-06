@@ -198,16 +198,18 @@ def solve_cgp(
     CGPResult or (CGPResult, _LaplaceWorkspace)
     """
     # Optionally extend
-    extended = (
-        extension.extend(usermap, target_size=target_extent) if extend_grid else usermap
-    )
+    extended = extension.extend(usermap, target_size=target_extent) if extend_grid else usermap
     er_field = extended.er_field()
     tan_delta_field = extended.tan_delta_field()
 
     # Solve with actual εr
     ws = _solve_one(
-        extended, er_field,
-        use_charge_shift=use_charge_shift, method=method, tol=tol, max_iter=max_iter,
+        extended,
+        er_field,
+        use_charge_shift=use_charge_shift,
+        method=method,
+        tol=tol,
+        max_iter=max_iter,
     )
 
     px = ws.pixel_width_m
@@ -233,8 +235,12 @@ def solve_cgp(
     # Solve again with εr = 1 everywhere → C_vacuum → L, εeff, vp
     er_vac = np.ones_like(er_field)
     ws_vac = _solve_one(
-        extended, er_vac,
-        use_charge_shift=use_charge_shift, method=method, tol=tol, max_iter=max_iter,
+        extended,
+        er_vac,
+        use_charge_shift=use_charge_shift,
+        method=method,
+        tol=tol,
+        max_iter=max_iter,
     )
     integral_vac = _energy_integral(ws_vac.v_field, er_vac)
     C_vacuum = EPS0 / (V_drive * V_drive) * integral_vac * (px * px)

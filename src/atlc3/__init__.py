@@ -31,9 +31,9 @@ from typing import Any
 
 from atlc3.analytical import solve as _analytical_solve
 from atlc3.geometry import (
+    CPWG,
     GEOMETRY_TYPES,
     BroadsideCoupledDiffStripline,
-    CPWG,
     EdgeCoupledDiffMicrostrip,
     EdgeCoupledDiffStripline,
     EmbeddedMicrostrip,
@@ -45,16 +45,24 @@ from atlc3.geometry import (
 )
 from atlc3.geometry.builders import rasterize
 from atlc3.geometry.usermap import Usermap
+from atlc3.optimize import OptimizeResult
+from atlc3.optimize import optimize_for as _optimize_for
 from atlc3.results import DiffResult, SolverWarning, TLineResult
-from atlc3.optimize import OptimizeResult, optimize_for as _optimize_for
 from atlc3.solvers import (
     CGPResult,
     RLGCResult,
+)
+from atlc3.solvers import (
     solve_cgp as _solve_cgp,
+)
+from atlc3.solvers import (
     solve_full as _solve_full,
+)
+from atlc3.solvers import (
     solve_lrs as _solve_lrs,
 )
-from atlc3.sweep import SweepPoint, sweep as _sweep
+from atlc3.sweep import SweepPoint
+from atlc3.sweep import sweep as _sweep
 from atlc3.units import parse_frequency, parse_length
 from atlc3.version import __version__
 
@@ -131,11 +139,23 @@ def edge_coupled_diff(
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     if on == "microstrip":
         geom: Any = EdgeCoupledDiffMicrostrip(
-            W=W, S=S, H=H, T=T, er=er, tan_delta=tan_delta, rho=rho,
+            W=W,
+            S=S,
+            H=H,
+            T=T,
+            er=er,
+            tan_delta=tan_delta,
+            rho=rho,
         )
     elif on == "stripline":
         geom = EdgeCoupledDiffStripline(
-            W=W, S=S, B=H, T=T, er=er, tan_delta=tan_delta, rho=rho,
+            W=W,
+            S=S,
+            B=H,
+            T=T,
+            er=er,
+            tan_delta=tan_delta,
+            rho=rho,
         )
     else:
         raise ValueError(f"`on` must be 'microstrip' or 'stripline', got {on!r}")
@@ -202,10 +222,7 @@ def solve_cgp(
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
 
-    if isinstance(geometry, Usermap):
-        usermap = geometry
-    else:
-        usermap = rasterize(geometry, pixel_width=px)
+    usermap = geometry if isinstance(geometry, Usermap) else rasterize(geometry, pixel_width=px)
 
     return _solve_cgp(
         usermap,
@@ -257,12 +274,11 @@ def solve_lrs(
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
 
-    usermap = (
-        geometry if isinstance(geometry, Usermap)
-        else rasterize(geometry, pixel_width=px)
-    )
+    usermap = geometry if isinstance(geometry, Usermap) else rasterize(geometry, pixel_width=px)
     return _solve_lrs(
-        usermap, frequency_hz=float(freq), method=method,
+        usermap,
+        frequency_hz=float(freq),
+        method=method,
         restrict_to_skin_depth=restrict_to_skin_depth,
     )
 
@@ -284,12 +300,10 @@ def solve_full(
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
 
-    usermap = (
-        geometry if isinstance(geometry, Usermap)
-        else rasterize(geometry, pixel_width=px)
-    )
+    usermap = geometry if isinstance(geometry, Usermap) else rasterize(geometry, pixel_width=px)
     return _solve_full(
-        usermap, frequency_hz=float(freq),
+        usermap,
+        frequency_hz=float(freq),
         restrict_to_skin_depth=restrict_to_skin_depth,
     )
 
@@ -307,8 +321,11 @@ def sweep(
         geometry = from_dict(geometry)
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     return _sweep(
-        geometry, parameter=parameter, values=values,  # type: ignore[arg-type]
-        solver=solver, frequency_hz=freq,
+        geometry,
+        parameter=parameter,
+        values=values,  # type: ignore[arg-type]
+        solver=solver,
+        frequency_hz=freq,
     )
 
 
@@ -336,20 +353,24 @@ def optimize_for(
     """
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     return _optimize_for(
-        template=template, vary=vary, target=target,
-        solver=solver, frequency_hz=freq, max_iter=max_iter,
+        template=template,
+        vary=vary,
+        target=target,
+        solver=solver,
+        frequency_hz=freq,
+        max_iter=max_iter,
     )
 
 
 __all__ = [
-    "BroadsideCoupledDiffStripline",
     "CPWG",
+    "GEOMETRY_TYPES",
+    "BroadsideCoupledDiffStripline",
     "CGPResult",
     "DiffResult",
     "EdgeCoupledDiffMicrostrip",
     "EdgeCoupledDiffStripline",
     "EmbeddedMicrostrip",
-    "GEOMETRY_TYPES",
     "GeometryUnion",
     "Microstrip",
     "OptimizeResult",

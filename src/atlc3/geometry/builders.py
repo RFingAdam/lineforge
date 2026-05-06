@@ -28,7 +28,6 @@ from atlc3.geometry.types import (
     StriplineSymmetric,
 )
 from atlc3.geometry.usermap import Usermap, UsermapMetadata
-from atlc3.materials import lookup_by_rgb
 
 # atlc2 default colors used by the rasterizer:
 RED_PLUS_ONE: Final[tuple[int, int, int]] = (255, 0, 0)  # signal trace (V=+1)
@@ -64,12 +63,15 @@ def _pick_pixel_width(min_feature_m: float, target_pixels: int = 8) -> float:
     return min_feature_m / target_pixels
 
 
-def _fill_rect(rgb: np.ndarray, y0: int, y1: int, x0: int, x1: int,
-               color: tuple[int, int, int]) -> None:
+def _fill_rect(
+    rgb: np.ndarray, y0: int, y1: int, x0: int, x1: int, color: tuple[int, int, int]
+) -> None:
     """Fill an inclusive-exclusive box in the RGB array."""
     h, w, _ = rgb.shape
-    y0 = max(0, y0); y1 = min(h, y1)
-    x0 = max(0, x0); x1 = min(w, x1)
+    y0 = max(0, y0)
+    y1 = min(h, y1)
+    x0 = max(0, x0)
+    x1 = min(w, x1)
     if y0 >= y1 or x0 >= x1:
         return
     rgb[y0:y1, x0:x1] = np.array(color, dtype=np.uint8)

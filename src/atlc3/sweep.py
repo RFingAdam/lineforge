@@ -9,9 +9,9 @@ Phase 3 implements the sweep over a single parameter; Phase 4 polish adds
 
 from __future__ import annotations
 
-from collections.abc import Iterable
+from collections.abc import Callable, Iterable
 from dataclasses import dataclass
-from typing import Any, Callable
+from typing import Any
 
 from atlc3.geometry.types import GeometryUnion
 from atlc3.geometry.usermap import Usermap
@@ -63,9 +63,9 @@ def sweep(
     list[SweepPoint]
     """
     from atlc3.analytical import solve as analytical
+    from atlc3.geometry.builders import rasterize
     from atlc3.solvers.cgp import solve_cgp
     from atlc3.solvers.lrs import solve_full as solve_full_rlgc
-    from atlc3.geometry.builders import rasterize
 
     values_list = list(values)
     out: list[SweepPoint] = []
@@ -93,14 +93,10 @@ def sweep(
         if solver == "analytical":
             result = analytical(geom, frequency_hz=freq)  # type: ignore[arg-type]
         elif solver == "cgp":
-            usermap = (
-                geom if isinstance(geom, Usermap) else rasterize(geom)
-            )
+            usermap = geom if isinstance(geom, Usermap) else rasterize(geom)
             result = solve_cgp(usermap, frequency_hz=freq)
         elif solver == "full":
-            usermap = (
-                geom if isinstance(geom, Usermap) else rasterize(geom)
-            )
+            usermap = geom if isinstance(geom, Usermap) else rasterize(geom)
             if freq is None:
                 raise ValueError("solver='full' requires frequency_hz")
             result = solve_full_rlgc(usermap, frequency_hz=freq)

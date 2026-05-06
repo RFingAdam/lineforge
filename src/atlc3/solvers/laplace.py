@@ -102,7 +102,7 @@ def solve_sor(
     denom = aE + aW + aN + aS
     safe_denom = np.where(denom > 0, denom, 1.0)
 
-    v = (initial.copy() if initial is not None else np.zeros_like(er, dtype=np.float64))
+    v = initial.copy() if initial is not None else np.zeros_like(er, dtype=np.float64)
     v[v_mask] = v_value[v_mask]
     free = ~v_mask
 
@@ -115,10 +115,14 @@ def solve_sor(
 
     for it in range(1, max_iter + 1):
         for pmask in parity_masks:
-            nE = np.zeros_like(v); nE[:, :-1] = v[:, 1:]
-            nW = np.zeros_like(v); nW[:, 1:] = v[:, :-1]
-            nN = np.zeros_like(v); nN[1:, :] = v[:-1, :]
-            nS = np.zeros_like(v); nS[:-1, :] = v[1:, :]
+            nE = np.zeros_like(v)
+            nE[:, :-1] = v[:, 1:]
+            nW = np.zeros_like(v)
+            nW[:, 1:] = v[:, :-1]
+            nN = np.zeros_like(v)
+            nN[1:, :] = v[:-1, :]
+            nS = np.zeros_like(v)
+            nS[:-1, :] = v[1:, :]
             num = aE * nE + aW * nW + aN * nN + aS * nS
             v_pixel = num / safe_denom
             v[pmask] += omega * (v_pixel[pmask] - v[pmask])
@@ -132,14 +136,20 @@ def solve_sor(
             residual = float(np.max(np.abs(v - last_check)))
             if residual < tol:
                 return LaplaceResult(
-                    v_field=v, iterations=it, residual=residual,
-                    converged=True, method="sor",
+                    v_field=v,
+                    iterations=it,
+                    residual=residual,
+                    converged=True,
+                    method="sor",
                 )
             last_check = v.copy()
 
     return LaplaceResult(
-        v_field=v, iterations=max_iter, residual=residual,
-        converged=False, method="sor",
+        v_field=v,
+        iterations=max_iter,
+        residual=residual,
+        converged=False,
+        method="sor",
     )
 
 
@@ -166,21 +176,27 @@ def _build_laplace_csr(er: np.ndarray) -> sp.csr_matrix:
     idx_grid = np.arange(n).reshape(h, w)
 
     # Main diagonal
-    rows.append(np.arange(n)); cols.append(np.arange(n)); data.append(diag)
+    rows.append(np.arange(n))
+    cols.append(np.arange(n))
+    data.append(diag)
 
     # East: link (i,j) with (i,j+1)
     valid = aE[:, :-1] > 0
     r = idx_grid[:, :-1][valid]
     c = idx_grid[:, 1:][valid]
     d = aE[:, :-1][valid]
-    rows += [r, c]; cols += [c, r]; data += [d, d]  # symmetric
+    rows += [r, c]
+    cols += [c, r]
+    data += [d, d]  # symmetric
 
     # South: link (i,j) with (i+1,j)
     valid = aS[:-1, :] > 0
     r = idx_grid[:-1, :][valid]
     c = idx_grid[1:, :][valid]
     d = aS[:-1, :][valid]
-    rows += [r, c]; cols += [c, r]; data += [d, d]
+    rows += [r, c]
+    cols += [c, r]
+    data += [d, d]
 
     A = sp.coo_matrix(
         (np.concatenate(data), (np.concatenate(rows), np.concatenate(cols))),
@@ -200,7 +216,6 @@ def _apply_dirichlet(
     iterate against fixed values.
     """
     A = A.tolil()
-    n = A.shape[0]
     masked = np.where(mask_flat)[0]
 
     # Move masked-column contributions to RHS for free rows
@@ -296,9 +311,14 @@ def solve_laplace(
     if chosen == "amg":
         return solve_amg(er, v_mask, v_value, tol=tol, max_iter=max_iter or 200)
     return solve_sor(
-        er, v_mask, v_value,
-        initial=initial, omega=omega,
-        max_iter=max_iter or 50_000, tol=tol, float_groups=float_groups,
+        er,
+        v_mask,
+        v_value,
+        initial=initial,
+        omega=omega,
+        max_iter=max_iter or 50_000,
+        tol=tol,
+        float_groups=float_groups,
     )
 
 

@@ -110,9 +110,19 @@ select = [
 ]
 ignore = [
     "E501",   # line too long (handled by black)
+    "E702",   # multiple statements on one line (we use this for compact array setup)
     "N803",   # argument name should be lowercase (we use W, H, T, S, etc., as physics dictates)
     "N806",   # variable name should be lowercase (same reason)
     "N802",   # function name should be lowercase (we use Z0, Zdiff, etc. for clarity)
+    "RUF001", # ambiguous unicode in identifier (we use Greek letters: δ, ε, μ, ω, etc.)
+    "RUF002", # ambiguous unicode in docstring (×, ²,  etc., are domain-correct)
+    "RUF003", # ambiguous unicode in comment (same)
+    "RUF100", # unused noqa (lint-rule moves between versions)
+    "BLE001", # blind except — sometimes unavoidable at API boundaries
+    "B008",   # function call in default arg — Typer requires this pattern
+    "A002",   # shadowing a builtin (id) — needed for MCP resource URIs
+    "ARG001", # unused function arg — common with explicit interface stubs
+    "SIM300", # Yoda conditions — sometimes clearer in physics code
 ]
 
 [tool.ruff.lint.per-file-ignores]

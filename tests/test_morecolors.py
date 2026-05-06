@@ -76,10 +76,7 @@ class TestParser:
 
 class TestDedupe:
     def test_last_wins(self) -> None:
-        text = (
-            "255 0 0 +1 1.7 1 0 1 first\n"
-            "255 0 0 +1 1.7 1 0 1 second\n"
-        )
+        text = "255 0 0 +1 1.7 1 0 1 first\n" "255 0 0 +1 1.7 1 0 1 second\n"
         records = parse_morecolors_text(text)
         deduped = dedupe_keep_last(records)
         assert len(deduped) == 1
