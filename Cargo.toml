@@ -12,7 +12,13 @@ repository = "https://github.com/atlc3-project/atlc3"
 homepage = "https://github.com/atlc3-project/atlc3"
 
 [workspace.dependencies]
-pyo3 = { version = "0.22", features = ["extension-module", "abi3-py311"] }
+# pyo3 'extension-module' feature must NOT be enabled unconditionally — it
+# tells the linker to leave Python symbols undefined (because the host
+# Python provides them at runtime). When `cargo test` builds a test binary,
+# there's no host Python, so the link fails on macOS. Each crate that uses
+# pyo3 enables `extension-module` only via its own feature flag, defaulting
+# to off. `maturin` enables it by passing `--features extension-module`.
+pyo3 = { version = "0.22", features = ["abi3-py311"] }
 numpy = "0.22"
 ndarray = { version = "0.16", features = ["rayon"] }
 rayon = "1.10"
