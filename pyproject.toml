@@ -67,12 +67,12 @@ dev = [
     "types-pillow",
     "scikit-rf>=1.1",
     "maturin>=1.7",
+    "mktestdocs>=0.2",
 ]
 docs = [
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.25",
-    "mktestdocs>=0.2",
 ]
 
 [project.urls]
