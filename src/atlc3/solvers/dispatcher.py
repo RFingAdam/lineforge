@@ -27,7 +27,6 @@ def solve(
     method: SolverChoice = "auto",
     frequency_hz: float | None = None,
     pixel_width: float | None = None,
-    **kwargs: object,
 ) -> TLineResult | DiffResult | CGPResult:
     """Solve the given geometry, picking the right solver.
 
@@ -45,21 +44,17 @@ def solve(
     pixel_width
         Pixel size for rasterization (only used when method=='cgp' and the
         input is a parameterized geometry).
-    **kwargs
-        Forwarded to :func:`atlc3.solvers.solve_cgp` when running the bitmap path.
     """
     if isinstance(geometry, Usermap):
-        return solve_cgp(geometry, frequency_hz=frequency_hz, **kwargs)  # type: ignore[arg-type]
+        return solve_cgp(geometry, frequency_hz=frequency_hz)
 
-    if method == "auto":
-        method = "analytical"
+    chosen: SolverChoice = method if method != "auto" else "analytical"
 
-    if method == "analytical":
+    if chosen == "analytical":
         return analytical_solve(geometry, frequency_hz=frequency_hz)
 
-    # Bitmap path: rasterize the geometry, then solve.
     usermap = rasterize(geometry, pixel_width=pixel_width)
-    return solve_cgp(usermap, frequency_hz=frequency_hz, **kwargs)  # type: ignore[arg-type]
+    return solve_cgp(usermap, frequency_hz=frequency_hz)
 
 
 __all__ = ["solve"]

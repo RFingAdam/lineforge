@@ -44,7 +44,7 @@ def _surface_pixels(mask: np.ndarray) -> np.ndarray:
     nS = np.zeros_like(mask)
     nS[:-1, :] = mask[1:, :]
     interior_only = nE & nW & nN & nS
-    surface = mask & ~interior_only
+    surface: np.ndarray = mask & ~interior_only
     return surface
 
 
@@ -141,8 +141,8 @@ def predict_v_field(
     v_field = v_flat.reshape(h, w)
 
     # Clamp to BC-respecting bounds (numerical safety)
-    v_field = np.clip(v_field, -1.5, 1.5)
-    return v_field
+    v_field_clamped: np.ndarray = np.clip(v_field, -1.5, 1.5)
+    return v_field_clamped
 
 
 __all__ = ["predict_v_field"]

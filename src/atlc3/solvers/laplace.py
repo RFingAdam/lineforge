@@ -273,7 +273,7 @@ def solve_amg(
     x = ml.solve(b_red, tol=tol, maxiter=max_iter)
 
     residual = float(np.linalg.norm(A_red @ x - b_red))
-    converged = residual < tol * (1 + np.linalg.norm(b_red))
+    converged = bool(residual < tol * (1 + np.linalg.norm(b_red)))
     return LaplaceResult(
         v_field=x.reshape(h, w),
         iterations=max_iter,

@@ -151,6 +151,8 @@ module = [
     "pyamg.*",
     "diskcache.*",
     "skrf.*",
+    "scipy",
+    "scipy.*",
     "atlc3._kernel",
 ]
 ignore_missing_imports = true

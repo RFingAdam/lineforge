@@ -110,16 +110,17 @@ def optimize_for(
             return 1e6  # bad geometry → huge penalty
 
         try:
+            result: Any
             if solver == "analytical":
                 result = analytical_solve(geom, frequency_hz=frequency_hz)
             elif solver == "cgp":
-                usermap = rasterize(geom)  # type: ignore[name-defined]
-                result = solve_cgp(usermap, frequency_hz=frequency_hz)  # type: ignore[name-defined]
+                usermap = rasterize(geom)
+                result = solve_cgp(usermap, frequency_hz=frequency_hz)
             elif solver == "full":
                 if frequency_hz is None:
                     raise ValueError("solver='full' requires frequency_hz")
-                usermap = rasterize(geom)  # type: ignore[name-defined]
-                result = solve_full_rlgc(usermap, frequency_hz=frequency_hz)  # type: ignore[name-defined]
+                usermap = rasterize(geom)
+                result = solve_full_rlgc(usermap, frequency_hz=frequency_hz)
             else:
                 raise ValueError(f"unknown solver {solver!r}")
         except Exception:
@@ -164,6 +165,7 @@ def optimize_for(
         params[fld] = float(val)
     geom = from_dict(params)
 
+    final: Any
     if solver == "analytical":
         final = analytical_solve(geom, frequency_hz=frequency_hz)
     else:
