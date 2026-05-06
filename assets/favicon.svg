@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="atlc3">
+  <title>atlc3</title>
+  <defs>
+    <linearGradient id="fbg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0B1220"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <linearGradient id="fstrip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+  </defs>
+  <rect width="64" height="64" rx="12" ry="12" fill="url(#fbg)"/>
+  <!-- Strip -->
+  <rect x="24" y="22" width="16" height="5" rx="1" fill="url(#fstrip)"/>
+  <!-- Dielectric -->
+  <rect x="10" y="28" width="44" height="14" fill="#0EA5E9" fill-opacity="0.18"/>
+  <!-- Ground -->
+  <rect x="10" y="42" width="44" height="3" fill="#94A3B8"/>
+  <!-- E-field arcs -->
+  <g fill="none" stroke="#22D3EE" stroke-width="1.4" stroke-linecap="round">
+    <path d="M 40 24 Q 52 24, 54 38 Q 56 44, 52 45" opacity="0.95"/>
+    <path d="M 24 24 Q 12 24, 10 38 Q  8 44, 12 45" opacity="0.95"/>
+    <path d="M 32 28 L 32 42" opacity="0.7"/>
+  </g>
+</svg>

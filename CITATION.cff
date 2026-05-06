@@ -1,0 +1,57 @@
+# Citation File Format (CFF) — https://citation-file-format.github.io/
+cff-version: 1.2.0
+title: "atlc3.0: Open-Source MCP-Enabled Transmission Line Calculator"
+message: "If you use atlc3 in published research or designs, please cite as below."
+type: software
+authors:
+  - name: "atlc3 contributors"
+    website: "https://github.com/RFingAdam/atlc3"
+repository-code: "https://github.com/RFingAdam/atlc3"
+url: "https://github.com/RFingAdam/atlc3"
+license: GPL-3.0-or-later
+keywords:
+  - transmission-line
+  - impedance
+  - microstrip
+  - stripline
+  - cpwg
+  - pcb
+  - rf
+  - electromagnetics
+  - mcp
+  - model-context-protocol
+references:
+  - type: software
+    title: "atlc — Arbitrary Transmission Line Calculator"
+    authors:
+      - family-names: Kirkby
+        given-names: David
+        name-suffix: G8WRB
+    url: "http://atlc.sourceforge.net/"
+    notes: "Original GPL implementation. atlc3 references its FD Laplace kernel."
+  - type: software
+    title: "atlc2"
+    authors:
+      - name: "Brian Beezley"
+        website: "http://www.hdtvprimer.com/kq6qv/atlc2.html"
+    notes: "Closed-source Windows successor. atlc3 reimplements its documented behaviour."
+  - type: article
+    title: "Accurate Models for Microstrip Computer-Aided Design"
+    authors:
+      - family-names: Hammerstad
+        given-names: Erik
+      - family-names: Jensen
+        given-names: "Øystein"
+    conference: "IEEE MTT-S International Microwave Symposium Digest"
+    year: 1980
+    notes: "Closed-form microstrip Z₀ formulas used by atlc3.analytical.hammerstad."
+  - type: book
+    title: "Transmission Line Design Handbook"
+    authors:
+      - family-names: Wadell
+        given-names: Brian C.
+    publisher:
+      name: "Artech House"
+    year: 1991
+    isbn: "978-0890064368"
+    notes: "Reference text for stripline, CPWG, differential pair formulas."
