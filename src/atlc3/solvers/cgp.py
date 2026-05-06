@@ -33,6 +33,7 @@ import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
 
 from atlc3.analytical._constants import C0, EPS0, MU0
+from atlc3.cache import cached
 from atlc3.geometry.usermap import Usermap
 from atlc3.solvers import charge_shift, extension, laplace
 
@@ -178,6 +179,12 @@ def solve_cgp(
 ) -> tuple[CGPResult, _LaplaceWorkspace]: ...
 
 
+@cached(
+    "solve_cgp",
+    # Skip cache when return_fields=True: the _LaplaceWorkspace contains big
+    # numpy arrays that aren't worth disk-caching and aren't always picklable.
+    skip_when=lambda *args, **kwargs: bool(kwargs.get("return_fields", False)),
+)
 def solve_cgp(
     usermap: Usermap,
     *,

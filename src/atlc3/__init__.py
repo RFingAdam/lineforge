@@ -30,6 +30,8 @@ from __future__ import annotations
 from typing import Any
 
 from atlc3.analytical import solve as _analytical_solve
+from atlc3.cache import cached, clear_cache
+from atlc3.cache import is_disabled as cache_disabled
 from atlc3.geometry import (
     CPWG,
     GEOMETRY_TYPES,
@@ -400,6 +402,9 @@ __all__ = [
     "TLineResult",
     "Usermap",
     "__version__",
+    "cache_disabled",
+    "cached",
+    "clear_cache",
     "cpwg",
     "edge_coupled_diff",
     "from_bmp",

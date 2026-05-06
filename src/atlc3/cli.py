@@ -104,6 +104,20 @@ def mcp_serve(
     run_stdio()
 
 
+@app.command(name="clear-cache")
+def clear_cache_cmd() -> None:
+    """Clear all cached solver results.
+
+    The cache key includes the package version, so it is also auto-invalidated
+    on upgrades — this is for manual cleanup or to force a re-solve.
+    """
+    from atlc3.cache import clear_cache, get_cache
+
+    cache_dir = get_cache().directory
+    n = clear_cache()
+    console.print(f"Cleared [bold]{n}[/bold] cached entries from {cache_dir}")
+
+
 @app.command()
 def info() -> None:
     """Show package and native-kernel info."""

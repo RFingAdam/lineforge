@@ -43,6 +43,7 @@ import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
 from atlc3.analytical._constants import MU0
+from atlc3.cache import cached
 from atlc3.geometry.usermap import Usermap
 
 
@@ -245,6 +246,7 @@ def _check_rs_geometry(usermap: Usermap, ys: np.ndarray, xs: np.ndarray) -> tupl
     return False, None
 
 
+@cached("solve_lrs_faraday")
 def solve_lrs(
     usermap: Usermap,
     *,

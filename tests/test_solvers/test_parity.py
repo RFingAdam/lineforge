@@ -31,7 +31,6 @@ from tests.fixtures.geometries import (
     air_wire_pair_300ohm,
 )
 
-
 # ---------------------------------------------------------------------------
 # C/Gp solver vs analytical Z₀ and L
 # ---------------------------------------------------------------------------
@@ -80,9 +79,9 @@ class TestCGPParity:
             max_iter=5000,
             extend_grid=False,
         )
-        assert math.isclose(result.z0, case.z0_ohm, rel_tol=0.10), (
-            f"75Ω coax: got Z0={result.z0:.2f}Ω, expected {case.z0_ohm:.2f}Ω"
-        )
+        assert math.isclose(
+            result.z0, case.z0_ohm, rel_tol=0.10
+        ), f"75Ω coax: got Z0={result.z0:.2f}Ω, expected {case.z0_ohm:.2f}Ω"
 
     def test_eps_eff_equals_one_for_air(self) -> None:
         """All air coax cases should report εeff ≈ 1.0 (vacuum)."""
@@ -90,9 +89,9 @@ class TestCGPParity:
         usermap = case.builder()
         result = solve_cgp(usermap, method="sor", tol=1e-5, max_iter=5000, extend_grid=False)
         # Vacuum cavity → εeff = 1.0; allow ±2% for grid discretization
-        assert math.isclose(result.eps_eff, 1.0, rel_tol=0.02), (
-            f"εeff for air coax = {result.eps_eff:.4f}, expected ~1.0"
-        )
+        assert math.isclose(
+            result.eps_eff, 1.0, rel_tol=0.02
+        ), f"εeff for air coax = {result.eps_eff:.4f}, expected ~1.0"
 
 
 # ---------------------------------------------------------------------------
@@ -152,6 +151,6 @@ def test_reference_z0_consistent_with_lc() -> None:
     """For each case, sqrt(L/C) should equal Z₀ (analytical consistency)."""
     for case in CASES.values():
         z0_from_lc = math.sqrt(case.L_per_m / case.C_per_m)
-        assert math.isclose(z0_from_lc, case.z0_ohm, rel_tol=1e-9), (
-            f"{case.name}: sqrt(L/C)={z0_from_lc:.4f}, z0_ohm={case.z0_ohm:.4f}"
-        )
+        assert math.isclose(
+            z0_from_lc, case.z0_ohm, rel_tol=1e-9
+        ), f"{case.name}: sqrt(L/C)={z0_from_lc:.4f}, z0_ohm={case.z0_ohm:.4f}"

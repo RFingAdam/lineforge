@@ -32,12 +32,12 @@ All references: Pozar, *Microwave Engineering* 4th ed., Chapter 1; Wadell,
 from __future__ import annotations
 
 import math
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable
 
 import numpy as np
 
-from atlc3.analytical._constants import C0, EPS0, ETA0, MU0
+from atlc3.analytical._constants import EPS0, ETA0, MU0
 from atlc3.geometry.usermap import Usermap, UsermapMetadata
 
 
