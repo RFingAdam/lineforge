@@ -245,29 +245,31 @@ def _print_cgp(result: Any) -> None:
 
 @app.command()
 def solve(
-    type_: str = typer.Option(None, "--type", help="Geometry type (e.g. 'microstrip')."),
-    json_path: Path = typer.Option(None, "--json", help="Read geometry from a JSON file."),
-    bmp_path: Path = typer.Option(None, "--bmp", help="Use a BMP usermap (forces --method=cgp)."),
+    type_: str | None = typer.Option(None, "--type", help="Geometry type (e.g. 'microstrip')."),
+    json_path: Path | None = typer.Option(None, "--json", help="Read geometry from a JSON file."),
+    bmp_path: Path | None = typer.Option(
+        None, "--bmp", help="Use a BMP usermap (forces --method=cgp)."
+    ),
     method: str = typer.Option("auto", "--method", help="Solver: analytical | cgp | auto."),
-    pixel_width: str = typer.Option(
+    pixel_width: str | None = typer.Option(
         None, "--pixel-width", help="Pixel size for bitmap solves (e.g. '0.1mm')."
     ),
     output: str = typer.Option("rich", "--output", "-o", help="Output format: rich | json"),
-    frequency: str = typer.Option(
+    frequency: str | None = typer.Option(
         None, "--frequency", "-f", help="Frequency for loss / Gp (e.g. '1GHz')."
     ),
     # Per-field flags (analytical/parameterized path)
-    W: str = typer.Option(None, "--W"),
-    H: str = typer.Option(None, "--H"),
-    H2: str = typer.Option(None, "--H2"),
-    H_between: str = typer.Option(None, "--H-between"),  # noqa: N803
-    H1: str = typer.Option(None, "--H1"),
-    T: str = typer.Option(None, "--T"),
-    S: str = typer.Option(None, "--S"),
-    B: str = typer.Option(None, "--B"),
-    er: float = typer.Option(None, "--er"),
-    er2: float = typer.Option(None, "--er2"),
-    tan_delta: float = typer.Option(None, "--tan-delta"),
+    W: str | None = typer.Option(None, "--W"),
+    H: str | None = typer.Option(None, "--H"),
+    H2: str | None = typer.Option(None, "--H2"),
+    H_between: str | None = typer.Option(None, "--H-between"),  # noqa: N803
+    H1: str | None = typer.Option(None, "--H1"),
+    T: str | None = typer.Option(None, "--T"),
+    S: str | None = typer.Option(None, "--S"),
+    B: str | None = typer.Option(None, "--B"),
+    er: float | None = typer.Option(None, "--er"),
+    er2: float | None = typer.Option(None, "--er2"),
+    tan_delta: float | None = typer.Option(None, "--tan-delta"),
 ) -> None:
     """Solve a transmission line geometry."""
     freq_hz = parse_frequency(frequency) if frequency else None
@@ -313,16 +315,16 @@ def solve(
     if method == "cgp":
         from atlc3.solvers.dispatcher import solve as dispatch
 
-        result = dispatch(
+        cgp_result = dispatch(
             geometry,
             method="cgp",
             frequency_hz=freq_hz,
             pixel_width=parse_length(pixel_width) if pixel_width else None,
         )
         if output == "json":
-            console.print_json(data=result.model_dump())
+            console.print_json(data=cgp_result.model_dump())
         else:
-            _print_cgp(result)
+            _print_cgp(cgp_result)
         return
 
     try:
@@ -361,11 +363,15 @@ def import_bmp(
 @app.command()
 def render(
     field: str = typer.Option(..., "--field", "-f", help="V | E | D | T"),
-    bmp: Path = typer.Option(None, "--bmp", help="Solve this BMP usermap and render its field."),
-    pixel_width: str = typer.Option(None, "--pixel-width"),
+    bmp: Path | None = typer.Option(
+        None, "--bmp", help="Solve this BMP usermap and render its field."
+    ),
+    pixel_width: str | None = typer.Option(None, "--pixel-width"),
     output: Path = typer.Option(..., "--output", "-o", help="Output PNG path."),
 ) -> None:
     """Render a field plot from a usermap by solving and visualizing."""
+    from typing import cast
+
     if bmp is None:
         err_console.print("--bmp is required (Phase 2)")
         raise typer.Exit(code=2)
@@ -374,15 +380,21 @@ def render(
         raise typer.Exit(code=2)
 
     from atlc3.solvers.cgp import solve_cgp
-    from atlc3.visualization.fields import render_field
+    from atlc3.visualization.fields import FieldKind, render_field
+
+    field_upper = field.upper()
+    if field_upper not in {"U", "V", "E", "D", "T", "J"}:
+        err_console.print(f"unknown field {field!r}; expected U/V/E/D/T/J")
+        raise typer.Exit(code=2)
+    field_kind = cast(FieldKind, field_upper)
 
     usermap = Usermap.from_bmp(bmp, pixel_width=pixel_width)
-    _, ws = solve_cgp(usermap, return_fields=True)  # type: ignore[misc]
+    _, ws = solve_cgp(usermap, return_fields=True)
     img = render_field(
-        kind=field.upper(),  # type: ignore[arg-type]
+        kind=field_kind,
         v_field=ws.v_field,
         er_field=ws.er_field,
-        tan_delta_field=usermap.tan_delta_field() if field.upper() == "T" else None,
+        tan_delta_field=usermap.tan_delta_field() if field_kind == "T" else None,
     )
     img.save(output)
     console.print(f"Wrote [green]{output}[/green]")
@@ -395,21 +407,21 @@ def render(
 
 @app.command()
 def lrs(
-    type_: str = typer.Option(None, "--type"),
-    json_path: Path = typer.Option(None, "--json"),
-    bmp_path: Path = typer.Option(None, "--bmp"),
-    pixel_width: str = typer.Option(None, "--pixel-width"),
+    type_: str | None = typer.Option(None, "--type"),
+    json_path: Path | None = typer.Option(None, "--json"),
+    bmp_path: Path | None = typer.Option(None, "--bmp"),
+    pixel_width: str | None = typer.Option(None, "--pixel-width"),
     frequency: str = typer.Option(..., "--frequency", "-f", help="e.g. '1GHz'"),
     output: str = typer.Option("rich", "--output", "-o"),
     skip_skin_depth: bool = typer.Option(False, "--no-skin-mask"),
-    W: str = typer.Option(None, "--W"),
-    H: str = typer.Option(None, "--H"),
-    T: str = typer.Option(None, "--T"),
-    S: str = typer.Option(None, "--S"),
-    B: str = typer.Option(None, "--B"),
-    H1: str = typer.Option(None, "--H1"),
-    H2: str = typer.Option(None, "--H2"),
-    er: float = typer.Option(None, "--er"),
+    W: str | None = typer.Option(None, "--W"),
+    H: str | None = typer.Option(None, "--H"),
+    T: str | None = typer.Option(None, "--T"),
+    S: str | None = typer.Option(None, "--S"),
+    B: str | None = typer.Option(None, "--B"),
+    H1: str | None = typer.Option(None, "--H1"),
+    H2: str | None = typer.Option(None, "--H2"),
+    er: float | None = typer.Option(None, "--er"),
 ) -> None:
     """Solve L and Rs via the Phase 3 Faraday/PEEC bitmap solver."""
     import atlc3 as _api
@@ -479,7 +491,7 @@ def optimize(
     ),
     fixed: str = typer.Option("", "--fixed", help="key=value, comma-separated fixed fields."),
     solver: str = typer.Option("analytical", "--solver"),
-    frequency: str = typer.Option(None, "--frequency", "-f"),
+    frequency: str | None = typer.Option(None, "--frequency", "-f"),
 ) -> None:
     """Find geometry parameters that hit electrical targets."""
     import atlc3 as _api
@@ -514,12 +526,12 @@ def optimize(
     table = Table(title="Optimization result")
     table.add_column("Field", style="cyan")
     table.add_column("Value", justify="right")
-    for k in vary_dict:
-        v = getattr(result.geometry, k, None)
-        if v is not None:
-            table.add_row(k, f"{v:.4e} m")
-    for k, v in result.metric.items():
-        table.add_row(f"{k} (achieved)", f"{v:.4f}")
+    for fld in vary_dict:
+        geom_val = getattr(result.geometry, fld, None)
+        if geom_val is not None:
+            table.add_row(fld, f"{geom_val:.4e} m")
+    for metric_name, metric_val in result.metric.items():
+        table.add_row(f"{metric_name} (achieved)", f"{metric_val:.4f}")
     table.add_row("cost (RMS)", f"{result.cost:.4e}")
     table.add_row("iterations", str(result.iterations))
     table.add_row("success", "yes" if result.success else "no")
@@ -531,15 +543,15 @@ def sweep(
     type_: str = typer.Option(..., "--type"),
     parameter: str = typer.Option(..., "--param"),
     values: str = typer.Option(..., "--values", help="Comma-separated values."),
-    output: Path = typer.Option(None, "--output", "-o", help="CSV output path."),
+    output: Path | None = typer.Option(None, "--output", "-o", help="CSV output path."),
     solver: str = typer.Option("analytical", "--solver", help="analytical|cgp|full"),
-    frequency: str = typer.Option(None, "--frequency", "-f"),
-    W: str = typer.Option(None, "--W"),
-    H: str = typer.Option(None, "--H"),
-    T: str = typer.Option(None, "--T"),
-    S: str = typer.Option(None, "--S"),
-    B: str = typer.Option(None, "--B"),
-    er: float = typer.Option(None, "--er"),
+    frequency: str | None = typer.Option(None, "--frequency", "-f"),
+    W: str | None = typer.Option(None, "--W"),
+    H: str | None = typer.Option(None, "--H"),
+    T: str | None = typer.Option(None, "--T"),
+    S: str | None = typer.Option(None, "--S"),
+    B: str | None = typer.Option(None, "--B"),
+    er: float | None = typer.Option(None, "--er"),
 ) -> None:
     """Run a parameter sweep and report results."""
     import atlc3 as _api
@@ -575,7 +587,7 @@ def sweep(
     keys: list[str] = []
     for p in points:
         # determine result keys lazily
-        d = (
+        d: dict[str, Any] = (
             p.result.model_dump()
             if hasattr(p.result, "model_dump")
             else {
@@ -587,7 +599,7 @@ def sweep(
             keys = sorted(k for k in d if isinstance(d[k], (int, float)))
             for k in keys:
                 table.add_column(k)
-        row = [f"{points[points.index(p)].params[parameter]:.4g}"]
+        row: list[str] = [f"{points[points.index(p)].params[parameter]:.4g}"]
         for k in keys:
             row.append(f"{d[k]:.4g}" if d[k] is not None else "-")
         table.add_row(*row)
@@ -600,9 +612,12 @@ def sweep(
             writer = csv.writer(fh)
             writer.writerow([parameter, *keys])
             for p in points:
-                d = p.result.model_dump() if hasattr(p.result, "model_dump") else {}
-                row = [p.params[parameter], *(d.get(k) for k in keys)]
-                writer.writerow(row)
+                d_csv: dict[str, Any] = (
+                    p.result.model_dump() if hasattr(p.result, "model_dump") else {}
+                )
+                csv_row: list[Any] = [p.params[parameter]]
+                csv_row.extend(d_csv.get(k) for k in keys)
+                writer.writerow(csv_row)
         console.print(f"Wrote [green]{output}[/green]")
 
 

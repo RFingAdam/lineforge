@@ -15,6 +15,7 @@ Then press U/V/E/D/T to switch field modes, +/- to zoom, S to save.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import cast
 
 from rich.console import Console
 
@@ -30,7 +31,7 @@ def run_viewer(bmp_path: Path, *, pixel_width: str) -> None:
     usermap = Usermap.from_bmp(bmp_path, pixel_width=pixel_width)
     console.print(f"Loaded [cyan]{bmp_path.name}[/cyan] ({usermap.shape[1]}×{usermap.shape[0]} px)")
     console.print("Solving...")
-    cgp_result, ws = solve_cgp(usermap, return_fields=True)  # type: ignore[misc]
+    cgp_result, ws = solve_cgp(usermap, return_fields=True)
     console.print(
         f"Z0 = [bold]{cgp_result.z0:.2f} Ω[/bold]  "
         f"εeff = [bold]{cgp_result.eps_eff:.3f}[/bold]  "
@@ -62,10 +63,10 @@ def run_viewer(bmp_path: Path, *, pixel_width: str) -> None:
             break
 
         if cmd in {"U", "V", "E", "D", "T"}:
-            current_mode = cmd  # type: ignore[assignment]
+            current_mode = cast(FieldKind, cmd)
             tan_d = usermap.tan_delta_field() if cmd == "T" else None
             img = render_field(
-                kind=cmd,
+                kind=current_mode,
                 v_field=ws.v_field,
                 er_field=ws.er_field,
                 tan_delta_field=tan_d,

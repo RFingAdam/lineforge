@@ -32,6 +32,7 @@ in LRS/full-RLGC; Phase 4 fills in the GUI-related no-ops.
 from __future__ import annotations
 
 import logging
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -132,7 +133,8 @@ class ScriptInterpreter:
         cmd = tokens[0].lower()[:3]  # atlc2 examines first 3 chars only
         args = tokens[1:]
 
-        handler = {
+        Handler = Callable[[list[str]], None]  # noqa: N806
+        handler: Handler | None = {
             "twi": self._cmd_twinlead,
             "squ": self._cmd_square,
             "coa": self._cmd_coaxial,

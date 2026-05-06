@@ -27,6 +27,7 @@ Frequency-dependent.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from typing import Literal, overload
 
 import numpy as np
 from pydantic import BaseModel, ConfigDict, Field
@@ -147,6 +148,34 @@ def _solve_one(
         converged=res.converged,
         extended_shape=usermap.shape,
     )
+
+
+@overload
+def solve_cgp(
+    usermap: Usermap,
+    *,
+    frequency_hz: float | None = ...,
+    use_charge_shift: bool = ...,
+    method: str = ...,
+    tol: float = ...,
+    max_iter: int | None = ...,
+    extend_grid: bool = ...,
+    target_extent: int = ...,
+    return_fields: Literal[False] = False,
+) -> CGPResult: ...
+@overload
+def solve_cgp(
+    usermap: Usermap,
+    *,
+    frequency_hz: float | None = ...,
+    use_charge_shift: bool = ...,
+    method: str = ...,
+    tol: float = ...,
+    max_iter: int | None = ...,
+    extend_grid: bool = ...,
+    target_extent: int = ...,
+    return_fields: Literal[True],
+) -> tuple[CGPResult, _LaplaceWorkspace]: ...
 
 
 def solve_cgp(

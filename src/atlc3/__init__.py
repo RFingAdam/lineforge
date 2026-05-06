@@ -67,6 +67,10 @@ from atlc3.units import parse_frequency, parse_length
 from atlc3.version import __version__
 
 
+def _to_m(value: float | str) -> float:
+    return parse_length(value) if isinstance(value, str) else float(value)
+
+
 def microstrip(
     *,
     W: float | str,
@@ -85,7 +89,7 @@ def microstrip(
     >>> 40 < r.z0 < 70
     True
     """
-    geom = Microstrip(W=W, H=H, T=T, er=er, tan_delta=tan_delta, rho=rho)
+    geom = Microstrip(W=_to_m(W), H=_to_m(H), T=_to_m(T), er=er, tan_delta=tan_delta, rho=rho)
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     return _analytical_solve(geom, frequency_hz=freq)
 
@@ -101,7 +105,9 @@ def stripline(
     frequency: float | str | None = None,
 ) -> TLineResult:
     """Solve a symmetric stripline via Cohn / Wadell."""
-    geom = StriplineSymmetric(W=W, T=T, B=B, er=er, tan_delta=tan_delta, rho=rho)
+    geom = StriplineSymmetric(
+        W=_to_m(W), T=_to_m(T), B=_to_m(B), er=er, tan_delta=tan_delta, rho=rho
+    )
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     return _analytical_solve(geom, frequency_hz=freq)
 
@@ -118,7 +124,7 @@ def cpwg(
     frequency: float | str | None = None,
 ) -> TLineResult:
     """Solve a coplanar waveguide with ground plane (CPWG)."""
-    geom = CPWG(W=W, S=S, H=H, T=T, er=er, tan_delta=tan_delta, rho=rho)
+    geom = CPWG(W=_to_m(W), S=_to_m(S), H=_to_m(H), T=_to_m(T), er=er, tan_delta=tan_delta, rho=rho)
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     return _analytical_solve(geom, frequency_hz=freq)
 
@@ -137,29 +143,33 @@ def edge_coupled_diff(
 ) -> DiffResult:
     """Solve an edge-coupled differential pair, on microstrip or stripline."""
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
+    Wm, Sm, Hm, Tm = _to_m(W), _to_m(S), _to_m(H), _to_m(T)
+    geom: EdgeCoupledDiffMicrostrip | EdgeCoupledDiffStripline
     if on == "microstrip":
-        geom: Any = EdgeCoupledDiffMicrostrip(
-            W=W,
-            S=S,
-            H=H,
-            T=T,
+        geom = EdgeCoupledDiffMicrostrip(
+            W=Wm,
+            S=Sm,
+            H=Hm,
+            T=Tm,
             er=er,
             tan_delta=tan_delta,
             rho=rho,
         )
     elif on == "stripline":
         geom = EdgeCoupledDiffStripline(
-            W=W,
-            S=S,
-            B=H,
-            T=T,
+            W=Wm,
+            S=Sm,
+            B=Hm,
+            T=Tm,
             er=er,
             tan_delta=tan_delta,
             rho=rho,
         )
     else:
         raise ValueError(f"`on` must be 'microstrip' or 'stripline', got {on!r}")
-    return _analytical_solve(geom, frequency_hz=freq)
+    result = _analytical_solve(geom, frequency_hz=freq)
+    assert isinstance(result, DiffResult)
+    return result
 
 
 def solve(
@@ -224,12 +234,20 @@ def solve_cgp(
 
     usermap = geometry if isinstance(geometry, Usermap) else rasterize(geometry, pixel_width=px)
 
+    if return_fields:
+        return _solve_cgp(
+            usermap,
+            frequency_hz=freq,
+            use_charge_shift=use_charge_shift,
+            method=laplace_method,
+            return_fields=True,
+        )
     return _solve_cgp(
         usermap,
         frequency_hz=freq,
         use_charge_shift=use_charge_shift,
         method=laplace_method,
-        return_fields=return_fields,
+        return_fields=False,
     )
 
 
@@ -323,7 +341,7 @@ def sweep(
     return _sweep(
         geometry,
         parameter=parameter,
-        values=values,  # type: ignore[arg-type]
+        values=values,
         solver=solver,
         frequency_hz=freq,
     )

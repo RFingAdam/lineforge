@@ -7,8 +7,8 @@
 
 use pyo3::prelude::*;
 
-pub mod sor;
 pub mod multigrid;
+pub mod sor;
 
 pub fn register(m: &Bound<'_, PyModule>) -> PyResult<()> {
     sor::register(m)?;

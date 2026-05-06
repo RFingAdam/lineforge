@@ -116,7 +116,7 @@ def _self_inductance_per_m(px: float) -> float:
     which is acceptable for Phase 3 — the off-diagonal terms dominate the
     answer for any non-trivial geometry.
     """
-    return (MU0 / (2.0 * np.pi)) * (np.log(1.0 / max(px, 1e-12)) + 0.5)
+    return float((MU0 / (2.0 * np.pi)) * (np.log(1.0 / max(px, 1e-12)) + 0.5))
 
 
 def _build_system(
@@ -214,7 +214,8 @@ def _solve_bicgstab_with_ilu(Z: np.ndarray, b: np.ndarray, tol: float = 1e-8) ->
     if info != 0:
         # Fall back to dense
         return _solve_dense(Z, b)
-    return x
+    x_arr: np.ndarray = np.asarray(x)
+    return x_arr
 
 
 def _check_rs_geometry(usermap: Usermap, ys: np.ndarray, xs: np.ndarray) -> tuple[bool, str | None]:

@@ -86,7 +86,7 @@ def awg_to_meters(awg: float) -> float:
     True
     """
     diameter_mm = _AWG_BASE_MM * (_AWG_FACTOR ** ((_AWG_REF - awg) / _AWG_DIVISOR))
-    return diameter_mm * 1e-3
+    return float(diameter_mm * 1e-3)
 
 
 def parse_length(value: str | float | int) -> float:

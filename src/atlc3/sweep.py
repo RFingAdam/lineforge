@@ -90,6 +90,7 @@ def sweep(
             geom = geometry.model_copy(update={parameter: v})
 
         # Dispatch
+        result: Any
         if solver == "analytical":
             result = analytical(geom, frequency_hz=freq)  # type: ignore[arg-type]
         elif solver == "cgp":

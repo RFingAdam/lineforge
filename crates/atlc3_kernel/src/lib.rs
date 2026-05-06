@@ -6,10 +6,10 @@
 
 use pyo3::prelude::*;
 
-mod laplace;
-mod faraday;
 mod charge_shift;
 mod extension;
+mod faraday;
+mod laplace;
 
 /// Returns the kernel version string. Used as a smoke test that the Rust
 /// extension is correctly built and importable from Python.

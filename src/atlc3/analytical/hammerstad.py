@@ -52,7 +52,7 @@ def _eps_eff_thin_strip(W: float, H: float, er: float) -> float:
         + (1.0 / 18.7) * math.log(1.0 + (u / 18.1) ** 3)
     )
     b = 0.564 * ((er - 0.9) / (er + 3.0)) ** 0.053
-    return (er + 1.0) / 2.0 + ((er - 1.0) / 2.0) * (1.0 + 10.0 / u) ** (-a * b)
+    return float((er + 1.0) / 2.0 + ((er - 1.0) / 2.0) * (1.0 + 10.0 / u) ** (-a * b))
 
 
 def _z0_thin_strip(W: float, H: float, eps_eff: float) -> float:
