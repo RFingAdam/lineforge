@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="atlc3 logo">
+  <title>atlc3 — open-source transmission line calculator</title>
+  <desc>Stylized microstrip cross-section: an amber signal trace above a translucent FR4 dielectric over a ground plane, with cyan electric field lines arcing from the strip to ground.</desc>
+
+  <defs>
+    <!-- Background: deep navy gradient -->
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0B1220"/>
+      <stop offset="100%" stop-color="#0F172A"/>
+    </linearGradient>
+    <!-- Dielectric (FR4): translucent teal -->
+    <linearGradient id="diel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.18"/>
+      <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0.06"/>
+    </linearGradient>
+    <!-- Strip: copper / signal-trace amber -->
+    <linearGradient id="strip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <!-- Ground plane: cool silver -->
+    <linearGradient id="ground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+    <!-- Glow for field lines -->
+    <filter id="glow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.2" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Rounded background tile -->
+  <rect width="256" height="256" rx="48" ry="48" fill="url(#bg)"/>
+
+  <!-- Subtle inner glow / vignette -->
+  <rect x="2" y="2" width="252" height="252" rx="46" ry="46"
+        fill="none" stroke="#1E293B" stroke-width="1"/>
+
+  <!-- Cross-section group, centred -->
+  <g transform="translate(0, 8)">
+    <!-- Dielectric block -->
+    <rect x="36" y="120" width="184" height="60" rx="2"
+          fill="url(#diel)" stroke="#0EA5E9" stroke-opacity="0.35" stroke-width="0.6"/>
+
+    <!-- Ground plane -->
+    <rect x="36" y="180" width="184" height="10" rx="2" fill="url(#ground)"/>
+    <!-- Hatching marks under ground (schematic-style) -->
+    <g stroke="#64748B" stroke-width="1.2">
+      <line x1="48"  y1="190" x2="42"  y2="200"/>
+      <line x1="68"  y1="190" x2="62"  y2="200"/>
+      <line x1="88"  y1="190" x2="82"  y2="200"/>
+      <line x1="108" y1="190" x2="102" y2="200"/>
+      <line x1="128" y1="190" x2="122" y2="200"/>
+      <line x1="148" y1="190" x2="142" y2="200"/>
+      <line x1="168" y1="190" x2="162" y2="200"/>
+      <line x1="188" y1="190" x2="182" y2="200"/>
+      <line x1="208" y1="190" x2="202" y2="200"/>
+    </g>
+
+    <!-- Signal trace (the strip) -->
+    <rect x="100" y="100" width="56" height="20" rx="2"
+          fill="url(#strip)" stroke="#B45309" stroke-width="0.5"/>
+
+    <!-- E-field lines (arcs from strip top, around the sides, into ground) -->
+    <g fill="none" stroke="#22D3EE" stroke-width="2" stroke-linecap="round" filter="url(#glow)">
+      <!-- Right-side arcs -->
+      <path d="M 156 105 Q 200 105, 218 145 Q 232 175, 218 185" stroke-opacity="0.95"/>
+      <path d="M 156 110 Q 188 110, 200 145 Q 208 170, 200 184" stroke-opacity="0.85"/>
+      <path d="M 154 115 Q 178 115, 184 145 Q 188 168, 184 183" stroke-opacity="0.7"/>
+      <!-- Left-side arcs (mirror) -->
+      <path d="M 100 105 Q 56 105, 38 145 Q 24 175, 38 185" stroke-opacity="0.95"/>
+      <path d="M 100 110 Q 68 110, 56 145 Q 48 170, 56 184" stroke-opacity="0.85"/>
+      <path d="M 102 115 Q 78 115, 72 145 Q 68 168, 72 183" stroke-opacity="0.7"/>
+      <!-- Centre downward fingers (in-dielectric field) -->
+      <path d="M 116 120 L 116 178" stroke-opacity="0.55"/>
+      <path d="M 128 120 L 128 178" stroke-opacity="0.7"/>
+      <path d="M 140 120 L 140 178" stroke-opacity="0.55"/>
+    </g>
+  </g>
+
+  <!-- Wordmark "3" in the corner -->
+  <g transform="translate(196, 60)" font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, sans-serif"
+     font-weight="700" fill="#22D3EE">
+    <text x="0" y="0" font-size="32" text-anchor="middle">3</text>
+  </g>
+</svg>

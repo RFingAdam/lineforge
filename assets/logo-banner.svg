@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 320" role="img" aria-label="atlc3 — open-source MCP-enabled transmission line calculator">
+  <title>atlc3 — open-source transmission line calculator</title>
+
+  <defs>
+    <linearGradient id="bbg" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0%"  stop-color="#0B1220"/>
+      <stop offset="50%" stop-color="#0F172A"/>
+      <stop offset="100%" stop-color="#0B1220"/>
+    </linearGradient>
+    <linearGradient id="bdiel" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#0EA5E9" stop-opacity="0.2"/>
+      <stop offset="100%" stop-color="#0EA5E9" stop-opacity="0.06"/>
+    </linearGradient>
+    <linearGradient id="bstrip" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FBBF24"/>
+      <stop offset="100%" stop-color="#F59E0B"/>
+    </linearGradient>
+    <linearGradient id="bground" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#CBD5E1"/>
+      <stop offset="100%" stop-color="#94A3B8"/>
+    </linearGradient>
+    <filter id="bglow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.4" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background -->
+  <rect width="1280" height="320" fill="url(#bbg)"/>
+
+  <!-- Subtle horizontal field-line accent across the whole banner -->
+  <g stroke="#1E293B" stroke-width="0.5" opacity="0.6">
+    <line x1="0" y1="40"  x2="1280" y2="40"/>
+    <line x1="0" y1="80"  x2="1280" y2="80"/>
+    <line x1="0" y1="240" x2="1280" y2="240"/>
+    <line x1="0" y1="280" x2="1280" y2="280"/>
+  </g>
+
+  <!-- Logo cross-section (left side) -->
+  <g transform="translate(40, 40)">
+    <!-- Rounded badge -->
+    <rect x="0" y="0" width="240" height="240" rx="44" ry="44" fill="#0B1220" stroke="#1E293B" stroke-width="1"/>
+
+    <!-- Cross-section -->
+    <g transform="translate(0, 8)">
+      <rect x="34" y="112" width="172" height="56" rx="2"
+            fill="url(#bdiel)" stroke="#0EA5E9" stroke-opacity="0.35" stroke-width="0.6"/>
+      <rect x="34" y="168" width="172" height="9" rx="2" fill="url(#bground)"/>
+      <g stroke="#64748B" stroke-width="1.2">
+        <line x1="46"  y1="177" x2="40"  y2="187"/>
+        <line x1="66"  y1="177" x2="60"  y2="187"/>
+        <line x1="86"  y1="177" x2="80"  y2="187"/>
+        <line x1="106" y1="177" x2="100" y2="187"/>
+        <line x1="126" y1="177" x2="120" y2="187"/>
+        <line x1="146" y1="177" x2="140" y2="187"/>
+        <line x1="166" y1="177" x2="160" y2="187"/>
+        <line x1="186" y1="177" x2="180" y2="187"/>
+      </g>
+      <rect x="94" y="94" width="52" height="18" rx="2"
+            fill="url(#bstrip)" stroke="#B45309" stroke-width="0.5"/>
+      <g fill="none" stroke="#22D3EE" stroke-width="1.8" stroke-linecap="round" filter="url(#bglow)">
+        <path d="M 146 99 Q 188 99, 204 138 Q 218 168, 204 175" stroke-opacity="0.95"/>
+        <path d="M 146 104 Q 176 104, 188 138 Q 196 162, 188 174" stroke-opacity="0.8"/>
+        <path d="M 144 109 Q 168 109, 174 138 Q 178 160, 174 173" stroke-opacity="0.65"/>
+        <path d="M 94  99 Q  52  99,  36 138 Q  22 168,  36 175" stroke-opacity="0.95"/>
+        <path d="M 94 104 Q  64 104,  52 138 Q  44 162,  52 174" stroke-opacity="0.8"/>
+        <path d="M 96 109 Q  72 109,  66 138 Q  62 160,  66 173" stroke-opacity="0.65"/>
+        <path d="M 110 112 L 110 168" stroke-opacity="0.5"/>
+        <path d="M 120 112 L 120 168" stroke-opacity="0.65"/>
+        <path d="M 130 112 L 130 168" stroke-opacity="0.5"/>
+      </g>
+    </g>
+  </g>
+
+  <!-- Wordmark + tagline (right side) -->
+  <g font-family="ui-sans-serif, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif">
+    <!-- atlc3 -->
+    <text x="320" y="170" font-size="120" font-weight="800" fill="#F8FAFC" letter-spacing="-3">atlc3</text>
+    <!-- Version pill -->
+    <g transform="translate(640, 132)">
+      <rect x="0" y="0" width="58" height="30" rx="15" fill="#0F172A" stroke="#22D3EE" stroke-width="1.5"/>
+      <text x="29" y="20" font-size="14" font-weight="700" fill="#22D3EE" text-anchor="middle">v0.1.0</text>
+    </g>
+    <!-- Tagline -->
+    <text x="320" y="208" font-size="22" font-weight="500" fill="#94A3B8">
+      Open-source · MCP-enabled · transmission line calculator
+    </text>
+    <!-- Keywords row -->
+    <g font-size="14" font-weight="600" fill="#64748B">
+      <text x="320" y="240">PCB · microstrip · stripline · CPWG · differential pairs · arbitrary cross-sections</text>
+    </g>
+    <!-- Surfaces row -->
+    <g transform="translate(320, 256)" font-size="13" font-weight="700">
+      <g transform="translate(0, 0)">
+        <rect x="0" y="0" width="62" height="22" rx="11" fill="#1E293B"/>
+        <text x="31" y="15" fill="#F59E0B" text-anchor="middle">Python</text>
+      </g>
+      <g transform="translate(72, 0)">
+        <rect x="0" y="0" width="44" height="22" rx="11" fill="#1E293B"/>
+        <text x="22" y="15" fill="#22D3EE" text-anchor="middle">CLI</text>
+      </g>
+      <g transform="translate(126, 0)">
+        <rect x="0" y="0" width="50" height="22" rx="11" fill="#1E293B"/>
+        <text x="25" y="15" fill="#A78BFA" text-anchor="middle">MCP</text>
+      </g>
+      <g transform="translate(186, 0)">
+        <rect x="0" y="0" width="86" height="22" rx="11" fill="#1E293B"/>
+        <text x="43" y="15" fill="#34D399" text-anchor="middle">GPLv3</text>
+      </g>
+    </g>
+  </g>
+</svg>
