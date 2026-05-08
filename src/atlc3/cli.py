@@ -735,6 +735,118 @@ def view(
     run_viewer(bmp, pixel_width=pixel_width)
 
 
+@app.command()
+def gui(
+    gui_dir: Path = typer.Option(
+        Path("../atlc3-gui"),
+        "--gui-dir",
+        help="Path to the atlc3-gui sibling repo (default: ../atlc3-gui).",
+    ),
+    backend_port: int = typer.Option(8000, "--backend-port"),
+    frontend_port: int = typer.Option(3000, "--frontend-port"),
+) -> None:
+    """Launch the atlc3-gui chat-driven web GUI.
+
+    Starts the FastAPI backend (uvicorn on ``--backend-port``) and the
+    Next.js dev server (on ``--frontend-port``) as child processes, then
+    opens ``http://localhost:<frontend-port>`` in the default browser.
+
+    Both processes inherit the parent's environment, so ``ANTHROPIC_API_KEY``
+    or ``CLAUDE_API_KEY`` (or a local ``claude /login`` session) flows
+    through to the agent.
+
+    The atlc3-gui project must be cloned next to atlc3 (or pass ``--gui-dir``).
+    Pre-flight: ensures ``backend/.venv`` and ``frontend/node_modules`` exist;
+    if not, prints the setup commands and exits.
+    """
+    import shutil
+    import subprocess
+    import time
+    import webbrowser
+
+    gui_dir = gui_dir.expanduser().resolve()
+    backend_dir = gui_dir / "backend"
+    frontend_dir = gui_dir / "frontend"
+
+    if not gui_dir.exists():
+        err_console.print(f"GUI directory not found: {gui_dir}")
+        err_console.print(
+            "Clone https://github.com/RFingAdam/atlc3-gui next to atlc3, "
+            "or pass --gui-dir <path>."
+        )
+        raise typer.Exit(code=2)
+
+    backend_python = backend_dir / ".venv" / "bin" / "python"
+    if not backend_python.exists():
+        err_console.print(f"Backend venv missing at {backend_python.parent.parent}")
+        console.print("Set it up with:")
+        console.print(f"  cd {backend_dir}")
+        console.print(
+            "  python3 -m venv .venv && .venv/bin/pip install -e ../../atlc3 fastapi uvicorn[standard] websockets claude-agent-sdk"
+        )
+        raise typer.Exit(code=2)
+
+    pnpm = shutil.which("pnpm") or shutil.which("npm")
+    if pnpm is None:
+        err_console.print("Neither pnpm nor npm found on PATH; install Node.js.")
+        raise typer.Exit(code=2)
+
+    if not (frontend_dir / "node_modules").exists():
+        console.print(f"Installing frontend deps in {frontend_dir}...")
+        subprocess.run([pnpm, "install"], cwd=frontend_dir, check=True)
+
+    console.print(f"Starting backend on port {backend_port}...")
+    backend_proc = subprocess.Popen(
+        [
+            str(backend_python),
+            "-m",
+            "uvicorn",
+            "app.main:app",
+            "--host",
+            "127.0.0.1",
+            "--port",
+            str(backend_port),
+        ],
+        cwd=backend_dir,
+    )
+
+    console.print(f"Starting frontend on port {frontend_port}...")
+    frontend_proc = subprocess.Popen(
+        [pnpm, "dev", "--port", str(frontend_port)],
+        cwd=frontend_dir,
+    )
+
+    url = f"http://localhost:{frontend_port}"
+    time.sleep(2.5)  # let dev servers boot
+    import contextlib
+
+    with contextlib.suppress(Exception):
+        webbrowser.open(url)
+    console.print(f"\natlc3-gui running → [bold green]{url}[/bold green]")
+    console.print("[dim]Ctrl-C to stop both servers.[/dim]\n")
+
+    try:
+        # Wait on either process; forward exit code from whichever finishes first.
+        while True:
+            if backend_proc.poll() is not None:
+                err_console.print("backend exited")
+                break
+            if frontend_proc.poll() is not None:
+                err_console.print("frontend exited")
+                break
+            time.sleep(0.5)
+    except KeyboardInterrupt:
+        console.print("\nshutting down...")
+    finally:
+        for proc in (frontend_proc, backend_proc):
+            if proc.poll() is None:
+                proc.terminate()
+                try:
+                    proc.wait(timeout=5)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+
+
 # ---------------------------------------------------------------------------
 # Script runner
 # ---------------------------------------------------------------------------
