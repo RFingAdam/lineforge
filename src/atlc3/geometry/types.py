@@ -342,6 +342,13 @@ Used as the input type for :func:`atlc3.analytical.solve` and the MCP server's
 """
 
 
+def _register_three_wire() -> dict[str, type[BaseModel]]:
+    """Lazy import to avoid circular references on module load."""
+    from atlc3.geometry.three_wire import ThreeWireGeometry
+
+    return {"three_wire": ThreeWireGeometry}
+
+
 GEOMETRY_TYPES: dict[str, type[BaseModel]] = {
     "microstrip": Microstrip,
     "embedded_microstrip": EmbeddedMicrostrip,
@@ -351,6 +358,7 @@ GEOMETRY_TYPES: dict[str, type[BaseModel]] = {
     "edge_coupled_diff_microstrip": EdgeCoupledDiffMicrostrip,
     "edge_coupled_diff_stripline": EdgeCoupledDiffStripline,
     "broadside_coupled_diff_stripline": BroadsideCoupledDiffStripline,
+    **_register_three_wire(),
 }
 """Lookup table from ``type`` discriminator string to model class."""
 
