@@ -16,10 +16,11 @@ storage is always SI base.
 
 from __future__ import annotations
 
-from typing import Annotated, Literal, Union
+from typing import Annotated, Any, Literal, Union
 
-from pydantic import BaseModel, BeforeValidator, ConfigDict, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
+from atlc3.geometry.dielectric import DielectricLayer, series_reduce
 from atlc3.units import parse_length
 
 
@@ -129,6 +130,13 @@ class StriplineAsymmetric(_BaseGeometry):
     these override the single ``er`` / ``tan_delta`` values: the closed-form
     solver uses a capacitance-weighted εr_eff, and the bitmap rasterizer
     paints the two halves with different materials.
+
+    For multi-layer stacks on either side (e.g. Prepreg + voided plane + Core
+    when an intermediate plane is voided to push the reference down), pass
+    ``stack_above`` / ``stack_below`` as a list of :class:`DielectricLayer`.
+    The stack is series-reduced via the parallel-plate (C-series) formula
+    ``εr_eq = h_total / Σ(hᵢ/εᵢ)`` to derive H1/H2/εr_above/εr_below
+    automatically — the explicit per-side fields are then unused.
     """
 
     type: Literal["stripline_asymmetric"] = "stripline_asymmetric"
@@ -163,6 +171,79 @@ class StriplineAsymmetric(_BaseGeometry):
         description="Optional loss tangent below the strip.",
         ge=0,
     )
+    stack_above: list[DielectricLayer] | None = Field(
+        None,
+        description=(
+            "Optional multi-layer dielectric stack above the strip. When set, "
+            "H1, er_above and tan_delta_above are derived from the stack via "
+            "C-series reduction; do not also pass H1/er_above/tan_delta_above "
+            "explicitly."
+        ),
+    )
+    stack_below: list[DielectricLayer] | None = Field(
+        None,
+        description=(
+            "Optional multi-layer dielectric stack below the strip. When set, "
+            "H2, er_below and tan_delta_below are derived from the stack."
+        ),
+    )
+
+    @model_validator(mode="before")
+    @classmethod
+    def _derive_h_from_stacks(cls, data: Any) -> Any:
+        """Pre-fill H1/er_above/tan_delta_above (and below) from stacks if given.
+
+        Runs in 'before' mode so the derived values pass through the normal
+        Length / float field validators downstream. Also fills the bulk ``er``
+        field with the larger of the two stack-derived εr_eq values (it acts
+        only as a fallback once split-εr fields are populated, but Pydantic
+        still requires it to be ≥ 1).
+        """
+        if not isinstance(data, dict):
+            return data
+
+        any_stack = False
+        for side, h_key, er_key, tan_key in (
+            ("stack_above", "H1", "er_above", "tan_delta_above"),
+            ("stack_below", "H2", "er_below", "tan_delta_below"),
+        ):
+            stack = data.get(side)
+            if not stack:
+                continue
+            any_stack = True
+            # Allow either DielectricLayer instances or plain dicts.
+            layers = [
+                layer if isinstance(layer, DielectricLayer) else DielectricLayer(**layer)
+                for layer in stack
+            ]
+            h_total, er_eq, tan_eq = series_reduce(layers)
+            for k, v in ((h_key, h_total), (er_key, er_eq), (tan_key, tan_eq)):
+                existing = data.get(k)
+                if existing not in (None, 0, 0.0):
+                    # Allow the model_dump → model_validate_json round-trip:
+                    # the dump emits both ``stack_below`` and the derived
+                    # ``H2``/``er_below``/``tan_delta_below``. Accept exact
+                    # numerical agreement; reject genuine inconsistencies.
+                    if isinstance(existing, (int, float)) and abs(existing - v) <= max(
+                        1e-9 * abs(v), 1e-12
+                    ):
+                        continue
+                    raise ValueError(
+                        f"StriplineAsymmetric: cannot pass both {side} and {k}; "
+                        f"the stack derives {k} automatically."
+                    )
+                data[k] = v
+            # Materialize the validated layers back into the dict so the field
+            # type sees DielectricLayer instances (not raw dicts).
+            data[side] = layers
+
+        # When at least one stack is given, ``er`` is unused (er_above/er_below
+        # take over) but Pydantic still requires er ≥ 1. Default it to the
+        # larger derived εr_eq so it's at least dimensionally sensible.
+        if any_stack and "er" not in data:
+            candidates = [data.get("er_above"), data.get("er_below")]
+            data["er"] = max(c for c in candidates if c is not None)
+        return data
 
 
 class CPWG(_BaseGeometry):
