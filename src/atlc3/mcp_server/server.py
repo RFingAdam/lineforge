@@ -524,6 +524,42 @@ def build_server() -> FastMCP:
         return {"taskId": task.id, "status": task.status}
 
     @server.tool()
+    def solve_modes(usermap_uri: str) -> dict[str, Any]:
+        """3-wire Y-decomposition (ZoR/ZoG/ZoB + odd/even modes).
+
+        Three Laplace solves, one with each conductor (red, green, blue) in
+        turn floating. Combines results via Y-decomposition.
+
+        Parameters
+        ----------
+        usermap_uri
+            ``atlc://geometries/<id>`` URI from a prior ``rasterize`` or
+            ``import_usermap`` call. The usermap must contain red (+1),
+            blue (−1), and green (0) conductor pixels.
+
+        Returns
+        -------
+        dict
+            Serialized :class:`atlc3.results.ThreeWireResult` plus
+            ``"_kind": "ThreeWireResult"``.
+        """
+        if not usermap_uri.startswith("atlc://geometries/"):
+            return {"error": f"expected atlc://geometries/<id>, got {usermap_uri!r}"}
+        uid = usermap_uri.removeprefix("atlc://geometries/")
+        usermap = usermap_store.get(uid)
+        if usermap is None:
+            return {"error": f"unknown usermap {uid!r}"}
+        from atlc3.solvers import solve_modes as _solve_modes
+
+        try:
+            result = _solve_modes(usermap)
+        except (ValueError, RuntimeError) as exc:
+            return {"error": f"solve_modes failed: {exc}"}
+        out = result.model_dump()
+        out["_kind"] = "ThreeWireResult"
+        return out
+
+    @server.tool()
     def target_z0(
         template: dict[str, Any],
         target_ohms: float,
