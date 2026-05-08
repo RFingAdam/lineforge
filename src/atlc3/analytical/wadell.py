@@ -163,11 +163,14 @@ def stripline_asymmetric(
     vp = C0 / math.sqrt(er_eff)
     td_per_in = INCH_M / vp
 
-    method = (
-        "ipc2141-stripline-asymmetric-split-er"
-        if (geometry.er_above is not None or geometry.er_below is not None)
-        else "ipc2141-stripline-asymmetric"
-    )
+    has_stack = geometry.stack_above is not None or geometry.stack_below is not None
+    has_split = geometry.er_above is not None or geometry.er_below is not None
+    if has_stack:
+        method = "ipc2141-stripline-asymmetric-multilayer-stack"
+    elif has_split:
+        method = "ipc2141-stripline-asymmetric-split-er"
+    else:
+        method = "ipc2141-stripline-asymmetric"
 
     return TLineResult(
         z0=z0,
