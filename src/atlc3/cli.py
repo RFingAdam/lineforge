@@ -552,6 +552,66 @@ def optimize(
     console.print(table)
 
 
+@app.command(name="target-z0")
+def target_z0_cmd(
+    type_: str = typer.Option(..., "--type"),
+    target_ohms: float = typer.Option(..., "--target", help="Target Z0 in ohms."),
+    vary: str = typer.Option("W", "--vary", help="Field name to vary (default: W)."),
+    bounds: str = typer.Option(
+        "0.5mil:30mil",
+        "--bounds",
+        help="lo:hi bounds for the varied field (default 0.5mil:30mil).",
+    ),
+    fixed: str = typer.Option("", "--fixed", help="key=value, comma-separated fixed fields."),
+    solver: str = typer.Option("analytical", "--solver"),
+    frequency: str | None = typer.Option(None, "--frequency", "-f"),
+) -> None:
+    """Solve for the dimension that lands a target characteristic impedance.
+
+    Ergonomic shortcut for the most common optimization workflow:
+
+        atlc3 target-z0 --type microstrip --target 50 \\
+            --fixed H=4mil,T=1.4mil,er=4.4
+
+    Defaults: ``--vary W`` over ``--bounds 0.5mil:30mil``, analytical solver.
+    """
+    from atlc3.optimize import target_z0 as _target_z0
+
+    template: dict[str, Any] = {"type": type_}
+    for tok in fixed.split(","):
+        tok = tok.strip()
+        if not tok:
+            continue
+        k, _, v = tok.partition("=")
+        template[k.strip()] = v.strip()
+
+    lo, _, hi = bounds.partition(":")
+    freq_hz = parse_frequency(frequency) if frequency else None
+
+    result = _target_z0(
+        template=template,
+        vary=vary,
+        target_ohms=target_ohms,
+        bounds=(lo.strip(), hi.strip()),
+        solver=solver,
+        frequency_hz=freq_hz,
+    )
+
+    table = Table(title=f"target-z0: {target_ohms:.3f} Ω")
+    table.add_column("Field", style="cyan")
+    table.add_column("Value", justify="right")
+    geom_val = getattr(result.geometry, vary, None)
+    if geom_val is not None:
+        table.add_row(f"{vary} (m)", f"{geom_val:.4e}")
+        table.add_row(f"{vary} (mil)", f"{geom_val * 39370.0787:.4f}")
+        table.add_row(f"{vary} (mm)", f"{geom_val * 1000:.4f}")
+    table.add_row("Z0 achieved (Ω)", f"{result.metric.get('z0', float('nan')):.4f}")
+    table.add_row("cost (rel. err)", f"{result.cost:.2e}")
+    table.add_row("iterations", str(result.iterations))
+    table.add_row("success", "yes" if result.success else "no")
+    console.print(table)
+
+
 @app.command()
 def sweep(
     type_: str = typer.Option(..., "--type"),
