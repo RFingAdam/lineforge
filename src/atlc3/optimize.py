@@ -137,11 +137,15 @@ def optimize_for(
 
     if len(fields) == 1:
         lo, hi = bounds[0]
+        # xatol scaled to the bound-range — the optimizer should converge to a
+        # tiny fraction of the search interval, not the default 1e-5 in absolute
+        # SI units which is huge when bounds are in meters (0.1 mil = 2.5 µm).
+        xatol = max((hi - lo) * 1e-9, 1e-15)
         scalar_res = minimize_scalar(
             lambda x: objective(np.array([x])),
             bounds=(lo, hi),
             method="bounded",
-            options={"maxiter": max_iter},
+            options={"maxiter": max_iter, "xatol": xatol},
         )
         x_opt = np.array([scalar_res.x])
         cost = float(scalar_res.fun)
@@ -190,4 +194,84 @@ def optimize_for(
     )
 
 
-__all__ = ["OptimizeResult", "optimize_for"]
+def target_z0(
+    template: dict[str, Any],
+    *,
+    vary: str | dict[str, tuple[float | str, float | str]],
+    target_ohms: float,
+    solver: str = "analytical",
+    frequency_hz: float | None = None,
+    max_iter: int = 100,
+    bounds: tuple[float | str, float | str] | None = None,
+) -> OptimizeResult:
+    """Find a single dimension that hits a target characteristic impedance.
+
+    Ergonomic wrapper around :func:`optimize_for` for the most common workflow:
+    "what trace width gives me 50 Ω on this stackup?"
+
+    Parameters
+    ----------
+    template
+        Geometry dict with all the fixed fields (type + everything not varying).
+    vary
+        Either a field name (e.g. ``"W"``) — bounds default to ``("0.1mil", "100mil")``
+        or are taken from the optional ``bounds`` argument — or a full ``vary``
+        dict like :func:`optimize_for` accepts.
+    target_ohms
+        Target Z₀ in ohms (e.g. ``50.0``, ``48.0``, ``100.0``).
+    solver
+        ``"analytical"`` (default), ``"cgp"``, or ``"full"``.
+    frequency_hz
+        Required for ``solver="full"``; optional otherwise.
+    max_iter
+        Maximum optimizer iterations.
+    bounds
+        ``(low, high)`` for the varied field. Only consulted when ``vary`` is a
+        bare string. Accepts unit strings.
+
+    Returns
+    -------
+    OptimizeResult
+        ``.geometry`` is the dimensioned geometry; ``.metric["z0"]`` is the
+        achieved Z₀; ``.success`` is ``True`` when within 1 % of target.
+
+    Examples
+    --------
+    Recover the L3 SIG1 W=3.18 mil result from the planning session::
+
+        >>> from atlc3.optimize import target_z0
+        >>> r = target_z0(
+        ...     template={
+        ...         "type": "stripline_asymmetric",
+        ...         "T": "0.689mil",
+        ...         "H1": "3.5mil",
+        ...         "H2": "5.3mil",
+        ...         "er": 4.2,
+        ...         "er_above": 4.2,
+        ...         "er_below": 3.7,
+        ...     },
+        ...     vary="W",
+        ...     target_ohms=48.0,
+        ...     bounds=("1mil", "10mil"),
+        ... )
+        >>> round(r.geometry.W * 39370.1, 2)  # convert m → mil
+        3.18
+    """
+    if isinstance(vary, str):
+        if bounds is None:
+            bounds = ("0.1mil", "100mil")
+        vary_dict: dict[str, tuple[float | str, float | str]] = {vary: bounds}
+    else:
+        vary_dict = vary
+
+    return optimize_for(
+        template=template,
+        vary=vary_dict,
+        target={"z0": target_ohms},
+        solver=solver,
+        frequency_hz=frequency_hz,
+        max_iter=max_iter,
+    )
+
+
+__all__ = ["OptimizeResult", "optimize_for", "target_z0"]
