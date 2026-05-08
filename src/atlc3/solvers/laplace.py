@@ -17,10 +17,25 @@ Two solvers:
 
 Boundary conditions:
     - **Dirichlet**: pixels in ``v_mask`` are clamped to ``v_value``.
-    - **Floating** conductors: pixel groups passed via ``float_groups``. SOR
-      enforces a common voltage by averaging within each group every iteration
-      (a simplification of atlc2's eddy-current treatment; the rigorous version
-      lives in the Phase 3 Faraday solver).
+    - **Floating** conductors: pixel groups passed via ``float_groups``. The
+      group is forced to a single equipotential value at every iteration via
+      the ``floating_mode`` parameter:
+
+      * ``"average"`` (default) — V_group = arithmetic mean of the group's
+        post-relaxation values. Fast and correct for symmetric problems
+        (where the linear-V centroid coincides with the zero-net-charge V).
+        For asymmetric εr around the group it's an approximation; use the
+        radiation indicator (Σ E·n on the group boundary) to flag cases
+        where it matters.
+      * ``"boundary_weighted"`` — V_group = εr-weighted average of the
+        outward-neighbor potentials. More accurate when εr is asymmetric
+        around the group. Stable for the cases tested (3-wire above ground,
+        coupled-stripline coupler); see ``tests/test_solvers/test_floating_bc.py``.
+
+      A rigorous Schur-complement formulation enforcing exactly zero net
+      charge on each floating group is tracked as a follow-up — for the
+      3-wire Y-decomposition use case the existing modes are sufficient
+      modulo the 4 % radiation indicator.
     - **Outer boundary**: zero-Dirichlet (V=0). Combined with
       :mod:`atlc3.solvers.extension` this approximates "ground at infinity".
 """
@@ -77,6 +92,66 @@ def _edge_coefficients(er: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarr
 # ---------------------------------------------------------------------------
 
 
+def _equipotential_boundary_weighted(
+    v: np.ndarray,
+    aE: np.ndarray,
+    aW: np.ndarray,
+    aN: np.ndarray,
+    aS: np.ndarray,
+    group: np.ndarray,
+) -> float:
+    """Compute the equipotential V_F as the εr-weighted average of the
+    group's external-neighbor potentials.
+
+    For a constant-V group F satisfying ∮(εr ∇V)·n dA = 0 on its boundary
+    (zero net induced charge), the FD form gives::
+
+        V_F = Σ_{external edges} α_edge · V_neighbor_outside  /  Σ_{external edges} α_edge
+
+    Internal edges (between two F-cells) cancel and don't contribute. This
+    is computed directly here without iterating on a current-V proxy, so it
+    converges cleanly even in highly asymmetric εr geometries.
+    """
+    # For each direction (E, W, N, S), find F-cells whose neighbor in that
+    # direction is OUTSIDE F (or off-grid).
+    # Boundary masks: True for F-cells whose <dir>-neighbor is outside F.
+    out_E = group.copy()
+    out_E[:, :-1] = group[:, :-1] & ~group[:, 1:]  # E-neighbor outside
+    # The rightmost column has no E-neighbor (off-grid is "outside") — keep True.
+
+    out_W = group.copy()
+    out_W[:, 1:] = group[:, 1:] & ~group[:, :-1]
+
+    out_N = group.copy()
+    out_N[1:, :] = group[1:, :] & ~group[:-1, :]
+
+    out_S = group.copy()
+    out_S[:-1, :] = group[:-1, :] & ~group[1:, :]
+
+    # Neighbor potentials (zero-padded at grid boundary, which matches the
+    # outer Dirichlet V=0 BC of the solver).
+    nE = np.zeros_like(v)
+    nE[:, :-1] = v[:, 1:]
+    nW = np.zeros_like(v)
+    nW[:, 1:] = v[:, :-1]
+    nN = np.zeros_like(v)
+    nN[1:, :] = v[:-1, :]
+    nS = np.zeros_like(v)
+    nS[:-1, :] = v[1:, :]
+
+    num = float(
+        (aE * out_E * nE).sum()
+        + (aW * out_W * nW).sum()
+        + (aN * out_N * nN).sum()
+        + (aS * out_S * nS).sum()
+    )
+    denom = float((aE * out_E).sum() + (aW * out_W).sum() + (aN * out_N).sum() + (aS * out_S).sum())
+    if denom <= 0:
+        # Group fully interior with no boundary. Keep current value.
+        return float(v[group].mean())
+    return num / denom
+
+
 def solve_sor(
     er: np.ndarray,
     v_mask: np.ndarray,
@@ -88,6 +163,7 @@ def solve_sor(
     tol: float = 1e-7,
     check_every: int = 50,
     float_groups: list[np.ndarray] | None = None,
+    floating_mode: str = "average",
 ) -> LaplaceResult:
     """Successive over-relaxation Laplace solve.
 
@@ -129,8 +205,13 @@ def solve_sor(
 
         if float_groups:
             for group in float_groups:
-                if group.any():
-                    v[group] = float(v[group].mean())
+                if not group.any():
+                    continue
+                if floating_mode == "boundary_weighted":
+                    v_f = _equipotential_boundary_weighted(v, aE, aW, aN, aS, group)
+                else:
+                    v_f = float(v[group].mean())
+                v[group] = v_f
 
         if it % check_every == 0:
             residual = float(np.max(np.abs(v - last_check)))
@@ -294,6 +375,7 @@ def solve_laplace(
     max_iter: int | None = None,
     tol: float = 1e-7,
     float_groups: list[np.ndarray] | None = None,
+    floating_mode: str = "average",
 ) -> LaplaceResult:
     """Top-level Laplace solve dispatcher.
 
@@ -302,6 +384,8 @@ def solve_laplace(
     method
         ``"sor"``, ``"amg"``, or ``"auto"``. Auto picks AMG for grids
         with ≥ 250_000 free pixels, SOR otherwise.
+    floating_mode
+        ``"average"`` or ``"charge_balanced"`` — see module docstring.
     """
     n_free = int((~v_mask).sum())
     chosen = method
@@ -319,6 +403,7 @@ def solve_laplace(
         max_iter=max_iter or 50_000,
         tol=tol,
         float_groups=float_groups,
+        floating_mode=floating_mode,
     )
 
 
