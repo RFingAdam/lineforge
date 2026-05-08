@@ -121,7 +121,6 @@ class TestRasterizeStriplineAsymmetricSplitEr:
             W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.0, er_above=4.5, er_below=3.7
         )
         umap = rasterize_stripline_asymmetric(geom)
-        h, w = umap.rgb.shape[:2]
         # Sample a column well away from the strip (column 1, in the side margin).
         col = umap.rgb[:, 1, :]
         # Find rows with non-ground, non-vacuum content (the dielectric halves).
