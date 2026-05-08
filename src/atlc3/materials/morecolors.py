@@ -196,6 +196,13 @@ def load_json_pack(path: str | Path) -> list[MaterialRecord]:
     """
     blob: dict[str, Any] = json.loads(Path(path).read_text())
     materials = blob.get("materials", [])
+
+    def _to_freq_dict(raw: dict[str, Any] | None) -> dict[float, float] | None:
+        """JSON has only string keys; coerce them to float for the {Hz: value} dicts."""
+        if not raw:
+            return None
+        return {float(k): float(v) for k, v in raw.items()}
+
     return [
         MaterialRecord(
             rgb=tuple(m["rgb"]),
@@ -205,6 +212,8 @@ def load_json_pack(path: str | Path) -> list[MaterialRecord]:
             tan_delta=float(m.get("tan_delta", 0.0)),
             mu_r=float(m.get("mu_r", 1.0)),
             name=m["name"],
+            er_freq=_to_freq_dict(m.get("er_freq")),
+            tan_freq=_to_freq_dict(m.get("tan_freq")),
         )
         for m in materials
     ]
