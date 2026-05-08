@@ -12,9 +12,9 @@ from atlc3.geometry.types import CPWG, Microstrip
 
 
 class TestGeometryTypes:
-    def test_all_seven_types_registered(self) -> None:
-        # Phase 1 ships 8 (microstrip + embedded + 2 striplines + cpwg + 3 diffs)
-        assert len(GEOMETRY_TYPES) == 8
+    def test_all_geometry_types_registered(self) -> None:
+        # 8 from Phase 1 + 1 ThreeWireGeometry from Phase B1
+        assert len(GEOMETRY_TYPES) == 9
 
     def test_microstrip_round_trip_json(self) -> None:
         m = Microstrip(W=152e-6, H=102e-6, T=35e-6, er=4.4)
