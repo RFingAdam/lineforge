@@ -6,6 +6,86 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.0.0] — 2026-05-08
+
+First stable release. atlc3 is now feature-complete vs the Phase 0-4 plan
+plus the post-1.0 Phase A work (multi-layer stacks, Touchstone export,
+ergonomic optimizer wrapper, expanded laminate library, frequency-dependent
+materials, atlc-format BMP parity fixtures, broader test coverage).
+
+### Added since 0.1.0
+
+#### Multi-layer dielectric stack (A1)
+- `atlc3.geometry.DielectricLayer` Pydantic model + `series_reduce` helper.
+- `StriplineAsymmetric.stack_above` / `stack_below` for stratified
+  cross-sections (e.g. Prepreg + voided plane + Core when an intermediate
+  plane is voided to push the reference down).
+- Capacitance-weighted εr_eq and tan_δ_eq via the parallel-plate / series-cap
+  reduction. Method tag becomes
+  `ipc2141-stripline-asymmetric-multilayer-stack` when stacks are present.
+- Bitmap rasterizer paints each layer with its own synthesized RGB +
+  material record, so the bitmap solver sees the actual stratified geometry.
+
+#### Split-εr asymmetric stripline (pre-A1)
+- `StriplineAsymmetric.er_above` / `er_below` (and matching tan_δ fields)
+  for two-dielectric inner-layer traces (Core above ≠ Prepreg below). The
+  closed-form solver uses a capacitance-weighted εr_eff; the rasterizer
+  paints two distinct halves with synthesized RGB.
+
+#### Touchstone (.s2p) export (A2)
+- `atlc3.touchstone.to_touchstone(sweep_results, path, *, line_length, z_ref)`
+  emits a 2-port Touchstone v1 file via scikit-rf.
+- CLI: `atlc3 sweep --touchstone-out trace.s2p --line-length 1in --z-ref 50`.
+- MCP: `sweep` tool gains `touchstone_out`, `line_length`, `z_ref` params;
+  returns the file path under `result.touchstone`.
+
+#### `target_z0` ergonomic wrapper (A3)
+- `atlc3.optimize.target_z0(template, *, vary, target_ohms, ...)` —
+  one-liner for "what trace width gives me 50 Ω on this stackup?"
+- Bundled convergence fix: `optimize_for`'s 1D scalar minimizer now uses
+  `xatol` scaled to 1e-9 of the search interval (was scipy's default 1e-5
+  in absolute SI, which is huge when bounds are in meters). The L3 SIG1
+  benchmark now lands W=3.182 mil and Z₀=48.000 Ω.
+- CLI: `atlc3 target-z0 --type microstrip --target 50 --fixed H=4mil,...`
+- MCP: `target_z0` tool.
+
+#### Frequency-dependent εr / tan_δ + expanded laminate library (A4)
+- `MaterialRecord` gains optional `er_freq` / `tan_freq` mappings
+  (`{Hz: value}`); `record.at_frequency(f)` interpolates log-linearly.
+- New `atlc3.materials.dispersion` with `interpolate_log_freq` and
+  `material_at_frequency` helpers.
+- `pcb_extended.json` expanded from 10 → 18 entries: Rogers RO4350B/
+  RO4003C/RO3003/RO3010/RO3006, Panasonic Megtron 4/6/7-N (multi-frequency
+  Dk/Df), Isola 370HR / I-Tera MT40 / Tachyon 100G, ITEQ IT-150DA/180A,
+  plus FR4 Core/Prepreg generics.
+
+#### atlc-format BMP fixtures + parity tests (A5)
+- New `tests/fixtures/usermaps/` directory with `air_coax_50ohm.bmp`,
+  `air_coax_75ohm.bmp` and a `_generate.py` regen script.
+- `tests/test_solvers/test_atlc_bmp_parity.py` exercises BMP I/O round-trip
+  + atlc2 palette lookup + bitmap solver against analytical references
+  within ±10 % Z₀.
+
+#### Test coverage uplift (A6)
+- Coverage 63 % → 70 %.
+- New tests for `atlc3.visualization.fields` (0 % → 99 %),
+  `atlc3.viewer` (0 % → 100 %), `atlc3.scripting.atlc2_script` (46 % → 71 %).
+- Outstanding gaps (cli.py, mcp_server, builders, diff_modes) tracked
+  for follow-up; the `--cov-fail-under=90` flag stays held until those
+  close.
+
+#### Examples
+- `examples/06_dielectric_stack.py` — L3 SIG1 void-L4 stackup walkthrough.
+- `examples/07_touchstone_export.py` — sweep + .s2p export + skrf reload.
+
+### Changed
+- `optimize_for` 1D scalar minimization tolerance is now scaled to the
+  search interval; user-visible side-effect is far tighter convergence on
+  Z₀ targets (≤ 1e-9 relative error vs the previous ~1 %).
+- `MaterialRecord` is forward-compatible with frequency-tabulated εr / tan_δ
+  while remaining backward-compatible: existing constant-only records still
+  return the same numbers from `at_frequency()` as their bulk fields.
+
 ### Phase 4 — Polish + 1.0.0 prep
 - Added geometry optimizer (`atlc3.optimize_for`) — wrap scipy.optimize for
   finding dimensions that hit Z0 / Zdiff / εeff targets.
