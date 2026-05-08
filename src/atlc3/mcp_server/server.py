@@ -439,12 +439,20 @@ def build_server() -> FastMCP:
         values: list[float],
         solver: str = "analytical",
         frequency: float | str | None = None,
+        touchstone_out: str | None = None,
+        line_length: str | float = "1in",
+        z_ref: float = 50.0,
     ) -> dict[str, Any]:
         """Sweep a single parameter and return results.
 
         For ``solver="analytical"`` this is synchronous (microseconds per point).
         For ``"cgp"`` or ``"full"`` it submits a background task and returns
         a ``taskId``; poll ``tasks_get`` for progress.
+
+        Optional Touchstone export: pass ``touchstone_out=<path>`` (with
+        ``parameter="frequency"``) to also write a 2-port ``.s2p`` file
+        modeling a ``line_length``-long section at reference impedance
+        ``z_ref`` Ω.
         """
         try:
             geom = from_dict(geometry)
@@ -466,9 +474,26 @@ def build_server() -> FastMCP:
                 )
             except Exception as exc:  # noqa: BLE001
                 return {"error": f"sweep failed: {exc}"}
-            return {
+
+            response: dict[str, Any] = {
                 "points": [{"params": p.params, "result": p.result.model_dump()} for p in points],
             }
+            if touchstone_out is not None:
+                from atlc3.touchstone import to_touchstone
+
+                try:
+                    out_path = to_touchstone(
+                        points, touchstone_out, line_length=line_length, z_ref=z_ref
+                    )
+                    response["touchstone"] = {
+                        "path": str(out_path),
+                        "n_ports": 2,
+                        "z_ref": z_ref,
+                        "line_length": line_length,
+                    }
+                except (ValueError, OSError) as exc:
+                    response["touchstone_error"] = str(exc)
+            return response
 
         # Numerical solver: async
         def _run(task_obj: Any) -> dict[str, Any]:
