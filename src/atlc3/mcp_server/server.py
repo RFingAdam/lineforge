@@ -524,6 +524,75 @@ def build_server() -> FastMCP:
         return {"taskId": task.id, "status": task.status}
 
     @server.tool()
+    def target_z0(
+        template: dict[str, Any],
+        target_ohms: float,
+        vary: str = "W",
+        bounds: list[str] | None = None,
+        solver: str = "analytical",
+        frequency: float | str | None = None,
+    ) -> dict[str, Any]:
+        """Find a single dimension that lands a target characteristic impedance.
+
+        Ergonomic wrapper around the optimizer for "what trace width gives me
+        50 Ω on this stackup?"-style queries.
+
+        Parameters
+        ----------
+        template
+            Geometry dict with ``type`` plus all the fixed fields.
+        target_ohms
+            Target Z₀ in ohms.
+        vary
+            Field name to optimize (default ``"W"``).
+        bounds
+            Two-element ``[low, high]`` bounds for the varied field. Accepts
+            unit strings. Defaults to ``["0.1mil", "100mil"]`` if omitted.
+        solver
+            ``"analytical"`` (default), ``"cgp"``, or ``"full"``.
+        frequency
+            Required for ``solver="full"``.
+
+        Returns
+        -------
+        dict with keys ``geometry`` (geometry dict), ``z0_achieved``,
+        ``cost``, ``iterations``, ``success``.
+        """
+        from atlc3.optimize import target_z0 as _target_z0
+
+        freq_hz = parse_frequency(frequency) if isinstance(frequency, str) else frequency
+        bounds_tuple: tuple[float | str, float | str] | None
+        if bounds is None:
+            bounds_tuple = None
+        else:
+            if len(bounds) != 2:
+                return {"error": "bounds must be a 2-element list [low, high]"}
+            bounds_tuple = (bounds[0], bounds[1])
+
+        try:
+            result = _target_z0(
+                template=template,
+                vary=vary,
+                target_ohms=target_ohms,
+                solver=solver,
+                frequency_hz=freq_hz,
+                bounds=bounds_tuple,
+            )
+        except (KeyError, ValueError) as exc:
+            return {"error": str(exc)}
+        return {
+            "geometry": (
+                result.geometry.model_dump()
+                if hasattr(result.geometry, "model_dump")
+                else dict(result.geometry)
+            ),
+            "z0_achieved": result.metric.get("z0"),
+            "cost": result.cost,
+            "iterations": result.iterations,
+            "success": result.success,
+        }
+
+    @server.tool()
     def run_atlc2_script(script_text: str, dry_run: bool = False) -> dict[str, Any]:
         """Execute an atlc2-style ``.txt`` script."""
         from atlc3.scripting import ScriptInterpreter
