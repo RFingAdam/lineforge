@@ -97,4 +97,55 @@ class DiffResult(BaseModel):
     warnings: list[SolverWarning] = Field(default_factory=list)
 
 
-__all__ = ["DiffResult", "SolverWarning", "TLineResult"]
+class ThreeWireResult(BaseModel):
+    """Result of a 3-conductor (Y-decomposed) line analysis.
+
+    Per ``docs/theory/three_wire.md``, a 3-wire line has no single Z₀ — three
+    pair-wise impedances combine in a "Y" arrangement. We carry both the raw
+    pair impedances (each with one conductor floating) and the derived Y-leg
+    impedances + odd/even mode equivalents.
+
+    Attributes
+    ----------
+    z_rcz, z_gcz, z_bcz
+        Pair impedances (red+green active, etc.); the suffix names which
+        conductor is set to current-zero (floating).
+    zo_r, zo_g, zo_b
+        Y-decomposition: each is the impedance of one Y leg. Computed via
+        ``zo_r = (z_gcz + z_bcz − z_rcz) / 2`` and analogous.
+    z_odd, z_even
+        Coupler odd/even mode impedances when the geometry is interpreted as
+        a directional coupler (red + blue as the two signal lines, green as
+        ground).
+    ignd_ratio
+        |I_ground / I_signal| ratio. If > 0.04 the line is radiating and the
+        Z₀ values are not true characteristic impedances (atlc2 4 % red-text
+        warning); a SolverWarning with code ``radiating_3wire`` is appended
+        in that case.
+    """
+
+    model_config = ConfigDict(extra="forbid")
+
+    z_rcz: float = Field(..., description="Pair Z₀ with red current-zero (R floating).", gt=0)
+    z_gcz: float = Field(..., description="Pair Z₀ with green current-zero (G floating).", gt=0)
+    z_bcz: float = Field(..., description="Pair Z₀ with blue current-zero (B floating).", gt=0)
+
+    zo_r: float = Field(..., description="Y-leg impedance for the red (+1) conductor.")
+    zo_g: float = Field(..., description="Y-leg impedance for the green (0) conductor.")
+    zo_b: float = Field(..., description="Y-leg impedance for the blue (−1) conductor.")
+
+    z_odd: float = Field(..., description="Coupler odd-mode impedance.", gt=0)
+    z_even: float = Field(..., description="Coupler even-mode impedance.", gt=0)
+
+    ignd_ratio: float = Field(
+        0.0,
+        description="|Iground/Isignal| ratio (radiation indicator).",
+        ge=0,
+    )
+
+    method: str = Field(..., description="Which solver produced this result.")
+    frequency_hz: float | None = Field(None, gt=0)
+    warnings: list[SolverWarning] = Field(default_factory=list)
+
+
+__all__ = ["DiffResult", "SolverWarning", "TLineResult", "ThreeWireResult"]

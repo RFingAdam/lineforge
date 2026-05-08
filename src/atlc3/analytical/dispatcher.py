@@ -11,9 +11,11 @@ MCP server.
 
 from __future__ import annotations
 
-from typing import overload
+from typing import Union, overload
 
 from atlc3.analytical import hammerstad, wadell
+from atlc3.analytical.three_wire import solve_three_wire as _solve_three_wire
+from atlc3.geometry.three_wire import ThreeWireGeometry
 from atlc3.geometry.types import (
     CPWG,
     BroadsideCoupledDiffStripline,
@@ -25,7 +27,14 @@ from atlc3.geometry.types import (
     StriplineAsymmetric,
     StriplineSymmetric,
 )
-from atlc3.results import DiffResult, TLineResult
+from atlc3.results import DiffResult, ThreeWireResult, TLineResult
+
+ExtendedGeometryUnion = Union[GeometryUnion, ThreeWireGeometry]  # noqa: UP007
+"""GeometryUnion plus the ThreeWireGeometry side-class.
+
+Kept distinct from ``GeometryUnion`` because :class:`ThreeWireGeometry`
+returns :class:`ThreeWireResult`, not the TLineResult/DiffResult union.
+"""
 
 
 @overload
@@ -50,11 +59,13 @@ def solve(
 def solve(
     geometry: BroadsideCoupledDiffStripline, *, frequency_hz: float | None = ...
 ) -> DiffResult: ...
+@overload
+def solve(geometry: ThreeWireGeometry, *, frequency_hz: float | None = ...) -> ThreeWireResult: ...
 
 
 def solve(
-    geometry: GeometryUnion, *, frequency_hz: float | None = None
-) -> TLineResult | DiffResult:
+    geometry: ExtendedGeometryUnion, *, frequency_hz: float | None = None
+) -> TLineResult | DiffResult | ThreeWireResult:
     """Dispatch a geometry to its closed-form solver.
 
     Parameters
@@ -94,6 +105,8 @@ def solve(
             return wadell.edge_coupled_diff_stripline(geometry, frequency_hz=frequency_hz)
         case BroadsideCoupledDiffStripline():
             return wadell.broadside_coupled_diff_stripline(geometry, frequency_hz=frequency_hz)
+        case ThreeWireGeometry():
+            return _solve_three_wire(geometry)
         case _:
             raise TypeError(
                 f"unrecognized geometry type {type(geometry).__name__}; "
