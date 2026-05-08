@@ -12,10 +12,12 @@ closed-form to within 1% (Phase 2.5 AC).
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from typing import Final
 
 import numpy as np
 
+from atlc3.geometry.dielectric import DielectricLayer
 from atlc3.geometry.types import (
     CPWG,
     BroadsideCoupledDiffStripline,
@@ -64,17 +66,27 @@ def _synth_dielectric_rgb(er: float, role: str) -> tuple[int, int, int]:
 
     Uses a corner of color space the atlc2 default palette never touches
     (high-saturation green-yellow-blue tints around er ∈ [1, 10]). The ``role``
-    string ("above"/"below") nudges the color so two custom dielectrics with
-    similar εr still get visually distinct colors.
+    string nudges the color so two custom dielectrics with similar εr still
+    get visually distinct colors. Recognized role prefixes:
+
+    - ``"above"`` → cool teal (single layer above)
+    - ``"below"`` → warm coral (single layer below)
+    - ``"above_<idx>"`` / ``"below_<idx>"`` → above/below colors with a
+      per-layer offset on a secondary channel so two layers with the same εr
+      still get distinct colors. Up to 16 layers per side are distinguishable.
     """
     er_clamped = max(1.0, min(10.0, er))
-    # Map er ∈ [1, 10] → [40, 220] for the dominant channel
-    base = int(round(40 + (er_clamped - 1.0) * (220 - 40) / 9.0))
-    if role == "above":
-        return (base, 240, 200)  # cool teal — "above"
-    if role == "below":
-        return (240, base, 130)  # warm coral — "below"
-    # Generic fallback (single-dielectric custom case)
+    base = round(40 + (er_clamped - 1.0) * (220 - 40) / 9.0)
+
+    # Parse "above_3" / "below_2" → ("above"|"below", index) for per-layer offset.
+    side, _, idx_str = role.partition("_")
+    idx = int(idx_str) if idx_str.isdigit() else 0
+    layer_offset = (idx * 11) % 96  # 0, 11, 22, ... distinct steps
+
+    if side == "above":
+        return (base, max(40, 240 - layer_offset), min(255, 200 + layer_offset))
+    if side == "below":
+        return (min(255, 240 - layer_offset), base, max(40, 130 + layer_offset))
     return (base, 200, 220)
 
 
@@ -272,6 +284,43 @@ def rasterize_stripline_symmetric(
     )
 
 
+def _stack_to_bands(
+    layers: Sequence[DielectricLayer],
+    px: float,
+    side: str,
+) -> tuple[list[tuple[int, tuple[int, int, int]]], list[MaterialRecord]]:
+    """Convert a DielectricLayer list into per-layer pixel bands + materials.
+
+    Returns
+    -------
+    bands
+        Ordered ``(thickness_px, rgb)`` tuples — one per layer. Caller paints
+        them top-to-bottom (above-side) or bottom-to-top (below-side) starting
+        from the strip.
+    records
+        Synthetic ``MaterialRecord`` instances carrying the EXACT εr/tan_δ
+        the user specified, so the bitmap solver doesn't get rounded to the
+        nearest atlc2-palette εr.
+    """
+    bands: list[tuple[int, tuple[int, int, int]]] = []
+    records: list[MaterialRecord] = []
+    for idx, layer in enumerate(layers):
+        thickness_px = max(1, round(layer.h / px))
+        # Nudge the role string per-layer so each gets a distinct color even
+        # when two layers share the same εr (e.g. two prepregs at different
+        # thicknesses in the same stack).
+        role = f"{side}_{idx}"
+        rgb, record = _make_synth_dielectric(
+            layer.er,
+            layer.tan_delta,
+            role=role,
+            label=(layer.name or f"custom εr={layer.er:.3f} ({side} layer {idx})"),
+        )
+        bands.append((thickness_px, rgb))
+        records.append(record)
+    return bands, records
+
+
 def rasterize_stripline_asymmetric(
     geom: StriplineAsymmetric,
     *,
@@ -280,15 +329,40 @@ def rasterize_stripline_asymmetric(
 ) -> Usermap:
     """Rasterize an asymmetric stripline.
 
-    When ``geom.er_above`` or ``geom.er_below`` are set, the H1 region (above
-    the strip) and H2 region (below) are painted with different materials
-    using ``_dielectric_rgb_for_er`` to find the closest atlc2 default. This
-    gives the bitmap solver an honest 2-dielectric cross-section, matching
-    real PCB stackups where Core and Prepreg differ.
+    Three painting modes:
+
+    1. **Bulk (single εr)** — entire cavity gets one dielectric color.
+    2. **Split εr** (``er_above``/``er_below`` set) — H1 and H2 halves get
+       distinct synthesized colors carrying the exact εr/tan_δ the user
+       specified.
+    3. **Multi-layer stack** (``stack_above`` and/or ``stack_below`` set) —
+       each layer of the stack is painted as its own band with its own
+       synthesized color and material record. The bitmap solver then sees
+       the actual stratified dielectric, not the C-equivalent flattening
+       (mathematically the C-equivalent is correct, but the per-layer
+       visualization is invaluable for inspecting and validating real PCB
+       stackups).
     """
     px = pixel_width or _pick_pixel_width(min(geom.H1, geom.H2, geom.T, geom.W))
-    h1_px = max(2, round(geom.H1 / px))
-    h2_px = max(2, round(geom.H2 / px))
+
+    has_stack_above = geom.stack_above is not None
+    has_stack_below = geom.stack_below is not None
+    has_any_stack = has_stack_above or has_stack_below
+
+    bands_above: list[tuple[int, tuple[int, int, int]]] = []
+    bands_below: list[tuple[int, tuple[int, int, int]]] = []
+    custom_records: list[MaterialRecord] = []
+    if has_stack_above and geom.stack_above is not None:
+        bands_above, recs = _stack_to_bands(geom.stack_above, px, "above")
+        custom_records.extend(recs)
+    if has_stack_below and geom.stack_below is not None:
+        bands_below, recs = _stack_to_bands(geom.stack_below, px, "below")
+        custom_records.extend(recs)
+
+    # Use the per-band sums (when stacks are present) so rounding errors don't
+    # leave gaps in the cavity. Otherwise fall back to the geom-derived heights.
+    h1_px = sum(b[0] for b in bands_above) if has_stack_above else max(2, round(geom.H1 / px))
+    h2_px = sum(b[0] for b in bands_below) if has_stack_below else max(2, round(geom.H2 / px))
     strip_t_px = max(1, round(geom.T / px))
     strip_w_px = max(2, round(geom.W / px))
     ground_px = 1
@@ -310,38 +384,66 @@ def rasterize_stripline_asymmetric(
 
     custom_lookup: dict[tuple[int, int, int], MaterialRecord] | None = None
 
-    if split_er:
-        # Build synthetic materials with the EXACT er/tan_delta the user asked for,
-        # so the bitmap Laplace solver sees two distinct dielectrics. The default
-        # atlc2 palette is too coarse to distinguish, e.g., εr=4.5 from εr=4.2.
-        rgb_above, mat_above = _make_synth_dielectric(
-            er_above, tan_above, role="above", label=f"custom εr={er_above:.3f} (above)"
-        )
-        rgb_below, mat_below = _make_synth_dielectric(
-            er_below, tan_below, role="below", label=f"custom εr={er_below:.3f} (below)"
-        )
-        custom_lookup = build_lookup([[mat_above, mat_below]])
-        diel_above_color, diel_below_color = rgb_above, rgb_below
-        # Above-strip half
-        _fill_rect(rgb, ground_px, ground_px + h1_px, 0, total_w, diel_above_color)
-        # Strip-row band — paint with below-color (overpainted by the strip pixels).
+    if has_any_stack or split_er:
+        synthetic_pool: list[MaterialRecord] = list(custom_records)
+
+        # Paint H1 region (above the strip)
+        if has_stack_above:
+            # Stacks above are listed in physical (top-down) order: stack_above[0]
+            # touches the upper ground, stack_above[-1] touches the strip.
+            y_cursor = ground_px
+            for thickness_px, band_rgb in bands_above:
+                _fill_rect(rgb, y_cursor, y_cursor + thickness_px, 0, total_w, band_rgb)
+                y_cursor += thickness_px
+        else:
+            rgb_above_color, mat_above = _make_synth_dielectric(
+                er_above, tan_above, role="above", label=f"custom εr={er_above:.3f} (above)"
+            )
+            synthetic_pool.append(mat_above)
+            _fill_rect(rgb, ground_px, ground_px + h1_px, 0, total_w, rgb_above_color)
+
+        # Strip-row band: paint with the closest below-color so the strip's
+        # boundary cells get reasonable dielectric on the row containing the
+        # strip pixels (the strip itself is overpainted below).
+        if has_stack_below:
+            # First-layer-below is the one touching the strip from below.
+            strip_band_rgb = bands_below[0][1]
+        else:
+            rgb_below_color, mat_below = _make_synth_dielectric(
+                er_below, tan_below, role="below", label=f"custom εr={er_below:.3f} (below)"
+            )
+            synthetic_pool.append(mat_below)
+            strip_band_rgb = rgb_below_color
         _fill_rect(
             rgb,
             ground_px + h1_px,
             ground_px + h1_px + strip_t_px,
             0,
             total_w,
-            diel_below_color,
+            strip_band_rgb,
         )
-        # Below-strip half
-        _fill_rect(
-            rgb,
-            ground_px + h1_px + strip_t_px,
-            ground_px + cavity_px,
-            0,
-            total_w,
-            diel_below_color,
-        )
+
+        # Paint H2 region (below the strip)
+        if has_stack_below:
+            # Layers below are listed strip→ground: stack_below[0] touches
+            # the strip, stack_below[-1] touches the lower ground.
+            y_cursor = ground_px + h1_px + strip_t_px
+            for thickness_px, band_rgb in bands_below:
+                _fill_rect(rgb, y_cursor, y_cursor + thickness_px, 0, total_w, band_rgb)
+                y_cursor += thickness_px
+        else:
+            # In the no-stack-below branch, the strip-row band color computed
+            # above (synthesized from er_below) extends through the rest of H2.
+            _fill_rect(
+                rgb,
+                ground_px + h1_px + strip_t_px,
+                ground_px + cavity_px,
+                0,
+                total_w,
+                strip_band_rgb,
+            )
+
+        custom_lookup = build_lookup([synthetic_pool])
     else:
         diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
         _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
