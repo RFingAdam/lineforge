@@ -558,6 +558,21 @@ def sweep(
     parameter: str = typer.Option(..., "--param"),
     values: str = typer.Option(..., "--values", help="Comma-separated values."),
     output: Path | None = typer.Option(None, "--output", "-o", help="CSV output path."),
+    touchstone_out: Path | None = typer.Option(
+        None,
+        "--touchstone-out",
+        help="Write a Touchstone .s2p file modeling the line as a 2-port. "
+        "Only valid for frequency sweeps.",
+    ),
+    line_length: str = typer.Option(
+        "1in",
+        "--line-length",
+        help="Length of the modeled line section for the Touchstone export "
+        "(e.g. '1in', '50mm'). Ignored unless --touchstone-out is set.",
+    ),
+    z_ref: float = typer.Option(
+        50.0, "--z-ref", help="Reference impedance for the Touchstone export [Ω]."
+    ),
     solver: str = typer.Option("analytical", "--solver", help="analytical|cgp|full"),
     frequency: str | None = typer.Option(None, "--frequency", "-f"),
     W: str | None = typer.Option(None, "--W"),
@@ -633,6 +648,15 @@ def sweep(
                 csv_row.extend(d_csv.get(k) for k in keys)
                 writer.writerow(csv_row)
         console.print(f"Wrote [green]{output}[/green]")
+
+    if touchstone_out is not None:
+        from atlc3.touchstone import to_touchstone
+
+        out_path = to_touchstone(points, touchstone_out, line_length=line_length, z_ref=z_ref)
+        console.print(
+            f"Wrote [green]{out_path}[/green] "
+            f"(2-port S-params, length={line_length}, Z_ref={z_ref}Ω)"
+        )
 
 
 # ---------------------------------------------------------------------------
