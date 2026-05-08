@@ -23,7 +23,14 @@ MaterialUse = Literal["+1", "-1", "0", "float", "insul"]
 
 
 class MaterialRecord(BaseModel):
-    """A single material entry in the atlc2-style database."""
+    """A single material entry in the atlc2-style database.
+
+    For modern high-frequency laminates whose Dk and Df vary with frequency,
+    the optional ``er_freq`` / ``tan_freq`` mappings carry the per-frequency
+    tabulated values. When supplied, :func:`atlc3.materials.dispersion.
+    material_at_frequency` interpolates them log-linearly; otherwise the
+    constant ``er`` / ``tan_delta`` fields are used as fallback.
+    """
 
     model_config = ConfigDict(extra="forbid", frozen=True)
 
@@ -38,6 +45,17 @@ class MaterialRecord(BaseModel):
     tan_delta: float = Field(0.0, description="Loss tangent (0 for conductors).", ge=0)
     mu_r: float = Field(1.0, description="Relative permeability (1.0 for non-magnetic).", ge=0)
     name: str = Field(..., description="Human-readable material name.")
+    er_freq: dict[float, float] | None = Field(
+        None,
+        description=(
+            "Optional Dk(f) table {Hz: εr}. When set, interpolated log-linearly "
+            "in frequency; the constant ``er`` is used as fallback."
+        ),
+    )
+    tan_freq: dict[float, float] | None = Field(
+        None,
+        description="Optional Df(f) table {Hz: tan_δ}. Same semantics as er_freq.",
+    )
 
     @property
     def is_conductor(self) -> bool:
@@ -57,6 +75,22 @@ class MaterialRecord(BaseModel):
         solver lets them settle to whatever the field demands.
         """
         return {"+1": 1.0, "-1": -1.0, "0": 0.0}.get(self.use)
+
+    def at_frequency(self, freq_hz: float) -> tuple[float, float]:
+        """Evaluate (εr, tan_δ) at a specific frequency.
+
+        If this record has ``er_freq`` / ``tan_freq`` tables, the values are
+        interpolated log-linearly; otherwise the constant fields are returned.
+        """
+        from atlc3.materials.dispersion import material_at_frequency
+
+        return material_at_frequency(
+            er=self.er,
+            tan_delta=self.tan_delta,
+            er_freq=self.er_freq,
+            tan_freq=self.tan_freq,
+            freq_hz=freq_hz,
+        )
 
 
 # fmt: off
