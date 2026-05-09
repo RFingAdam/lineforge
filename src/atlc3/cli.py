@@ -744,6 +744,11 @@ def gui(
     ),
     backend_port: int = typer.Option(8000, "--backend-port"),
     frontend_port: int = typer.Option(3000, "--frontend-port"),
+    reload: bool = typer.Option(
+        True,
+        "--reload/--no-reload",
+        help="Pass --reload to uvicorn so backend file changes hot-reload (dev mode).",
+    ),
 ) -> None:
     """Launch the atlc3-gui chat-driven web GUI.
 
@@ -795,20 +800,22 @@ def gui(
         console.print(f"Installing frontend deps in {frontend_dir}...")
         subprocess.run([pnpm, "install"], cwd=frontend_dir, check=True)
 
-    console.print(f"Starting backend on port {backend_port}...")
-    backend_proc = subprocess.Popen(
-        [
-            str(backend_python),
-            "-m",
-            "uvicorn",
-            "app.main:app",
-            "--host",
-            "127.0.0.1",
-            "--port",
-            str(backend_port),
-        ],
-        cwd=backend_dir,
+    console.print(
+        f"Starting backend on port {backend_port}{' (--reload)' if reload else ''}..."
     )
+    backend_cmd = [
+        str(backend_python),
+        "-m",
+        "uvicorn",
+        "app.main:app",
+        "--host",
+        "127.0.0.1",
+        "--port",
+        str(backend_port),
+    ]
+    if reload:
+        backend_cmd += ["--reload", "--reload-dir", str(backend_dir / "app")]
+    backend_proc = subprocess.Popen(backend_cmd, cwd=backend_dir)
 
     console.print(f"Starting frontend on port {frontend_port}...")
     frontend_proc = subprocess.Popen(
