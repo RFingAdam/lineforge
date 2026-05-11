@@ -68,11 +68,23 @@ dev = [
     "scikit-rf>=1.1",
     "maturin>=1.7",
     "mktestdocs>=0.2",
+    "httpx>=0.27",
 ]
 docs = [
     "mkdocs>=1.6",
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.25",
+]
+# Web GUI (FastAPI + Next.js front-end). Install with `pip install lineforge[gui]`
+# then run `lineforge gui` to launch both servers. Frontend lives at
+# <repo>/frontend/ and needs `pnpm install` separately.
+gui = [
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.30",
+    "websockets>=12",
+    "python-dotenv>=1.0",
+    "claude-agent-sdk>=0.1.77",
+    "scikit-rf>=1.1",
 ]
 
 [project.urls]
