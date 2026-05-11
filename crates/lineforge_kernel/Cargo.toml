@@ -1,0 +1,26 @@
+[package]
+name = "lineforge_kernel"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+homepage.workspace = true
+description = "Native numerical kernels (Laplace SOR/multigrid, Faraday sparse solver, charge-shift) for lineforge"
+
+[lib]
+name = "lineforge_kernel"
+crate-type = ["cdylib", "rlib"]
+
+[dependencies]
+pyo3.workspace = true
+numpy.workspace = true
+ndarray.workspace = true
+rayon.workspace = true
+sprs.workspace = true
+thiserror.workspace = true
+
+[features]
+default = []
+extension-module = ["pyo3/extension-module"]

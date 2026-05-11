@@ -26,11 +26,11 @@ The end-to-end client roundtrip:
 
 ## Procedure
 
-### 1. Install atlc3 from the repo
+### 1. Install lineforge from the repo
 
 ```bash
-git clone https://github.com/RFingAdam/atlc3.git
-cd atlc3
+git clone https://github.com/RFingAdam/lineforge.git
+cd lineforge
 python -m venv .venv
 .venv/Scripts/activate    # Windows
 # or: source .venv/bin/activate   # macOS / Linux
@@ -40,8 +40,8 @@ pip install -e .
 Verify the CLI is on your PATH:
 
 ```bash
-atlc3 --version
-# atlc3 0.1.0
+lineforge --version
+# lineforge 0.1.0
 #   native kernel: 0.1.0 (parallel=on)
 ```
 
@@ -52,28 +52,28 @@ Edit:
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Add an `atlc3` entry under `mcpServers`. The `command` should point to the
-`atlc3` script in your venv (the venv must be the one where you ran
+Add an `lineforge` entry under `mcpServers`. The `command` should point to the
+`lineforge` script in your venv (the venv must be the one where you ran
 `pip install -e .`):
 
 ```json
 {
   "mcpServers": {
-    "atlc3": {
-      "command": "F:\\Personal\\_Projects\\_live\\atlc3.0\\.venv\\Scripts\\atlc3.exe",
+    "lineforge": {
+      "command": "F:\\Personal\\_Projects\\_live\\lineforge\\.venv\\Scripts\\lineforge.exe",
       "args": ["mcp-serve"]
     }
   }
 }
 ```
 
-(macOS / Linux: replace with the absolute path to your `.venv/bin/atlc3`.)
+(macOS / Linux: replace with the absolute path to your `.venv/bin/lineforge`.)
 
 Restart Claude Desktop.
 
 ### 3. Smoke tests
 
-In a new conversation, you should see "atlc3" listed under "Connected
+In a new conversation, you should see "lineforge" listed under "Connected
 servers" (gear icon → MCP).
 
 Run these three queries verbatim and confirm the response shape:
@@ -93,7 +93,7 @@ gets back ``Z0 ≈ 51.93Ω`` and ``εeff ≈ 3.31``, and explains the answer.
 
 #### Test 3b — geometry introspection
 
-> What geometries does atlc3 support? Show me their required dimensional fields.
+> What geometries does lineforge support? Show me their required dimensional fields.
 
 Expected: Claude calls `list_geometry_types` and renders the result as a
 table or list. Should show all 8: microstrip, embedded_microstrip,
@@ -129,14 +129,14 @@ Expected sequence:
 
 **Tools don't show up in Claude Desktop's MCP panel:**
 
-- Check the `command` path resolves to the right `atlc3` script.
-- Check the venv has the package installed: `<venv>/Scripts/atlc3 --version`
+- Check the `command` path resolves to the right `lineforge` script.
+- Check the venv has the package installed: `<venv>/Scripts/lineforge --version`
   should work from a terminal.
 - Look at Claude Desktop's MCP log for stderr from the server.
 
-**`atlc3 mcp-serve` exits immediately:**
+**`lineforge mcp-serve` exits immediately:**
 
-- Run from a terminal: `atlc3 mcp-serve` should hang waiting for stdio
+- Run from a terminal: `lineforge mcp-serve` should hang waiting for stdio
   input. If it exits, the package import is broken — usually a missing
   native kernel (`maturin develop` not run).
 

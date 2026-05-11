@@ -1,6 +1,6 @@
 # C and Gp — the Laplace solver
 
-atlc3.0's bitmap C/Gp pipeline solves the 2D electrostatic Laplace equation
+lineforge's bitmap C/Gp pipeline solves the 2D electrostatic Laplace equation
 on a Cartesian pixel grid:
 
 $$
@@ -22,7 +22,7 @@ V_{i,j}\,(\alpha_E + \alpha_W + \alpha_N + \alpha_S)
 $$
 
 where each $\alpha_X$ is the εr at the cell-edge between (i,j) and the named
-neighbor — atlc3.0 uses the **arithmetic mean** of the two adjacent pixels
+neighbor — lineforge uses the **arithmetic mean** of the two adjacent pixels
 (matching atlc v1):
 
 $$
@@ -54,13 +54,13 @@ $$
 \omega_{\text{opt}} = \frac{2}{1 + \sin(\pi/N)} \approx 2 - \frac{2\pi}{N}
 $$
 
-For typical PCB usermaps ($N \sim 100$–$1000$), atlc3.0's default
+For typical PCB usermaps ($N \sim 100$–$1000$), lineforge's default
 $\omega = 1.9$ is close to optimal.
 
 ## Algebraic multigrid
 
 For grids ≳ $1000 \times 1000$, SOR's iteration count grows as $\mathcal{O}(N^2)$,
-which becomes prohibitive. atlc3.0 falls back to PyAMG's smoothed-aggregation
+which becomes prohibitive. lineforge falls back to PyAMG's smoothed-aggregation
 multigrid, which converges in $\mathcal{O}(N)$ work — typically a 5–10× speedup
 on big grids.
 

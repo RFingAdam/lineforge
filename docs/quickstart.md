@@ -5,7 +5,7 @@ Three-minute path from `pip install` to your first impedance answer.
 ## Install
 
 ```bash
-pip install atlc3
+pip install lineforge
 ```
 
 You'll need a Rust toolchain ([rustup.rs](https://rustup.rs/)) only if installing
@@ -16,16 +16,16 @@ from source — the wheels on PyPI are pre-built.
 === "Python"
 
     ```python
-    import atlc3
+    import lineforge
 
-    r = atlc3.microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4)
+    r = lineforge.microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4)
     print(f"Z0 = {r.z0:.2f} Ω, εeff = {r.eps_eff:.3f}")
     ```
 
 === "CLI"
 
     ```bash
-    atlc3 solve --type microstrip --W 6mil --H 4mil --T 1.4mil --er 4.4
+    lineforge solve --type microstrip --W 6mil --H 4mil --T 1.4mil --er 4.4
     ```
 
 === "MCP (Claude Desktop)"
@@ -35,7 +35,7 @@ from source — the wheels on PyPI are pre-built.
     ```json
     {
       "mcpServers": {
-        "atlc3": { "command": "atlc3", "args": ["mcp-serve"] }
+        "lineforge": { "command": "lineforge", "args": ["mcp-serve"] }
       }
     }
     ```
@@ -46,7 +46,7 @@ from source — the wheels on PyPI are pre-built.
 
 ## Length suffixes
 
-Anywhere atlc3 expects a length, you can pass:
+Anywhere lineforge expects a length, you can pass:
 
 - a raw number in **meters** (`1.5e-4`)
 - a string with a unit suffix: `"6mil"`, `"4mm"`, `"0.05in"`, `"0.1m"`
@@ -54,7 +54,7 @@ Anywhere atlc3 expects a length, you can pass:
 
 ## Frequency suffixes
 
-Anywhere atlc3 expects a frequency, you can pass a number in Hz or a string
+Anywhere lineforge expects a frequency, you can pass a number in Hz or a string
 like `"1GHz"`, `"100MHz"`, `"2.4GHz"`.
 
 ## What's next?

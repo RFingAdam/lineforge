@@ -3,13 +3,13 @@ requires = ["maturin>=1.7,<2.0"]
 build-backend = "maturin"
 
 [project]
-name = "atlc3"
-description = "Open-source MCP-enabled transmission line calculator (atlc3.0)"
+name = "lineforge"
+description = "Open-source MCP-enabled transmission line calculator (lineforge)"
 readme = "README.md"
 license = { text = "GPL-3.0-or-later" }
 requires-python = ">=3.11"
 authors = [
-    { name = "atlc3.0 contributors" },
+    { name = "lineforge contributors" },
 ]
 keywords = [
     "transmission-line",
@@ -76,17 +76,17 @@ docs = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/atlc3-project/atlc3"
-Documentation = "https://atlc3.readthedocs.io"
-Issues = "https://github.com/atlc3-project/atlc3/issues"
-Source = "https://github.com/atlc3-project/atlc3"
+Homepage = "https://github.com/RFingAdam/lineforge"
+Documentation = "https://lineforge.readthedocs.io"
+Issues = "https://github.com/RFingAdam/lineforge/issues"
+Source = "https://github.com/RFingAdam/lineforge"
 
 [project.scripts]
-atlc3 = "atlc3.cli:app"
+lineforge = "lineforge.cli:app"
 
 [tool.maturin]
-module-name = "atlc3._kernel"
-manifest-path = "crates/atlc3_kernel/Cargo.toml"
+module-name = "lineforge._kernel"
+manifest-path = "crates/lineforge_kernel/Cargo.toml"
 python-source = "src"
 features = ["pyo3/extension-module"]
 
@@ -160,7 +160,7 @@ module = [
     "skrf.*",
     "scipy",
     "scipy.*",
-    "atlc3._kernel",
+    "lineforge._kernel",
 ]
 ignore_missing_imports = true
 
@@ -186,7 +186,7 @@ markers = [
 ]
 
 [tool.coverage.run]
-source = ["src/atlc3"]
+source = ["src/lineforge"]
 branch = true
 omit = [
     "*/tests/*",

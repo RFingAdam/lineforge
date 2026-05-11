@@ -4,12 +4,12 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.analytical.wadell import (
+from lineforge.analytical.wadell import (
     broadside_coupled_diff_stripline,
     edge_coupled_diff_microstrip,
     edge_coupled_diff_stripline,
 )
-from atlc3.geometry.types import (
+from lineforge.geometry.types import (
     BroadsideCoupledDiffStripline,
     EdgeCoupledDiffMicrostrip,
     EdgeCoupledDiffStripline,

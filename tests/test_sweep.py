@@ -4,15 +4,15 @@ from __future__ import annotations
 
 import pytest
 
-import atlc3
-from atlc3.geometry.types import Microstrip
+import lineforge
+from lineforge.geometry.types import Microstrip
 
 
 class TestSweep:
     def test_analytical_w_sweep(self) -> None:
         geom = Microstrip(W=152e-6, H=102e-6, T=35e-6, er=4.4)
         values = [50e-6, 100e-6, 200e-6, 400e-6]
-        points = atlc3.sweep(geom, "W", values, solver="analytical")
+        points = lineforge.sweep(geom, "W", values, solver="analytical")
         assert len(points) == 4
         # Wider W → lower Z0
         z0s = [p.result.z0 for p in points]
@@ -20,7 +20,7 @@ class TestSweep:
 
     def test_sweep_returns_sweep_points(self) -> None:
         geom = Microstrip(W=152e-6, H=102e-6, T=35e-6, er=4.4)
-        points = atlc3.sweep(geom, "er", [3.5, 4.4, 6.0], solver="analytical")
+        points = lineforge.sweep(geom, "er", [3.5, 4.4, 6.0], solver="analytical")
         for p in points:
             assert "er" in p.params
             assert hasattr(p.result, "z0")
@@ -28,4 +28,4 @@ class TestSweep:
     def test_unknown_solver_raises(self) -> None:
         geom = Microstrip(W=152e-6, H=102e-6, T=35e-6, er=4.4)
         with pytest.raises(ValueError):
-            atlc3.sweep(geom, "W", [1e-4], solver="hadron-collider")
+            lineforge.sweep(geom, "W", [1e-4], solver="hadron-collider")

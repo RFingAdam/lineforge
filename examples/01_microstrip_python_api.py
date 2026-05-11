@@ -9,12 +9,12 @@ Run::
 
 from __future__ import annotations
 
-import atlc3
+import lineforge
 
 
 def main() -> None:
     # Single-ended microstrip: ~50Ω on 4 mil FR4.
-    se = atlc3.microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4, tan_delta=0.02, frequency="1GHz")
+    se = lineforge.microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4, tan_delta=0.02, frequency="1GHz")
     print("Single-ended microstrip:")
     print(f"  Z0       = {se.z0:.2f} Ω")
     print(f"  εeff     = {se.eps_eff:.3f}")
@@ -25,7 +25,7 @@ def main() -> None:
     print()
 
     # Differential pair: target 100Ω diff
-    dp = atlc3.edge_coupled_diff(W="4mil", S="6mil", H="4mil", T="1.4mil", er=4.4, on="microstrip")
+    dp = lineforge.edge_coupled_diff(W="4mil", S="6mil", H="4mil", T="1.4mil", er=4.4, on="microstrip")
     print("Edge-coupled differential pair:")
     print(f"  Z_diff   = {dp.z_diff:.2f} Ω")
     print(f"  Z_odd    = {dp.z_odd:.2f} Ω")

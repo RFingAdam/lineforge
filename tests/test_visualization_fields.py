@@ -1,4 +1,4 @@
-"""Tests for atlc3.visualization.fields — covers every FieldKind + edge cases."""
+"""Tests for lineforge.visualization.fields — covers every FieldKind + edge cases."""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 from PIL import Image
 
-from atlc3.visualization.fields import render_contour_lines, render_field
+from lineforge.visualization.fields import render_contour_lines, render_field
 
 
 @pytest.fixture

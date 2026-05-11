@@ -8,7 +8,7 @@ Locks in three things at once:
    to within ±10 % (the parity tolerance documented in AUDIT.md).
 
 The fixtures are regenerable via ``tests/fixtures/usermaps/_generate.py``
-to keep their licensing identical to atlc3 itself.
+to keep their licensing identical to lineforge itself.
 """
 
 from __future__ import annotations
@@ -17,8 +17,8 @@ from pathlib import Path
 
 import pytest
 
-from atlc3.geometry.usermap import Usermap
-from atlc3.solvers.cgp import solve_cgp
+from lineforge.geometry.usermap import Usermap
+from lineforge.solvers.cgp import solve_cgp
 
 FIXTURES = Path(__file__).parent.parent / "fixtures" / "usermaps"
 

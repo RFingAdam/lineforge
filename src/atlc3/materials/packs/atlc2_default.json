@@ -1,7 +1,0 @@
-{
-  "name": "atlc2-default",
-  "version": "1.0.0",
-  "description": "atlc2's 45 standard internally-defined colors. Generated from atlc3.materials.database.ATLC2_DEFAULTS.",
-  "source": "http://www.hdtvprimer.com/kq6qv/atlc2.html",
-  "materials": []
-}

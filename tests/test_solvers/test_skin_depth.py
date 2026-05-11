@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from atlc3.materials.database import MaterialRecord
-from atlc3.solvers.skin_depth import compute_delta, mask_skin_depth
+from lineforge.materials.database import MaterialRecord
+from lineforge.solvers.skin_depth import compute_delta, mask_skin_depth
 
 COPPER = MaterialRecord(
     rgb=(255, 0, 0),
@@ -46,7 +46,7 @@ class TestComputeDelta:
 class TestMasking:
     def test_thick_conductor_at_high_f_reduces_equations(self) -> None:
         # 30×30 grid, big red copper square in the middle
-        from atlc3.geometry.usermap import Usermap, UsermapMetadata
+        from lineforge.geometry.usermap import Usermap, UsermapMetadata
 
         rgb = np.full((30, 30, 3), 255, dtype=np.uint8)  # white = vacuum
         rgb[5:25, 5:25] = (255, 0, 0)  # 20×20 copper block

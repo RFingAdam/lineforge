@@ -7,9 +7,9 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from atlc3.geometry.types import Microstrip
-from atlc3.sweep import sweep
-from atlc3.touchstone import to_touchstone
+from lineforge.geometry.types import Microstrip
+from lineforge.sweep import sweep
+from lineforge.touchstone import to_touchstone
 
 
 @pytest.fixture
@@ -48,7 +48,7 @@ class TestTouchstoneRoundTrip:
         a Phase-1 conductor-loss estimate even at tan_δ=0), but we assert the
         network's energy budget matches the α it claims.
         """
-        from atlc3.touchstone import DB_PER_NEPER, INCH_M
+        from lineforge.touchstone import DB_PER_NEPER, INCH_M
 
         geom = Microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4, tan_delta=0.02)
         points = sweep(geom, parameter="frequency", values=[1e8, 1e9, 5e9], solver="analytical")

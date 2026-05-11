@@ -1,4 +1,4 @@
-"""Tests for atlc3.viewer.run_viewer with mocked stdin and solver.
+"""Tests for lineforge.viewer.run_viewer with mocked stdin and solver.
 
 The viewer is a keystroke-driven REPL; we exercise each command path by
 patching ``builtins.input`` to feed a scripted sequence of keys. PNG outputs
@@ -19,8 +19,8 @@ from unittest.mock import patch
 import numpy as np
 import pytest
 
-from atlc3.solvers.cgp import CGPResult
-from atlc3.viewer import run_viewer
+from lineforge.solvers.cgp import CGPResult
+from lineforge.viewer import run_viewer
 
 FIXTURE_BMP = Path(__file__).parent / "fixtures" / "usermaps" / "air_coax_50ohm.bmp"
 PIXEL_WIDTH = "12.5um"
@@ -71,7 +71,7 @@ def _run_with_keys(keys: list[str]) -> None:
     keys_iter = iter([*keys, "Q"])
     with (
         patch("builtins.input", side_effect=lambda _prompt="": next(keys_iter)),
-        patch("atlc3.viewer.solve_cgp", side_effect=_stub_solve_cgp),
+        patch("lineforge.viewer.solve_cgp", side_effect=_stub_solve_cgp),
     ):
         run_viewer(FIXTURE_BMP, pixel_width=PIXEL_WIDTH)
 
@@ -85,27 +85,27 @@ class TestViewerCommands:
 
     def test_v_renders_voltage_png(self, viewer_cwd: Path) -> None:
         _run_with_keys(["V"])
-        assert (viewer_cwd / "atlc3_view_v.png").exists()
+        assert (viewer_cwd / "lineforge_view_v.png").exists()
 
     def test_e_renders_e_field_png(self, viewer_cwd: Path) -> None:
         _run_with_keys(["E"])
-        assert (viewer_cwd / "atlc3_view_e.png").exists()
+        assert (viewer_cwd / "lineforge_view_e.png").exists()
 
     def test_d_renders_d_field_png(self, viewer_cwd: Path) -> None:
         _run_with_keys(["D"])
-        assert (viewer_cwd / "atlc3_view_d.png").exists()
+        assert (viewer_cwd / "lineforge_view_d.png").exists()
 
     def test_t_renders_loss_png(self, viewer_cwd: Path) -> None:
         _run_with_keys(["T"])
-        assert (viewer_cwd / "atlc3_view_t.png").exists()
+        assert (viewer_cwd / "lineforge_view_t.png").exists()
 
     def test_u_renders_usermap_png(self, viewer_cwd: Path) -> None:
         _run_with_keys(["U"])
-        assert (viewer_cwd / "atlc3_view_u.png").exists()
+        assert (viewer_cwd / "lineforge_view_u.png").exists()
 
     def test_l_renders_v_contours_png(self, viewer_cwd: Path) -> None:
         _run_with_keys(["L"])
-        assert (viewer_cwd / "atlc3_view_lines_v.png").exists()
+        assert (viewer_cwd / "lineforge_view_lines_v.png").exists()
 
     def test_s_after_render_reports_path(self, viewer_cwd: Path) -> None:
         """S after a render should not crash and should reference the saved path."""
@@ -122,13 +122,13 @@ class TestViewerCommands:
     def test_empty_input_skips(self, viewer_cwd: Path) -> None:
         """Empty input (just Enter) should be a no-op."""
         _run_with_keys(["", "V"])
-        assert (viewer_cwd / "atlc3_view_v.png").exists()
+        assert (viewer_cwd / "lineforge_view_v.png").exists()
 
     def test_multi_command_sequence(self, viewer_cwd: Path) -> None:
         """A sequence of commands should produce the corresponding PNGs."""
         _run_with_keys(["V", "E", "D", "T", "U"])
         for kind in "vedtu":
-            assert (viewer_cwd / f"atlc3_view_{kind}.png").exists()
+            assert (viewer_cwd / f"lineforge_view_{kind}.png").exists()
 
 
 class TestViewerEofHandling:
@@ -140,7 +140,7 @@ class TestViewerEofHandling:
 
         with (
             patch("builtins.input", side_effect=raise_eof),
-            patch("atlc3.viewer.solve_cgp", side_effect=_stub_solve_cgp),
+            patch("lineforge.viewer.solve_cgp", side_effect=_stub_solve_cgp),
         ):
             run_viewer(FIXTURE_BMP, pixel_width=PIXEL_WIDTH)
 
@@ -152,6 +152,6 @@ class TestViewerEofHandling:
 
         with (
             patch("builtins.input", side_effect=raise_kbi),
-            patch("atlc3.viewer.solve_cgp", side_effect=_stub_solve_cgp),
+            patch("lineforge.viewer.solve_cgp", side_effect=_stub_solve_cgp),
         ):
             run_viewer(FIXTURE_BMP, pixel_width=PIXEL_WIDTH)

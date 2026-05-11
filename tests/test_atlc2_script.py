@@ -1,4 +1,4 @@
-"""Tests for the atlc2 script interpreter (atlc3.scripting.atlc2_script).
+"""Tests for the atlc2 script interpreter (lineforge.scripting.atlc2_script).
 
 The interpreter dispatches commands by their first 3 characters, so the bulk
 of the surface area is exercised via dry-run scripts that hit each command
@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from atlc3.scripting.atlc2_script import ScriptError, ScriptInterpreter, run_script_file
+from lineforge.scripting.atlc2_script import ScriptError, ScriptInterpreter, run_script_file
 
 
 def _interp(*, dry_run: bool = True) -> ScriptInterpreter:

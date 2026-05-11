@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from atlc3.cache import _hash_args, cached, clear_cache, is_disabled
+from lineforge.cache import _hash_args, cached, clear_cache, is_disabled
 
 
 def test_hash_is_stable() -> None:
@@ -31,7 +31,7 @@ def test_cached_decorator_memoizes(tmp_path: Path, monkeypatch: pytest.MonkeyPat
     monkeypatch.delenv("ATLC3_NO_CACHE", raising=False)
 
     # Reset module-level cache singleton
-    import atlc3.cache as cache_module
+    import lineforge.cache as cache_module
 
     cache_module._cache = None
 
@@ -56,7 +56,7 @@ def test_clear_cache(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     monkeypatch.setenv("ATLC3_CACHE_DIR", str(tmp_path / "cache2"))
     monkeypatch.delenv("ATLC3_NO_CACHE", raising=False)
 
-    import atlc3.cache as cache_module
+    import lineforge.cache as cache_module
 
     cache_module._cache = None
 

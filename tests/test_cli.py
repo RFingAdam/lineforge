@@ -6,8 +6,8 @@ import json
 
 from typer.testing import CliRunner
 
-from atlc3.cli import app
-from atlc3.version import __version__
+from lineforge.cli import app
+from lineforge.version import __version__
 
 
 def _runner() -> CliRunner:
@@ -20,7 +20,7 @@ def _runner() -> CliRunner:
 def test_help_works() -> None:
     result = _runner().invoke(app, ["--help"])
     assert result.exit_code == 0
-    assert "atlc3" in result.stdout
+    assert "lineforge" in result.stdout
 
 
 def test_version_flag() -> None:

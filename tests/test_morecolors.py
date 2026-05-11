@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.materials.morecolors import (
+from lineforge.materials.morecolors import (
     MoreColorsParseError,
     dedupe_keep_last,
     dump_json_pack,

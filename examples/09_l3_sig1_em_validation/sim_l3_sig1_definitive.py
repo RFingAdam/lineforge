@@ -21,8 +21,8 @@ Outputs:
 import os
 import shutil
 import tempfile
-import numpy as np
 
+import numpy as np
 from CSXCAD import ContinuousStructure
 from openEMS import openEMS
 from openEMS.physical_constants import C0
@@ -40,7 +40,6 @@ def run_l3_sig1(use_real_losses=False, label="design"):
     er_below = 3.7
     Df = 0.02 if use_real_losses else 0.0
 
-    z_l4 = 0
     z_trace_bot = H2
     z_trace_top = H2 + trace_t
     z_l2 = H2 + trace_t + H1
@@ -141,7 +140,7 @@ def run_l3_sig1(use_real_losses=False, label="design"):
         [x_meas,  i_loop_w/2, i_loop_z_top],
     )
 
-    sim_path = os.path.join(tempfile.gettempdir(), f"atlc3_l3sig1_{label}")
+    sim_path = os.path.join(tempfile.gettempdir(), f"lineforge_l3sig1_{label}")
     if os.path.isdir(sim_path):
         shutil.rmtree(sim_path)
     FDTD.Run(sim_path, cleanup=True)
@@ -165,8 +164,9 @@ def run_l3_sig1(use_real_losses=False, label="design"):
 
 
 # Closed-form references
-from atlc3.analytical import stripline_asymmetric
-from atlc3.geometry.types import StriplineAsymmetric
+from lineforge.analytical import stripline_asymmetric
+from lineforge.geometry.types import StriplineAsymmetric
+
 g_T = StriplineAsymmetric(W="2.92mil", T="0.689mil", H1="3.5mil", H2="5.3mil",
                           er=4.0, er_above=4.2, er_below=3.7,
                           tan_delta=0.02)
@@ -175,10 +175,10 @@ r_T = stripline_asymmetric(g_T)
 print("=" * 88)
 print("L3 SIG1 ASYMMETRIC STRIPLINE — DEFINITIVE VALIDATION")
 print("=" * 88)
-print(f"  W = 2.92 mil (74.2 μm)")
-print(f"  T = 0.689 mil (17.5 μm) — ½ oz Cu")
-print(f"  H1 = 3.5 mil core (εr=4.2, above to L2 GND)")
-print(f"  H2 = 5.3 mil prepreg (εr=3.7, below to L4 PWR1)")
+print("  W = 2.92 mil (74.2 μm)")
+print("  T = 0.689 mil (17.5 μm) — ½ oz Cu")
+print("  H1 = 3.5 mil core (εr=4.2, above to L2 GND)")
+print("  H2 = 5.3 mil prepreg (εr=3.7, below to L4 PWR1)")
 print()
 print(f"  Closed-form Wadell (T=0.689 mil, asymmetric): Z₀ = {r_T.z0:.2f} Ω")
 print()
@@ -217,7 +217,7 @@ print("=" * 88)
 print(f"{'Band':>14} {'f (GHz)':>9} {'Z₀ |V/I|':>10} {'|S21| PEC':>11} {'|S21| real':>12} {'IL/in real':>11}")
 print("-" * 88)
 band_names = ["LTE B5", "LTE B3", "Wi-Fi 2.4", "Wi-Fi 5"]
-for bn, kf in zip(band_names, key_freqs_ghz):
+for bn, kf in zip(band_names, key_freqs_ghz, strict=False):
     idx = np.argmin(np.abs(freq - kf*1e9))
     z_real = abs(Vb_r[idx] / I_r[idx])
     s21p = 20*np.log10(np.abs(s21[idx]))
@@ -227,9 +227,9 @@ for bn, kf in zip(band_names, key_freqs_ghz):
 
 print()
 print("Compare IL to closed-form predictions:")
-print(f"  Conductor loss (pcb-emcopilot skin model, ~1 oz Cu): ~0.5-1 dB/inch at 6 GHz")
-print(f"  Dielectric loss (FR4 Df=0.02): ~0.2 dB/inch at 850 MHz, ~0.5 dB/inch at 6 GHz")
+print("  Conductor loss (pcb-emcopilot skin model, ~1 oz Cu): ~0.5-1 dB/inch at 6 GHz")
+print("  Dielectric loss (FR4 Df=0.02): ~0.2 dB/inch at 850 MHz, ~0.5 dB/inch at 6 GHz")
 print()
 print("Engineering takeaway:")
 print(f"  Z₀ ≈ {np.mean(Z_below_r[band]):.0f} Ω across the band — confirms 50 Ω target hit (within EM accuracy).")
-print(f"  Insertion loss is well-bounded for typical 0.5-1 inch L3 segments.")
+print("  Insertion loss is well-bounded for typical 0.5-1 inch L3 segments.")

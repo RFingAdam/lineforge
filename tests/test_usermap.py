@@ -7,7 +7,7 @@ from pathlib import Path
 import numpy as np
 import pytest
 
-from atlc3.geometry.usermap import Usermap, UsermapMetadata
+from lineforge.geometry.usermap import Usermap, UsermapMetadata
 
 
 def _tiny_microstrip_array() -> np.ndarray:

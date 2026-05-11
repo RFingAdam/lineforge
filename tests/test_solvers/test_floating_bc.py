@@ -11,7 +11,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from atlc3.solvers.laplace import _equipotential_boundary_weighted, solve_sor
+from lineforge.solvers.laplace import _equipotential_boundary_weighted, solve_sor
 
 
 def _two_plate_setup(n: int = 41, *, er_top: float = 1.0, er_bot: float = 1.0):

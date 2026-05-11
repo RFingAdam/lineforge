@@ -1,6 +1,6 @@
 # L and Rs — the Faraday solver
 
-atlc3.0's Phase 3 L/Rs pipeline solves a 2D **partial-element equivalent
+lineforge's Phase 3 L/Rs pipeline solves a 2D **partial-element equivalent
 circuit** (PEEC) system, equivalent to atlc2's "one equation per conductor
 pixel" Faraday's-law formulation.
 
@@ -26,14 +26,14 @@ where:
 - $\rho_n$ is the resistivity of pixel $n$.
 - $A_\text{pixel} = h^2$ is the pixel area (h = pixel side).
 - $r_{nk}$ is the center-to-center distance between pixels $n$ and $k$.
-- $d_\text{ref}$ is a reference distance (atlc3 uses the simulation extent).
+- $d_\text{ref}$ is a reference distance (lineforge uses the simulation extent).
 
 The self-pixel term ($n = k$) uses an analytic approximation based on a square
 cross-section: $L_\text{self} \approx (\mu_0/2\pi)(\ln(1/h) + 1/2)$.
 
 ## Constraint: net current per conductor
 
-For each conductor $c$, atlc3.0 imposes the driver current via:
+For each conductor $c$, lineforge imposes the driver current via:
 
 $$
 \sum_{n \in c} i_n = I_c
@@ -64,7 +64,7 @@ other via the logarithm); the $\mathbf{C}$ block is sparse.
 
 ## Solver
 
-For $N < 500$, atlc3 uses dense `numpy.linalg.solve`. For larger $N$, it
+For $N < 500$, lineforge uses dense `numpy.linalg.solve`. For larger $N$, it
 falls back to scipy.sparse.linalg `bicgstab` with an `spilu` preconditioner.
 
 ## Extraction of L and R
@@ -93,18 +93,18 @@ $$
 \delta = \sqrt{\frac{2\rho}{\omega \mu}}
 $$
 
-atlc3 (matching atlc2) optionally blackens conductor pixels deeper than
+lineforge (matching atlc2) optionally blackens conductor pixels deeper than
 $3\delta$ from the surface, reducing $N$ dramatically without sacrificing
 accuracy. ($e^{-3} \approx 5\%$ remaining current.)
 
 This is the "Restrict to skin depth" toggle in atlc2 (and the
-`restrict_to_skin_depth` flag in atlc3's API).
+`restrict_to_skin_depth` flag in lineforge's API).
 
 ## Accuracy
 
 Per atlc2 docs: Rs is accurate to ±1% when $\delta \ge 30 \cdot h$ (pixel
 width). For tighter geometries, accuracy degrades to ±5% with the standard
-PEEC formulation, and atlc3 emits a `low_confidence` warning when conductors
+PEEC formulation, and lineforge emits a `low_confidence` warning when conductors
 are too close (matching atlc2's red-text behavior).
 
 ## References

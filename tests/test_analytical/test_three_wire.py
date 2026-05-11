@@ -6,8 +6,8 @@ import math
 
 import pytest
 
-from atlc3.analytical.three_wire import solve_three_wire, y_decomposition
-from atlc3.geometry.three_wire import ThreeWireGeometry, WirePosition
+from lineforge.analytical.three_wire import solve_three_wire, y_decomposition
+from lineforge.geometry.three_wire import ThreeWireGeometry, WirePosition
 
 ETA0 = 376.730313668  # vacuum impedance
 
@@ -166,7 +166,7 @@ class TestGeometryValidation:
             )
 
     def test_round_trip_via_dict(self) -> None:
-        from atlc3.geometry import from_dict
+        from lineforge.geometry import from_dict
 
         d = {
             "type": "three_wire",
@@ -184,7 +184,7 @@ class TestGeometryValidation:
 
 class TestDispatcherIntegration:
     def test_dispatcher_routes_three_wire(self) -> None:
-        from atlc3.analytical import solve
+        from lineforge.analytical import solve
 
         geom = ThreeWireGeometry(
             a="0.5mm",
@@ -196,7 +196,7 @@ class TestDispatcherIntegration:
         )
         result = solve(geom)
         # Should be a ThreeWireResult, not TLineResult/DiffResult
-        from atlc3.results import ThreeWireResult
+        from lineforge.results import ThreeWireResult
 
         assert isinstance(result, ThreeWireResult)
         assert result.method == "closed-form-y-decomposition"

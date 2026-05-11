@@ -14,8 +14,8 @@ will deliver — important for setting the controlled-impedance spec.
 import os
 import shutil
 import tempfile
-import numpy as np
 
+import numpy as np
 from CSXCAD import ContinuousStructure
 from openEMS import openEMS
 from openEMS.physical_constants import C0
@@ -116,7 +116,7 @@ def run_l3(trace_w_um, label):
         [x_meas,  i_loop_w/2, i_loop_z_top],
     )
 
-    sim_path = os.path.join(tempfile.gettempdir(), f"atlc3_l3etch_{label}")
+    sim_path = os.path.join(tempfile.gettempdir(), f"lineforge_l3etch_{label}")
     if os.path.isdir(sim_path):
         shutil.rmtree(sim_path)
     FDTD.Run(sim_path, cleanup=True)
@@ -125,8 +125,8 @@ def run_l3(trace_w_um, label):
     port1.CalcPort(sim_path, freq, ref_impedance=50)
     port2.CalcPort(sim_path, freq, ref_impedance=50)
 
-    s11 = port1.uf_ref / port1.uf_inc
-    s21 = port2.uf_ref / port1.uf_inc
+    port1.uf_ref / port1.uf_inc
+    port2.uf_ref / port1.uf_inc
 
     v_below_d = np.loadtxt(os.path.join(sim_path, "v_below"), comments="%")
     i_d  = np.loadtxt(os.path.join(sim_path, "i_loop"), comments="%")
@@ -140,8 +140,8 @@ def run_l3(trace_w_um, label):
     return Z0, freq, V_f, I_f
 
 
-from atlc3.analytical import stripline_asymmetric
-from atlc3.geometry.types import StriplineAsymmetric
+from lineforge.analytical import stripline_asymmetric
+from lineforge.geometry.types import StriplineAsymmetric
 
 
 def cf_z0(W_mil):
@@ -183,7 +183,7 @@ cf_max = max(r[3] for r in results)
 
 print(f"  EM Z₀ window:     {em_min:.1f} – {em_max:.1f} Ω")
 print(f"  Wadell Z₀ window: {cf_min:.1f} – {cf_max:.1f} Ω")
-print(f"  Window matches closed-form within ~2 Ω.")
+print("  Window matches closed-form within ~2 Ω.")
 print()
 
 # Computed return loss against 50 Ω port

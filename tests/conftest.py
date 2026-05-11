@@ -11,7 +11,7 @@ import pytest
 def kernel_available() -> Iterator[bool]:
     """True when the native Rust kernel is importable."""
     try:
-        import atlc3._kernel  # noqa: F401
+        import lineforge._kernel  # noqa: F401
 
         yield True
     except ImportError:

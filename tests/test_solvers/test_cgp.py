@@ -9,9 +9,9 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.geometry.builders import rasterize_microstrip
-from atlc3.geometry.types import Microstrip
-from atlc3.solvers.cgp import solve_cgp
+from lineforge.geometry.builders import rasterize_microstrip
+from lineforge.geometry.types import Microstrip
+from lineforge.solvers.cgp import solve_cgp
 
 
 @pytest.mark.slow
@@ -53,7 +53,7 @@ class TestCGPParallelPlates:
     def test_parallel_plate_capacitance(self) -> None:
         import numpy as np
 
-        from atlc3.geometry.usermap import Usermap, UsermapMetadata
+        from lineforge.geometry.usermap import Usermap, UsermapMetadata
 
         # Build a 24×40 cavity: red top plate (1 row), 6 rows of vacuum, blue bottom plate
         h, w = 24, 40

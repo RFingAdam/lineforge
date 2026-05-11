@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.materials.database import (
+from lineforge.materials.database import (
     ATLC2_DEFAULTS,
     find_by_name,
     list_atlc2_default,

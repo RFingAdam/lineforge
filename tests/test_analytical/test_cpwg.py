@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.analytical.wadell import cpwg
-from atlc3.geometry.types import CPWG
+from lineforge.analytical.wadell import cpwg
+from lineforge.geometry.types import CPWG
 
 
 class TestCPWG:

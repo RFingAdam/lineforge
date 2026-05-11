@@ -5,7 +5,7 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from atlc3.solvers.laplace import solve_laplace, solve_sor
+from lineforge.solvers.laplace import solve_laplace, solve_sor
 
 
 def _parallel_plate_setup(n: int = 32) -> tuple[np.ndarray, np.ndarray, np.ndarray]:

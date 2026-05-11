@@ -1,4 +1,4 @@
-# atlc3.0 — Production Readiness Audit (rev 2)
+# lineforge — Production Readiness Audit (rev 2)
 
 **Initial date:** 2026-05-06 (commit `bf78015`, score 7/10)  
 **Rev 2:** 2026-05-06 (commit `22c185e`, score 9/10)
@@ -70,17 +70,17 @@ discovered by the audit:
 
 6 milestones (Phase 0-5), 21 issues filed via `scripts/file_phase_issues.py`.
 Each issue has the AC checklist from `docs/plan.md` with `[x]` for done
-items and `[ ]` for gaps. See <https://github.com/RFingAdam/atlc3/issues>.
+items and `[ ]` for gaps. See <https://github.com/RFingAdam/lineforge/issues>.
 
 ### Item #4 — Cache wired onto solvers ✅
 
 Applied `@cached` decorator to:
-- `atlc3.solvers.cgp.solve_cgp` (skip when `return_fields=True`)
-- `atlc3.solvers.faraday.solve_lrs`
-- `atlc3.solvers.lrs.solve_full`
+- `lineforge.solvers.cgp.solve_cgp` (skip when `return_fields=True`)
+- `lineforge.solvers.faraday.solve_lrs`
+- `lineforge.solvers.lrs.solve_full`
 
 Hash function extended to handle `Usermap` (rgb bytes + meta JSON) +
-Pydantic models + numpy arrays. CLI `atlc3 clear-cache` command added.
+Pydantic models + numpy arrays. CLI `lineforge clear-cache` command added.
 `ATLC3_NO_CACHE=1` env var disables globally.
 
 **Empirical speedup:** cold solve 1096ms → cached 0.5ms = **2297×**, well

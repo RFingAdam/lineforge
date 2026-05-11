@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.analytical import solve
-from atlc3.geometry.types import (
+from lineforge.analytical import solve
+from lineforge.geometry.types import (
     CPWG,
     BroadsideCoupledDiffStripline,
     EdgeCoupledDiffMicrostrip,
@@ -15,7 +15,7 @@ from atlc3.geometry.types import (
     StriplineAsymmetric,
     StriplineSymmetric,
 )
-from atlc3.results import DiffResult, TLineResult
+from lineforge.results import DiffResult, TLineResult
 
 
 class TestDispatcher:

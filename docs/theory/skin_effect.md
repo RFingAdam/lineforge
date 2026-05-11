@@ -11,14 +11,14 @@ $$
 where $\rho$ is resistivity and $\mu = \mu_0 \mu_r$. For copper at 1 GHz,
 $\delta \approx 2.1 \,\mu\mathrm{m}$.
 
-## Why it matters for atlc3.0's Rs accuracy
+## Why it matters for lineforge's Rs accuracy
 
 The Faraday solver assigns a single current value $i_n$ per conductor pixel.
 If the pixel side $h$ is large compared to $\delta$, the discretization can't
 resolve the actual current concentration at the surface, and Rs is
 underestimated.
 
-atlc2's empirical rule (which atlc3.0 inherits):
+atlc2's empirical rule (which lineforge inherits):
 
 > Rs is accurate to ±1% when $\delta \ge 30 \cdot h$.
 
@@ -28,7 +28,7 @@ pixels for flat surfaces, < 16 pixels for corners).
 
 ## "Restrict to skin depth"
 
-atlc2 ships a checkbox; atlc3 exposes the equivalent
+atlc2 ships a checkbox; lineforge exposes the equivalent
 `restrict_to_skin_depth=True` flag. When enabled, conductor pixels deeper than
 $3\delta$ from any conductor surface are blackened (treated as vacuum).
 Result: $N$ shrinks drastically at high frequency, keeping the dense
@@ -43,10 +43,10 @@ remains, well below the noise floor of the FD discretization itself.
 - Very thin conductors (foil): the conductor is already < $3\delta$ thick.
 - Cross-validation against analytical formulas that don't include skin depth.
 
-In atlc3:
+In lineforge:
 
 ```python
-result = atlc3.solve_lrs(geom, frequency="1GHz", restrict_to_skin_depth=False)
+result = lineforge.solve_lrs(geom, frequency="1GHz", restrict_to_skin_depth=False)
 ```
 
 ## Low-frequency dispersion
@@ -56,7 +56,7 @@ into the conductor interior, increasing the internal inductance contribution.
 At high frequency the current is concentrated at the surface, reducing $L$.
 This is the well-known **low-frequency dispersion** effect.
 
-atlc3's frequency-resolved Faraday solve captures this naturally — running
+lineforge's frequency-resolved Faraday solve captures this naturally — running
 solves at multiple frequencies and plotting $L(f)$ shows the dispersion.
 
 ## References

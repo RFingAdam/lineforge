@@ -1,6 +1,6 @@
-# Contributing to atlc3.0
+# Contributing to lineforge
 
-Thanks for your interest in atlc3.0. This guide covers how to get a development
+Thanks for your interest in lineforge. This guide covers how to get a development
 environment running, the code-style + testing expectations, and the PR flow.
 
 ## Code of Conduct
@@ -10,9 +10,9 @@ This project follows the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md). In shor
 ## Project layout
 
 ```
-atlc3/
-├── crates/atlc3_kernel/   # Rust crate (PyO3-exposed numerical kernels)
-├── src/atlc3/             # Python package (orchestration, surfaces)
+lineforge/
+├── crates/lineforge_kernel/   # Rust crate (PyO3-exposed numerical kernels)
+├── src/lineforge/             # Python package (orchestration, surfaces)
 ├── tests/                 # pytest suite
 ├── examples/              # runnable examples for users
 ├── benchmarks/            # performance + parity benchmarks
@@ -28,8 +28,8 @@ You need:
 - **maturin** for building the mixed Python/Rust package.
 
 ```bash
-git clone https://github.com/<org>/atlc3.git
-cd atlc3
+git clone https://github.com/<org>/lineforge.git
+cd lineforge
 
 python -m venv .venv
 source .venv/bin/activate     # macOS/Linux
@@ -39,7 +39,7 @@ pip install --upgrade pip maturin
 pip install -e ".[dev]"       # editable install with dev deps
 ```
 
-This builds the Rust kernel (`atlc3._kernel`) in debug mode and links it into your
+This builds the Rust kernel (`lineforge._kernel`) in debug mode and links it into your
 editable Python install. To rebuild after Rust changes:
 
 ```bash
@@ -53,7 +53,7 @@ Python:
 
 - **Formatter:** `black`
 - **Linter:** `ruff` (config in `pyproject.toml`)
-- **Type-checker:** `mypy --strict` for `src/atlc3/`
+- **Type-checker:** `mypy --strict` for `src/lineforge/`
 - **Docstrings:** NumPy style, public APIs only
 
 Rust:
@@ -65,7 +65,7 @@ Rust:
 Run all checks before opening a PR:
 
 ```bash
-ruff check . && black --check . && mypy src/atlc3
+ruff check . && black --check . && mypy src/lineforge
 cargo fmt -- --check && cargo clippy -- -D warnings
 ```
 
@@ -75,7 +75,7 @@ cargo fmt -- --check && cargo clippy -- -D warnings
 pytest                           # full suite
 pytest tests/test_analytical/    # one module
 pytest -k microstrip             # filter by name
-pytest --cov=atlc3 --cov-report=term-missing
+pytest --cov=lineforge --cov-report=term-missing
 cargo test                       # Rust unit tests
 ```
 
@@ -112,7 +112,7 @@ Please target your PRs at open issues so the AC list can be ticked off.
 ## Licensing
 
 By contributing, you agree your contributions are licensed under [GPLv3](LICENSE).
-atlc3.0 references and is partially derived from David Kirkby's GPL atlc v1; we
+lineforge references and is partially derived from David Kirkby's GPL atlc v1; we
 preserve copyleft on all derivatives.
 
 ## Reporting bugs
@@ -121,7 +121,7 @@ Open an issue with:
 
 - A minimal reproduction (geometry params or a small BMP).
 - Expected vs actual results.
-- atlc3 version, Python version, OS.
+- lineforge version, Python version, OS.
 
 For numerical accuracy bugs, please include the analytical or atlc/atlc2 reference
 value you're comparing against.

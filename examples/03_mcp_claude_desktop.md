@@ -1,18 +1,18 @@
 # Phase 1 example — MCP server in Claude Desktop
 
-This example connects atlc3.0 to Claude Desktop (or any MCP-aware client) via
+This example connects lineforge to Claude Desktop (or any MCP-aware client) via
 the stdio transport and demonstrates the analytical-solver tools.
 
-## 1. Install atlc3
+## 1. Install lineforge
 
 ```bash
-pip install atlc3
+pip install lineforge
 ```
 
 Verify the CLI is on your PATH:
 
 ```bash
-atlc3 --version
+lineforge --version
 ```
 
 ## 2. Configure Claude Desktop
@@ -22,13 +22,13 @@ Edit your `claude_desktop_config.json`:
 - macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
 - Windows: `%APPDATA%\Claude\claude_desktop_config.json`
 
-Add atlc3 to `mcpServers`:
+Add lineforge to `mcpServers`:
 
 ```json
 {
   "mcpServers": {
-    "atlc3": {
-      "command": "atlc3",
+    "lineforge": {
+      "command": "lineforge",
       "args": ["mcp-serve"]
     }
   }
@@ -39,7 +39,7 @@ Restart Claude Desktop.
 
 ## 3. Try it
 
-In a new Claude conversation, you should now see the atlc3 tools available.
+In a new Claude conversation, you should now see the lineforge tools available.
 Try prompts like:
 
 > What's the characteristic impedance of a 6 mil wide microstrip on 4 mil FR4
