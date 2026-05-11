@@ -24,7 +24,7 @@ dependencies = [
 
 [[package]]
 name = "atlc3_kernel"
-version = "1.0.0"
+version = "1.1.0"
 dependencies = [
  "ndarray 0.16.1",
  "numpy",

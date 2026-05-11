@@ -66,3 +66,6 @@ src/atlc3/_kernel.pyi.bak
 .env
 .env.local
 .env.*.local
+
+# Local research / one-off EM validation work (case study lives in examples/)
+/sims/

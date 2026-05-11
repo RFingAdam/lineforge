@@ -6,6 +6,56 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+## [1.1.0] — 2026-05-11
+
+Three-conductor analytical solver, GUI launcher polish, and the L3 SIG1
+openEMS validation case study.
+
+### Added
+
+#### Three-conductor lines — Y-decomposition (B1 / B2 / B3)
+- `atlc3.analytical.three_wire` — closed-form Y-matrix decomposition for
+  three-conductor systems (e.g. a signal trace flanked by two coplanar
+  ground rails). Returns even/odd mode impedances and the full 3×3 Y
+  matrix from the wire geometry. Method tag
+  `analytical-three-wire-y-decomposition`.
+- `atlc3.geometry.three_wire` — `WirePosition` Pydantic model and
+  `ThreeConductor` geometry; supports arbitrary 2D positions per wire.
+- `Laplace.solve_modes` (bitmap solver) — extends 2-conductor mode
+  decomposition to the 3-conductor case via Y-matrix factorisation,
+  matching the analytical formula on simple geometries within ~1 %.
+- Boundary-weighted floating-conductor BC (B2) — when one of the wires
+  is floating (Q-conserving rather than V-fixed), the Laplace solver
+  now uses a boundary-weighted constraint that converges much faster
+  than the previous Lagrange-multiplier approach and gives lower
+  residual on coarse meshes.
+- New `tests/test_analytical/test_three_wire.py` covering the
+  analytical path.
+- Theory doc: `docs/theory/three_wire.md`.
+
+#### GUI ergonomics (C-final, E9)
+- `atlc3 gui` CLI launcher — starts the FastAPI backend + opens the web
+  UI in your default browser with one command. No more two-terminal
+  startup dance.
+- `atlc3 gui --reload` — runs the backend under uvicorn with auto-reload
+  on source changes, for development of GUI features against a live
+  atlc3 kernel. Closes #28.
+- `examples/08_gui_walkthrough.md` — end-to-end walkthrough using the
+  GUI for a microstrip + diff-pair + sweep workflow.
+
+#### Case study: L3 SIG1 openEMS validation
+- New `examples/09_l3_sig1_em_validation/` directory: four standalone
+  openEMS scripts plus a writeup that cross-validates atlc3's Wadell
+  closed-form against 3D FDTD on a real RF design point (800 MHz – 6 GHz
+  triplexer common port on an 8-layer board).
+- Headline results: atlc3 microstrip Z₀ matches openEMS MSLPort within
+  ±1.6 % across W = 3.15 – 6.9 mil; asymmetric stripline at the design
+  point matches Wadell T → 0 within −2.1 % via V/I field probes; the
+  width-shift physics is reproduced within 1 Ω.
+
+### Changed
+- Nothing breaking; all 1.0.0 APIs continue to work unchanged.
+
 ## [1.0.0] — 2026-05-08
 
 First stable release. atlc3 is now feature-complete vs the Phase 0-4 plan
