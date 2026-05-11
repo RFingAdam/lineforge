@@ -34,8 +34,8 @@ impedance Z₀, effective permittivity εₑff, phase velocity v_p, distributed
 inductance L, capacitance C, skin-effect resistance Rs, and dielectric
 conductance Gp — for any 2D transmission line cross-section.
 
-Drive it from Python, the terminal, or any LLM agent over Model Context
-Protocol. Closed-form analytical solvers for the common geometries
+Drive it from Python, the terminal, any LLM agent over Model Context
+Protocol, or the chat-driven web GUI (`lineforge gui`). Closed-form analytical solvers for the common geometries
 (microstrip, stripline, coplanar, differential pairs, three-conductor
 lines) hand off seamlessly to a bitmap FD-Laplace + Faraday solver for
 arbitrary cross-sections. Validated against published IPC-2141 reference
@@ -162,6 +162,27 @@ end-to-end verification procedure.
 </td>
 </tr>
 </table>
+
+### Web GUI (`lineforge gui`)
+
+A chat-driven design studio that wraps the same library. FastAPI + Next.js
+backed by `claude-agent-sdk` — the agent fills in your geometry form, runs
+the solver, and renders V/E/D/T field plots live as you converse with it.
+
+```bash
+pip install 'lineforge[gui]'   # fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
+lineforge gui                  # launches backend + Next.js dev server
+```
+
+Then open <http://localhost:3000>. Type the geometry into the chat, watch the
+form fill in, results update, and field plots stream in. Agent credentials
+come from `ANTHROPIC_API_KEY` (or `CLAUDE_API_KEY`), or from a local
+`claude /login` session — no env vars needed in the second case. Set
+`ATLC3_GUI_CHAT_STUB=1` to use the echo handler for offline / CI testing.
+
+The backend is the importable subpackage `lineforge.web` (`lineforge.web.app:app`
+is the uvicorn target). The frontend lives at `<repo>/frontend/`; `pnpm install`
+runs automatically the first time you launch.
 
 ---
 

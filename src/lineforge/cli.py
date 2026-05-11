@@ -737,11 +737,6 @@ def view(
 
 @app.command()
 def gui(
-    gui_dir: Path = typer.Option(
-        Path("../lineforge-gui"),
-        "--gui-dir",
-        help="Path to the lineforge-gui sibling repo (default: ../lineforge-gui).",
-    ),
     backend_port: int = typer.Option(8000, "--backend-port"),
     frontend_port: int = typer.Option(3000, "--frontend-port"),
     reload: bool = typer.Option(
@@ -749,45 +744,56 @@ def gui(
         "--reload/--no-reload",
         help="Pass --reload to uvicorn so backend file changes hot-reload (dev mode).",
     ),
+    frontend_dir: Path | None = typer.Option(
+        None,
+        "--frontend-dir",
+        help="Override the path to the Next.js frontend (default: <repo>/frontend/).",
+    ),
 ) -> None:
-    """Launch the lineforge-gui chat-driven web GUI.
+    """Launch the chat-driven web GUI (FastAPI backend + Next.js frontend).
 
-    Starts the FastAPI backend (uvicorn on ``--backend-port``) and the
-    Next.js dev server (on ``--frontend-port``) as child processes, then
-    opens ``http://localhost:<frontend-port>`` in the default browser.
+    Starts uvicorn against ``lineforge.web.app:app`` on ``--backend-port`` using
+    the current Python interpreter (so the GUI runs in the same venv that
+    invoked ``lineforge``). Starts the Next.js dev server on
+    ``--frontend-port`` and opens ``http://localhost:<frontend-port>`` in the
+    default browser.
 
     Both processes inherit the parent's environment, so ``ANTHROPIC_API_KEY``
-    or ``CLAUDE_API_KEY`` (or a local ``claude /login`` session) flows
-    through to the agent.
+    or ``CLAUDE_API_KEY`` (or a local ``claude /login`` session) flows through
+    to the agent.
 
-    The lineforge-gui project must be cloned next to lineforge (or pass ``--gui-dir``).
-    Pre-flight: ensures ``backend/.venv`` and ``frontend/node_modules`` exist;
-    if not, prints the setup commands and exits.
+    Requirements:
+      - ``pip install 'lineforge\[gui]'`` (pulls fastapi, uvicorn, claude-agent-sdk…).
+      - The repo's ``frontend/`` directory must exist on disk and have its
+        node_modules installed (this command will ``pnpm install`` if missing).
+        When ``lineforge`` is installed from a wheel without the source tree,
+        pass ``--frontend-dir`` to point at a checked-out copy.
     """
     import shutil
     import subprocess
+    import sys
     import time
     import webbrowser
 
-    gui_dir = gui_dir.expanduser().resolve()
-    backend_dir = gui_dir / "backend"
-    frontend_dir = gui_dir / "frontend"
+    try:
+        import uvicorn  # noqa: F401
+    except ImportError as err:
+        err_console.print("uvicorn not installed.")
+        err_console.print(r"Install the GUI extras: [bold]pip install 'lineforge\[gui]'[/bold]")
+        raise typer.Exit(code=2) from err
 
-    if not gui_dir.exists():
-        err_console.print(f"GUI directory not found: {gui_dir}")
+    if frontend_dir is None:
+        # src/lineforge/cli.py → parents[2] is the repo root.
+        repo_root = Path(__file__).resolve().parents[2]
+        frontend_dir = repo_root / "frontend"
+    else:
+        frontend_dir = frontend_dir.expanduser().resolve()
+
+    if not (frontend_dir / "package.json").exists():
+        err_console.print(f"Frontend not found at {frontend_dir}")
         err_console.print(
-            "Clone https://github.com/RFingAdam/lineforge-gui next to lineforge, "
-            "or pass --gui-dir <path>."
-        )
-        raise typer.Exit(code=2)
-
-    backend_python = backend_dir / ".venv" / "bin" / "python"
-    if not backend_python.exists():
-        err_console.print(f"Backend venv missing at {backend_python.parent.parent}")
-        console.print("Set it up with:")
-        console.print(f"  cd {backend_dir}")
-        console.print(
-            "  python3 -m venv .venv && .venv/bin/pip install -e ../../lineforge fastapi uvicorn[standard] websockets claude-agent-sdk"
+            "When running from a wheel, clone https://github.com/RFingAdam/lineforge "
+            "and pass --frontend-dir <repo>/frontend."
         )
         raise typer.Exit(code=2)
 
@@ -804,18 +810,18 @@ def gui(
         f"Starting backend on port {backend_port}{' (--reload)' if reload else ''}..."
     )
     backend_cmd = [
-        str(backend_python),
+        sys.executable,
         "-m",
         "uvicorn",
-        "app.main:app",
+        "lineforge.web.app:app",
         "--host",
         "127.0.0.1",
         "--port",
         str(backend_port),
     ]
     if reload:
-        backend_cmd += ["--reload", "--reload-dir", str(backend_dir / "app")]
-    backend_proc = subprocess.Popen(backend_cmd, cwd=backend_dir)
+        backend_cmd += ["--reload"]
+    backend_proc = subprocess.Popen(backend_cmd)
 
     console.print(f"Starting frontend on port {frontend_port}...")
     frontend_proc = subprocess.Popen(
@@ -829,7 +835,7 @@ def gui(
 
     with contextlib.suppress(Exception):
         webbrowser.open(url)
-    console.print(f"\nlineforge-gui running → [bold green]{url}[/bold green]")
+    console.print(f"\nlineforge GUI running → [bold green]{url}[/bold green]")
     console.print("[dim]Ctrl-C to stop both servers.[/dim]\n")
 
     try:

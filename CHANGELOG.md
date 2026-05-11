@@ -6,6 +6,32 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+- **Web GUI consolidated into the main package.** The former standalone
+  `atlc3-gui` sibling repo is now `lineforge.web` (importable Python
+  subpackage at `src/lineforge/web/`) plus `frontend/` (Next.js dev tree)
+  at the repo root. Install with `pip install 'lineforge[gui]'`; launch
+  with `lineforge gui` — same chat-driven design studio, one install path.
+- `[project.optional-dependencies]` group `gui`: fastapi, uvicorn[standard],
+  websockets, python-dotenv, claude-agent-sdk, scikit-rf.
+
+### Changed
+- `lineforge gui` now uses the current Python interpreter (no separate
+  backend venv needed) and resolves the frontend at `<repo>/frontend/`
+  by default. `--gui-dir` option removed; `--frontend-dir` added for
+  wheel installs that don't ship the frontend source tree.
+- uvicorn import-string changed from `app.main:app` to
+  `lineforge.web.app:app`. Any external scripts driving the backend
+  directly need to be updated.
+- Backend tests live in `tests/test_web/` and run under the unified
+  `pytest` from the repo root (no separate test runner).
+
+### Migration
+- If you had the standalone `atlc3-gui` repo cloned: the standalone repo
+  at `/home/swamp/projects/github/atlc3-gui/` (or wherever you cloned it)
+  is preserved as the archive of granular C1–E10 commit history. Future
+  development happens in this repo.
+
 ## [2.0.0] — 2026-05-11
 
 **Project renamed: atlc3 → lineforge.** The codebase has grown past the
