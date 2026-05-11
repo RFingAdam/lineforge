@@ -26,8 +26,8 @@ import uuid
 from typing import Any
 
 import numpy as np
-from atlc3.geometry.usermap import Usermap, UsermapMetadata
-from atlc3.units import parse_length
+from lineforge.geometry.usermap import Usermap, UsermapMetadata
+from lineforge.units import parse_length
 from fastapi import APIRouter, HTTPException
 from PIL import Image
 from pydantic import BaseModel, ConfigDict

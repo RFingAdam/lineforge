@@ -42,15 +42,15 @@ def _chat_available() -> bool:
             return False
     return False
 
-from app import __version__
-from app.api_field_plot import router as field_plot_router
-from app.api_geometries import router as geometries_router
-from app.api_materials import router as materials_router
-from app.api_solve import router as solve_router
-from app.api_usermap import router as usermap_router
-from app.state import get_state, reset_state
-from app.ws_chat import router as chat_router
-from app.ws_progress import router as progress_router
+from lineforge.web import __version__
+from lineforge.web.api_field_plot import router as field_plot_router
+from lineforge.web.api_geometries import router as geometries_router
+from lineforge.web.api_materials import router as materials_router
+from lineforge.web.api_solve import router as solve_router
+from lineforge.web.api_usermap import router as usermap_router
+from lineforge.web.state import get_state, reset_state
+from lineforge.web.ws_chat import router as chat_router
+from lineforge.web.ws_progress import router as progress_router
 
 app = FastAPI(
     title="atlc3-gui-backend",
@@ -79,12 +79,12 @@ app.include_router(progress_router)
 @app.get("/api/health")
 def health() -> dict[str, Any]:
     """Liveness probe + chat-availability flag."""
-    import atlc3
+    import lineforge
 
     return {
         "status": "ok",
         "atlc3_gui_version": __version__,
-        "atlc3_version": atlc3.__version__,
+        "atlc3_version": lineforge.__version__,
         "chat_available": _chat_available(),
     }
 

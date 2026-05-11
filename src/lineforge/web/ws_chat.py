@@ -28,7 +28,7 @@ from typing import Any
 
 from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 
-from app.state import get_state, reset_state, update_state
+from lineforge.web.state import get_state, reset_state, update_state
 
 router = APIRouter()
 
@@ -53,7 +53,7 @@ async def _run_stub(content: str, ws: WebSocket) -> str:
 
 async def _run_agent(content: str, ws: WebSocket) -> str:
     """Run a real agent turn via claude_agent_sdk and forward events to the WS."""
-    from app.agent import run_chat_turn
+    from lineforge.web.agent import run_chat_turn
 
     last_state_snapshot = (await get_state()).model_dump()
     final_assistant_text = ""

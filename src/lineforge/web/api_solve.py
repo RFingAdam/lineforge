@@ -19,14 +19,14 @@ from __future__ import annotations
 
 from typing import Any
 
-from atlc3.analytical import solve as analytical_solve
-from atlc3.geometry import GEOMETRY_TYPES, from_dict
-from atlc3.sweep import sweep as run_sweep
-from atlc3.units import parse_frequency, parse_length
+from lineforge.analytical import solve as analytical_solve
+from lineforge.geometry import GEOMETRY_TYPES, from_dict
+from lineforge.sweep import sweep as run_sweep
+from lineforge.units import parse_frequency, parse_length
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
-from app.state import update_state
+from lineforge.web.state import update_state
 
 router = APIRouter(prefix="/api/solve", tags=["solve"])
 
@@ -193,9 +193,9 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
 
     if req.usermap_uri is not None:
         # Bitmap solve path
-        from atlc3.solvers.cgp import solve_cgp
+        from lineforge.solvers.cgp import solve_cgp
 
-        from app.api_usermap import get_usermap_by_uri
+        from lineforge.web.api_usermap import get_usermap_by_uri
 
         usermap = get_usermap_by_uri(req.usermap_uri)
         if usermap is None:
@@ -277,7 +277,7 @@ async def sweep(req: SweepRequest) -> dict[str, Any]:
         import tempfile
         from pathlib import Path as _Path
 
-        from atlc3.touchstone import to_touchstone
+        from lineforge.touchstone import to_touchstone
 
         try:
             # Write to a tmp file and read the bytes back so the GUI can
@@ -315,7 +315,7 @@ async def sweep(req: SweepRequest) -> dict[str, Any]:
 @router.post("/target-z0")
 async def target_z0(req: TargetZ0Request) -> dict[str, Any]:
     """Solve for the field that lands the target characteristic impedance."""
-    from atlc3.optimize import target_z0 as run_target
+    from lineforge.optimize import target_z0 as run_target
 
     cleaned_template = _clean_geometry(req.template)
     try:

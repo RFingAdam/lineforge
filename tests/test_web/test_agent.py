@@ -17,8 +17,8 @@ import json
 
 import pytest
 
-from app.agent import _TOOLS, build_mcp_server
-from app.state import get_state, reset_state
+from lineforge.web.agent import _TOOLS, build_mcp_server
+from lineforge.web.state import get_state, reset_state
 
 
 @pytest.fixture(autouse=True)
@@ -55,7 +55,7 @@ class TestToolRegistration:
 
 class TestSolverTools:
     async def test_calculate_impedance_microstrip(self) -> None:
-        from app.agent import _t_calculate_impedance
+        from lineforge.web.agent import _t_calculate_impedance
 
         out = await _t_calculate_impedance.handler(
             {
@@ -82,7 +82,7 @@ class TestSolverTools:
         assert state.last_result["_kind"] == "TLineResult"
 
     async def test_list_geometry_types(self) -> None:
-        from app.agent import _t_list_geometry_types
+        from lineforge.web.agent import _t_list_geometry_types
 
         out = await _t_list_geometry_types.handler({})
         body = json.loads(out["content"][0]["text"])
@@ -92,7 +92,7 @@ class TestSolverTools:
         assert "three_wire" in names
 
     async def test_target_z0(self) -> None:
-        from app.agent import _t_target_z0
+        from lineforge.web.agent import _t_target_z0
 
         out = await _t_target_z0.handler(
             {
@@ -113,7 +113,7 @@ class TestSolverTools:
         assert abs(body["z0_achieved"] - 50.0) < 0.1
 
     async def test_sweep_summary(self) -> None:
-        from app.agent import _t_sweep
+        from lineforge.web.agent import _t_sweep
 
         out = await _t_sweep.handler(
             {
@@ -140,7 +140,7 @@ class TestSolverTools:
 
 class TestGuiStateTools:
     async def test_set_geometry_field_with_no_prior_geometry(self) -> None:
-        from app.agent import _t_set_geometry_field
+        from lineforge.web.agent import _t_set_geometry_field
 
         out = await _t_set_geometry_field.handler({"field": "W", "value": "6mil"})
         text = out["content"][0]["text"]
@@ -149,7 +149,7 @@ class TestGuiStateTools:
         assert state.geometry == {"type": "microstrip", "W": "6mil"}
 
     async def test_set_geometry_type_resets_fields(self) -> None:
-        from app.agent import _t_set_geometry_field, _t_set_geometry_type
+        from lineforge.web.agent import _t_set_geometry_field, _t_set_geometry_type
 
         await _t_set_geometry_field.handler({"field": "W", "value": "6mil"})
         await _t_set_geometry_type.handler({"type": "stripline_asymmetric"})
@@ -158,7 +158,7 @@ class TestGuiStateTools:
         assert state.geometry == {"type": "stripline_asymmetric"}
 
     async def test_reset_chat_clears_state(self) -> None:
-        from app.agent import _t_reset_chat, _t_set_geometry_field
+        from lineforge.web.agent import _t_reset_chat, _t_set_geometry_field
 
         await _t_set_geometry_field.handler({"field": "W", "value": "6mil"})
         await _t_reset_chat.handler({})
