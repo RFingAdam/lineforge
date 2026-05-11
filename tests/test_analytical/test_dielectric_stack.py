@@ -19,9 +19,9 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.analytical.wadell import stripline_asymmetric
-from atlc3.geometry.dielectric import DielectricLayer, series_reduce
-from atlc3.geometry.types import StriplineAsymmetric
+from lineforge.analytical.wadell import stripline_asymmetric
+from lineforge.geometry.dielectric import DielectricLayer, series_reduce
+from lineforge.geometry.types import StriplineAsymmetric
 
 
 class TestSeriesReduce:
@@ -265,7 +265,7 @@ class TestStriplineAsymmetricStackRasterize:
     def test_rasterizer_paints_each_layer_distinctly(self) -> None:
         """Multi-layer stack_below produces N distinct dielectric colors in the
         bitmap so the solver and the human can see the stratification."""
-        from atlc3.geometry.builders import rasterize_stripline_asymmetric
+        from lineforge.geometry.builders import rasterize_stripline_asymmetric
 
         geom = StriplineAsymmetric(
             W="3.4mil",
@@ -289,7 +289,7 @@ class TestStriplineAsymmetricStackRasterize:
         assert len(unique) >= 4, f"expected ≥4 distinct dielectric colors, got {unique}"
 
     def test_rasterizer_lookup_carries_layer_names(self) -> None:
-        from atlc3.geometry.builders import rasterize_stripline_asymmetric
+        from lineforge.geometry.builders import rasterize_stripline_asymmetric
 
         geom = StriplineAsymmetric(
             W="3.4mil",

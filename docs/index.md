@@ -1,8 +1,8 @@
-# atlc3.0
+# lineforge.0
 
 Open-source, MCP-enabled, AI-friendly transmission line calculator.
 
-atlc3.0 is the spiritual successor to David Kirkby's `atlc` and Brian
+lineforge.0 is the spiritual successor to David Kirkby's `atlc` and Brian
 Beezley's `atlc2`. It computes the full RLGC characterization (Z₀, εeff, vp,
 L, C, Rs, Gp) of any 2D transmission line cross-section — from standard PCB
 geometries (microstrip, stripline, CPWG, differential pairs) to arbitrary
@@ -18,7 +18,7 @@ user-drawn bitmaps.
   scipy.sparse + ILU-preconditioned BiCGSTAB Faraday solver. PyO3-bound inner
   loops; NumPy/SciPy for orchestration.
 - **atlc2 drop-in compatible.** Existing atlc2 BMP usermaps, `MoreColors.txt`,
-  and script files work unchanged. New `.atlc3.json` format is the modern
+  and script files work unchanged. New `.lineforge.json` format is the modern
   alternative.
 - **GPLv3.**
 

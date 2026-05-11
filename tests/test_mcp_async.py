@@ -12,7 +12,7 @@ from typing import Any
 
 import pytest
 
-from atlc3.mcp_server.server import build_server
+from lineforge.mcp_server.server import build_server
 
 
 def _structured(call_result: tuple[Any, Any]) -> dict[str, Any]:

@@ -15,12 +15,11 @@ be smaller and the simulation should be more stable.
 import os
 import shutil
 import tempfile
-import numpy as np
 
+import numpy as np
 from CSXCAD import ContinuousStructure
 from openEMS import openEMS
 from openEMS.physical_constants import C0
-
 
 unit = 1e-6
 
@@ -153,7 +152,7 @@ port2 = FDTD.AddLumpedPort(
     "z", priority=5,
 )
 
-sim_path = os.path.join(tempfile.gettempdir(), "atlc3_via_short_sim")
+sim_path = os.path.join(tempfile.gettempdir(), "lineforge_via_short_sim")
 if os.path.isdir(sim_path):
     shutil.rmtree(sim_path)
 FDTD.Run(sim_path, cleanup=True)
@@ -169,7 +168,7 @@ print()
 print("=== L1→L3 short via (~9.4 mil), 8/16/30 mil drill/pad/antipad ===")
 print(f"{'f (GHz)':>7} {'|S11| dB':>9} {'|S21| dB':>9} {'VSWR':>6}")
 print("-" * 36)
-for f, s11i, s21i in zip(freq[::40], s11[::40], s21[::40]):
+for f, s11i, s21i in zip(freq[::40], s11[::40], s21[::40], strict=False):
     g = abs(s11i)
     vswr = (1 + g) / (1 - g) if g < 0.99 else 999.0
     s21_db = 20*np.log10(np.abs(s21i)) if abs(s21i) > 0 else -300
@@ -179,4 +178,4 @@ band = (freq >= 0.8e9) & (freq <= 6e9)
 worst_s11 = np.max(np.abs(s11[band]))
 print()
 print(f"  Worst |S11| in 0.8–6 GHz: {20*np.log10(worst_s11):.1f} dB at {freq[band][np.argmax(np.abs(s11[band]))]/1e9:.2f} GHz")
-print(f"  Closed-form analyze_via (this short via, L=3.6 nH C=3.0 pF): self-res 1.54 GHz, IL ≈ -7 dB at 6 GHz")
+print("  Closed-form analyze_via (this short via, L=3.6 nH C=3.0 pF): self-res 1.54 GHz, IL ≈ -7 dB at 6 GHz")

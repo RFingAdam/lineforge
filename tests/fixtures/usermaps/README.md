@@ -1,6 +1,6 @@
 # Reference BMP fixtures for parity tests
 
-These are atlc-format BMP24 files used to lock in atlc3's BMP I/O and bitmap
+These are atlc-format BMP24 files used to lock in lineforge's BMP I/O and bitmap
 solver against analytically-known transmission lines.
 
 The files are **regenerated locally** (not pulled from the atlc/atlc2

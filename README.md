@@ -1,11 +1,11 @@
 <div align="center">
 
-<img src="assets/logo-banner.svg" alt="atlc3 — open-source MCP-enabled transmission line calculator" width="100%"/>
+<img src="assets/logo-banner.svg" alt="lineforge — open-source MCP-enabled transmission line calculator" width="100%"/>
 
 <br/>
 
-[![CI](https://github.com/RFingAdam/atlc3/actions/workflows/ci.yml/badge.svg)](https://github.com/RFingAdam/atlc3/actions/workflows/ci.yml)
-[![Docs](https://github.com/RFingAdam/atlc3/actions/workflows/docs.yml/badge.svg)](https://github.com/RFingAdam/atlc3/actions/workflows/docs.yml)
+[![CI](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml)
+[![Docs](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-1E40AF.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB.svg)](https://www.python.org/downloads/)
 [![Rust](https://img.shields.io/badge/rust-stable-DEA584.svg)](https://www.rust-lang.org/)
@@ -26,17 +26,22 @@
 
 ---
 
-## What is atlc3?
+## What is lineforge?
 
-atlc3 is the third-generation, open-source successor to David Kirkby's
-[`atlc`](http://atlc.sourceforge.net/) (GPL, 2002) and Brian Beezley's
-`atlc2` (closed-source Windows app, 2010). It computes the full RLGC
-characterization — characteristic impedance Z₀, effective permittivity εₑff,
-phase velocity v_p, distributed inductance L, capacitance C, skin-effect
-resistance Rs, and dielectric conductance Gp — for any 2D transmission line
-cross-section.
+lineforge is a programmable transmission-line calculator built for the
+agent era. It computes the full RLGC characterization — characteristic
+impedance Z₀, effective permittivity εₑff, phase velocity v_p, distributed
+inductance L, capacitance C, skin-effect resistance Rs, and dielectric
+conductance Gp — for any 2D transmission line cross-section.
 
-**What's different about atlc3:**
+Drive it from Python, the terminal, or any LLM agent over Model Context
+Protocol. Closed-form analytical solvers for the common geometries
+(microstrip, stripline, coplanar, differential pairs, three-conductor
+lines) hand off seamlessly to a bitmap FD-Laplace + Faraday solver for
+arbitrary cross-sections. Validated against published IPC-2141 reference
+values and openEMS 3D FDTD to within ±2 %.
+
+**What lineforge does well:**
 
 - 🤖 **AI-native via MCP.** First-class [Model Context Protocol](https://modelcontextprotocol.io)
   server with 14 tools. Any Claude / LLM agent can drive it.
@@ -47,9 +52,9 @@ cross-section.
   multigrid + scipy.sparse BiCGSTAB+ILU0 solvers. Rust-accelerated kernels
   via [PyO3](https://pyo3.rs/) for inner loops (currently scaffolded;
   full implementation in Phase 5).
-- 📐 **atlc2 drop-in compatible.** Existing atlc2 BMP usermaps,
-  `MoreColors.txt` files, and `.txt` script files all work unchanged.
-  New `.atlc3.json` is the modern alternative.
+- 📐 **atlc2-format compatible.** Existing atlc2 BMP usermaps,
+  `MoreColors.txt` files, and `.txt` script files run unchanged via the
+  bitmap solver. New `.lineforge.json` is the modern alternative.
 - ✅ **Validated.** Closed-form solvers cross-checked against scikit-rf
   and IPC-2141A reference values; bitmap solvers validated against
   analytical coax (Z₀ ±10%) and wire-pair (DC L ±25%) closed forms.
@@ -62,7 +67,7 @@ cross-section.
 ### Install
 
 ```bash
-pip install atlc3
+pip install lineforge
 ```
 
 You'll need a [Rust toolchain](https://rustup.rs/) only if installing from
@@ -71,8 +76,8 @@ source — the wheels on PyPI are pre-built for `cp311`/`cp312`/`cp313` ×
 
 > Pre-alpha: not yet on PyPI. Install from the repo:
 > ```bash
-> git clone https://github.com/RFingAdam/atlc3.git
-> cd atlc3
+> git clone https://github.com/RFingAdam/lineforge.git
+> cd lineforge
 > pip install -e ".[dev]"
 > ```
 
@@ -85,17 +90,17 @@ source — the wheels on PyPI are pre-built for `cp311`/`cp312`/`cp313` ×
 **Python**
 
 ```python
-import atlc3
+import lineforge
 
 # 50Ω microstrip on 4 mil FR4
-r = atlc3.microstrip(
+r = lineforge.microstrip(
     W="6mil", H="4mil", T="1.4mil", er=4.4
 )
 print(f"Z0 = {r.z0:.2f} Ω")
 print(f"εeff = {r.eps_eff:.3f}")
 
 # Differential pair
-d = atlc3.edge_coupled_diff(
+d = lineforge.edge_coupled_diff(
     W="4mil", S="6mil", H="4mil",
     T="1.4mil", er=4.4, on="microstrip"
 )
@@ -108,19 +113,19 @@ print(f"Zdiff = {d.z_diff:.2f} Ω")
 **CLI**
 
 ```bash
-atlc3 solve --type microstrip \
+lineforge solve --type microstrip \
   --W 6mil --H 4mil --T 1.4mil --er 4.4
 
 # JSON output for piping to jq, csv tools
-atlc3 solve --type microstrip \
+lineforge solve --type microstrip \
   --W 6mil --H 4mil --T 1.4mil --er 4.4 \
   --output json | jq '.z0'
 
 # Run an atlc2 script unchanged
-atlc3 run-script my_atlc2_script.txt
+lineforge run-script my_atlc2_script.txt
 
 # Optimize for a target Z0
-atlc3 optimize --type microstrip \
+lineforge optimize --type microstrip \
   --target z0=50 --vary W=0.5mil:30mil \
   --fixed H=4mil,T=1.4mil,er=4.4
 ```
@@ -137,7 +142,7 @@ Add to your `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "atlc3": { "command": "atlc3", "args": ["mcp-serve"] }
+    "lineforge": { "command": "lineforge", "args": ["mcp-serve"] }
   }
 }
 ```
@@ -182,20 +187,20 @@ shapes, multi-conductor, custom dielectrics, designer-drawn cross-sections —
 use the bitmap solver:
 
 ```python
-um = atlc3.from_bmp("my_geometry.bmp", pixel_width="0.1mm")
-result = atlc3.solve_cgp(um, frequency="1GHz")           # C and Gp
-rlgc   = atlc3.solve_full(um, frequency="1GHz")          # full RLGC
+um = lineforge.from_bmp("my_geometry.bmp", pixel_width="0.1mm")
+result = lineforge.solve_cgp(um, frequency="1GHz")           # C and Gp
+rlgc   = lineforge.solve_full(um, frequency="1GHz")          # full RLGC
 ```
 
 The solver accepts atlc/atlc2-format BMPs unchanged — same color encoding,
 same `MoreColors.txt` material file format. atlc2's `.txt` script files
-also run via `atlc3 run-script script.txt`.
+also run via `lineforge run-script script.txt`.
 
 ---
 
 ## Accuracy
 
-atlc3 is validated at every layer. The numbers below come from the live
+lineforge is validated at every layer. The numbers below come from the live
 test suite (203 passing tests; run `pytest` to reproduce).
 
 ### Closed-form solvers
@@ -224,7 +229,7 @@ tightly-coupled pairs (S/H < 0.5). For exact, use Phase 4's
 | Air coax          | DC L (Faraday)   | (μ₀/2π)·ln(b/a)                            | ±20%      |
 | Wire pair (300Ω)  | DC L (Faraday)   | (μ₀/π)·acosh(D/2a)                         | ±25%      |
 
-The "live" test against atlc/atlc2 BMP fixtures is tracked in [#10](https://github.com/RFingAdam/atlc3/issues/10) — once added, that closes the last gap to 10/10.
+The "live" test against atlc/atlc2 BMP fixtures is tracked in [#10](https://github.com/RFingAdam/lineforge/issues/10) — once added, that closes the last gap to 10/10.
 
 ### Numerical pipeline
 
@@ -246,7 +251,7 @@ The "live" test against atlc/atlc2 BMP fixtures is tracked in [#10](https://gith
                    └──────────────────────────────────────────────────────┘
 ```
 
-For L and Rs at finite frequency, atlc3 builds a 2D PEEC sparse system
+For L and Rs at finite frequency, lineforge builds a 2D PEEC sparse system
 (one row per conductor pixel) and solves it with `scipy.sparse.linalg.bicgstab`
 + ILU0 preconditioner. Skin-depth restriction (atlc2 "Restrict to skin
 depth") blackens conductor pixels deeper than 3δ from the surface,
@@ -262,8 +267,8 @@ Full theory in [`docs/theory/`](docs/theory/).
 ┌──────────────────────────────────────────────────────────────────┐
 │  Layer 3: User-facing surfaces (all polished day 1)              │
 │  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
-│  │  MCP server    │  │  CLI: atlc3      │  │  Python API:     │ │
-│  │  (FastMCP,     │  │  (Typer + Rich,  │  │  import atlc3    │ │
+│  │  MCP server    │  │  CLI: lineforge      │  │  Python API:     │ │
+│  │  (FastMCP,     │  │  (Typer + Rich,  │  │  import lineforge    │ │
 │  │   SEP-1686     │  │   batch + serve) │  │  Pydantic models │ │
 │  │   Tasks)       │  │                  │  │                  │ │
 │  └────────────────┘  └──────────────────┘  └──────────────────┘ │
@@ -307,7 +312,7 @@ Full theory in [`docs/theory/`](docs/theory/).
 
 Repeat solves of the same geometry hit the on-disk cache (key includes the
 package version, so upgrades cleanly retire old results). Disable globally
-with `ATLC3_NO_CACHE=1`; clear with `atlc3 clear-cache`.
+with `ATLC3_NO_CACHE=1`; clear with `lineforge clear-cache`.
 
 ---
 
@@ -322,7 +327,7 @@ with `ATLC3_NO_CACHE=1`; clear with `atlc3 clear-cache`.
 | **4 — Polish + 1.0**       | 🚧 Closing     | Optimizer, cache, viewer, CHANGELOG, docs |
 | **5 — Rust acceleration**  | 🟦 Pending     | Native SOR/multigrid/PEEC via PyO3        |
 
-Track gaps as [GitHub issues](https://github.com/RFingAdam/atlc3/issues),
+Track gaps as [GitHub issues](https://github.com/RFingAdam/lineforge/issues),
 each tagged with its phase milestone.
 
 ---
@@ -355,13 +360,13 @@ deploys to GitHub Pages on every push to `main`.
 
 Contributions are welcome and follow a phase-driven workflow.
 
-1. **Pick a [GitHub issue](https://github.com/RFingAdam/atlc3/issues)** —
+1. **Pick a [GitHub issue](https://github.com/RFingAdam/lineforge/issues)** —
    each is tagged with its phase milestone and AC checklist.
 2. **Fork + branch** (`feature/your-thing` or `fix/your-bug`).
 3. **Run the local check suite**:
    ```bash
-   ruff check . && black --check . && mypy src/atlc3
-   pytest --cov=atlc3
+   ruff check . && black --check . && mypy src/lineforge
+   pytest --cov=lineforge
    cargo fmt --all -- --check && cargo clippy -- -D warnings
    cargo test --workspace
    ```
@@ -383,14 +388,14 @@ is governed by the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md).
 
 ## Citation
 
-If you use atlc3 in published research or designs, a citation is welcome:
+If you use lineforge in published research or designs, a citation is welcome:
 
 ```bibtex
-@software{atlc3,
-  title  = {atlc3.0: Open-Source MCP-Enabled Transmission Line Calculator},
-  author = {{atlc3 contributors}},
+@software{lineforge,
+  title  = {lineforge.0: Open-Source MCP-Enabled Transmission Line Calculator},
+  author = {{lineforge contributors}},
   year   = {2026},
-  url    = {https://github.com/RFingAdam/atlc3},
+  url    = {https://github.com/RFingAdam/lineforge},
   note   = {GPL-3.0-or-later}
 }
 ```
@@ -399,22 +404,42 @@ A formal release on [Zenodo](https://zenodo.org/) lands with `v1.0.0`.
 
 ---
 
+## Lineage
+
+lineforge was originally released as **atlc3** (1.0.0 / 1.1.0,
+April-May 2026). It was renamed to lineforge at v2.0.0 to reflect the
+broader scope — the project has grown well past being a "successor to
+atlc/atlc2" into a programmable, agent-friendly platform with MCP, Touchstone
+export, optimizer, frequency sweeps, multi-layer stacks, GUI, and a
+three-conductor solver.
+
+The atlc lineage is real and we honor it: lineforge references and is
+partially derived from David Kirkby's atlc v1 (GPL), and the bitmap solver
+maintains drop-in BMP/MoreColors/.txt script compatibility with Brian
+Beezley's atlc2 based on its publicly documented behavior at
+<http://www.hdtvprimer.com/kq6qv/atlc2.html>.
+
+If you used `atlc3 1.x` previously: the `atlc3` PyPI package is frozen at
+1.1.0. For new work, use `lineforge`. The Python API is unchanged in name
+shapes — just rename your `import atlc3` to `import lineforge`.
+
 ## License
 
-[GPLv3](LICENSE). atlc3 references and is partially derived from David Kirkby's
-atlc v1 (also GPL); behavioral compatibility with atlc2 is based on its
-publicly documented behavior at <http://www.hdtvprimer.com/kq6qv/atlc2.html>.
+[GPLv3](LICENSE).
 
 ## Acknowledgments
 
-- **Dr. David Kirkby (G8WRB)** — original [atlc](http://atlc.sourceforge.net/), GPL.
-- **Brian Beezley (KQ6QV)** — atlc2, the comprehensive documented spec we built against.
+- **Dr. David Kirkby (G8WRB)** — original [atlc](http://atlc.sourceforge.net/) (2002, GPL).
+- **Brian Beezley (KQ6QV)** — [atlc2](http://www.hdtvprimer.com/kq6qv/atlc2.html) (2010),
+  the comprehensive documented spec we built behavioral compatibility against.
 - **[scikit-rf](https://scikit-rf.readthedocs.io)**, **[PyAMG](https://pyamg.readthedocs.io/)**,
   **[scipy.sparse](https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html)** —
   the open-source numerical libraries that make this possible.
 - **[FastMCP](https://github.com/jlowin/fastmcp)**, **[Typer](https://typer.tiangolo.com/)**,
   **[Pydantic](https://docs.pydantic.dev/)**, **[maturin](https://www.maturin.rs/)** —
   the modern Python toolchain underneath the three user surfaces.
+- **[openEMS](https://openems.de/)** — independent 3D FDTD reference used to
+  cross-validate the closed-form solvers; see `examples/09_l3_sig1_em_validation/`.
 - **The MCP working group** — for the [Tasks SEP-1686 spec](https://modelcontextprotocol.io/seps/1686-tasks.md)
   that made the async-solver pattern clean.
 

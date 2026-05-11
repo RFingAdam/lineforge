@@ -6,8 +6,8 @@ from pathlib import Path
 
 import pytest
 
-from atlc3.materials import MaterialRecord, load_json_pack
-from atlc3.materials.dispersion import interpolate_log_freq, material_at_frequency
+from lineforge.materials import MaterialRecord, load_json_pack
+from lineforge.materials.dispersion import interpolate_log_freq, material_at_frequency
 
 
 class TestInterpolateLogFreq:
@@ -121,7 +121,7 @@ class TestMaterialRecordDispersion:
 class TestPcbExtendedPack:
     @pytest.fixture
     def pack_path(self) -> Path:
-        return Path(__file__).parent.parent / "src/atlc3/materials/packs/pcb_extended.json"
+        return Path(__file__).parent.parent / "src/lineforge/materials/packs/pcb_extended.json"
 
     def test_loads(self, pack_path: Path) -> None:
         records = load_json_pack(pack_path)

@@ -12,8 +12,8 @@ Geometry: H = 2.73 mil prepreg, εr = 3.7, T → 0 (MSLPort intrinsic).
 import os
 import shutil
 import tempfile
-import numpy as np
 
+import numpy as np
 from CSXCAD import ContinuousStructure
 from openEMS import openEMS
 from openEMS.physical_constants import C0
@@ -77,7 +77,7 @@ def run_msl_z0(trace_w_um, trace_l_um=25400.0, sub_h_um=69.34, sub_er=3.7,
         priority=10,
     )
 
-    sim_path = os.path.join(tempfile.gettempdir(), f"atlc3_{sim_label}_w{int(trace_w_um*10)}")
+    sim_path = os.path.join(tempfile.gettempdir(), f"lineforge_{sim_label}_w{int(trace_w_um*10)}")
     if os.path.isdir(sim_path):
         shutil.rmtree(sim_path)
     FDTD.Run(sim_path, cleanup=True)
@@ -107,11 +107,11 @@ def run_msl_z0(trace_w_um, trace_l_um=25400.0, sub_h_um=69.34, sub_er=3.7,
 
 
 def closed_form_z0(W_mil, T_mil, H_mil, er):
-    """Closed-form Wadell microstrip via atlc3."""
+    """Closed-form Wadell microstrip via lineforge."""
     import sys
-    sys.path.insert(0, os.path.expanduser("~/projects/github/atlc3/src"))
-    from atlc3.analytical import microstrip
-    from atlc3.geometry.types import Microstrip
+    sys.path.insert(0, os.path.expanduser("~/projects/github/lineforge/src"))
+    from lineforge.analytical import microstrip
+    from lineforge.geometry.types import Microstrip
     g = Microstrip(W=f"{W_mil}mil", T=f"{T_mil}mil", H=f"{H_mil}mil", er=er)
     r = microstrip(g)
     return r.z0, r.eps_eff

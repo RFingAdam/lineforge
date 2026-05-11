@@ -1,6 +1,6 @@
 # Analytical formulas (theory)
 
-atlc3.0's Phase 1 solvers are closed-form approximations valid over published
+lineforge's Phase 1 solvers are closed-form approximations valid over published
 geometric ranges. They run in microseconds and serve two roles:
 
 1. **Fast path for the 7 standard PCB geometries** — most users never need the
@@ -46,7 +46,7 @@ Finite-thickness Wheeler correction replaces $W$ with $W_{\text{eff}} =
 W + \Delta W$ before substitution.
 
 **Validity:** $0.05 \le W/H \le 20$, $\varepsilon_r \le 128$. Outside this
-range, atlc3 emits an `out_of_range` warning and the user should fall back to
+range, lineforge emits an `out_of_range` warning and the user should fall back to
 the bitmap kernel (Phase 2).
 
 **Reference:** E. Hammerstad and Ø. Jensen, *Accurate Models for Microstrip
@@ -98,7 +98,7 @@ k_1 = \frac{\tanh(\pi W/4H)}{\tanh(\pi(W + 2S)/4H)}
 $$
 
 and $K(\cdot)$ is the complete elliptic integral of the first kind, evaluated
-in atlc3 via `scipy.special.ellipk`.
+in lineforge via `scipy.special.ellipk`.
 
 **Validity:** $W/H \ge 0.05$. Conductor thickness ignored when $T \ll W,S$.
 
@@ -106,7 +106,7 @@ in atlc3 via `scipy.special.ellipk`.
 
 ## Differential pairs — IPC-2141A coupling correction
 
-For edge-coupled microstrip and stripline differential pairs, atlc3 uses the
+For edge-coupled microstrip and stripline differential pairs, lineforge uses the
 empirical IPC-2141A coupling correction on the single-trace Z₀:
 
 **Microstrip:** $Z_{\text{odd/even}} = Z_0\,(1 \mp 0.48\,e^{-0.96\,S/H})$
@@ -120,7 +120,7 @@ Z_{\text{diff}} = 2\,Z_{\text{odd}}, \qquad
 Z_{\text{common}} = Z_{\text{even}}/2
 $$
 
-For broadside-coupled stripline, atlc3 uses the parallel-plate Wadell §6.5
+For broadside-coupled stripline, lineforge uses the parallel-plate Wadell §6.5
 formula with finite-thickness correction.
 
 **Caveat:** The IPC-2141A coupling exponential is empirical and loses accuracy

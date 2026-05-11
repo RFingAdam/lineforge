@@ -6,7 +6,7 @@ from pathlib import Path
 
 import pytest
 
-from atlc3.scripting import ScriptError, ScriptInterpreter, run_script_file
+from lineforge.scripting import ScriptError, ScriptInterpreter, run_script_file
 
 
 class TestParser:

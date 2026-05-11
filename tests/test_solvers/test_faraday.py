@@ -5,8 +5,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from atlc3.geometry.usermap import Usermap, UsermapMetadata
-from atlc3.solvers.faraday import solve_lrs
+from lineforge.geometry.usermap import Usermap, UsermapMetadata
+from lineforge.solvers.faraday import solve_lrs
 
 
 def _two_strip_usermap(separation_px: int = 8) -> Usermap:
@@ -52,9 +52,9 @@ class TestFaradaySmoke:
 class TestRLGCFull:
     def test_rlgc_pipeline_produces_positive_quantities(self) -> None:
         # Use a small but proper microstrip cross-section
-        from atlc3.geometry.builders import rasterize_microstrip
-        from atlc3.geometry.types import Microstrip
-        from atlc3.solvers.lrs import solve_full
+        from lineforge.geometry.builders import rasterize_microstrip
+        from lineforge.geometry.types import Microstrip
+        from lineforge.solvers.lrs import solve_full
 
         geom = Microstrip(W="6mil", H="4mil", T="1.4mil", er=4.4)
         usermap = rasterize_microstrip(geom)

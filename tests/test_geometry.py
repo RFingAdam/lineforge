@@ -7,8 +7,8 @@ import json
 import pytest
 from pydantic import ValidationError
 
-from atlc3.geometry import GEOMETRY_TYPES, export_jsonschema, from_dict
-from atlc3.geometry.types import CPWG, Microstrip
+from lineforge.geometry import GEOMETRY_TYPES, export_jsonschema, from_dict
+from lineforge.geometry.types import CPWG, Microstrip
 
 
 class TestGeometryTypes:
@@ -64,8 +64,8 @@ class TestRasterizeStriplineAsymmetricSplitEr:
     """Bitmap rasterizer must paint two distinct dielectrics for split εr."""
 
     def test_no_custom_lookup_when_bulk_only(self) -> None:
-        from atlc3.geometry.builders import rasterize_stripline_asymmetric
-        from atlc3.geometry.types import StriplineAsymmetric
+        from lineforge.geometry.builders import rasterize_stripline_asymmetric
+        from lineforge.geometry.types import StriplineAsymmetric
 
         geom = StriplineAsymmetric(W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.4)
         umap = rasterize_stripline_asymmetric(geom)
@@ -76,8 +76,8 @@ class TestRasterizeStriplineAsymmetricSplitEr:
     def test_custom_lookup_carries_exact_er(self) -> None:
         """When er_above != er_below, the synthesized records must carry the
         EXACT εr the user asked for (not the closest atlc2-default match)."""
-        from atlc3.geometry.builders import rasterize_stripline_asymmetric
-        from atlc3.geometry.types import StriplineAsymmetric
+        from lineforge.geometry.builders import rasterize_stripline_asymmetric
+        from lineforge.geometry.types import StriplineAsymmetric
 
         geom = StriplineAsymmetric(
             W="5mil",
@@ -114,8 +114,8 @@ class TestRasterizeStriplineAsymmetricSplitEr:
     def test_split_er_paints_two_distinct_colors(self) -> None:
         """The H1 region (above strip) and H2 region (below) must be painted
         with different RGB values when split-εr is set."""
-        from atlc3.geometry.builders import rasterize_stripline_asymmetric
-        from atlc3.geometry.types import StriplineAsymmetric
+        from lineforge.geometry.builders import rasterize_stripline_asymmetric
+        from lineforge.geometry.types import StriplineAsymmetric
 
         geom = StriplineAsymmetric(
             W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.0, er_above=4.5, er_below=3.7

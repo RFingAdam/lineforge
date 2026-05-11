@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-atlc3 is a numerical-computation library — most security-relevant issues
+lineforge is a numerical-computation library — most security-relevant issues
 involve untrusted inputs flowing into the solver pipeline. Specifically:
 
 - Maliciously-crafted BMP/PNG/TIFF usermaps (Pillow decoder vulnerabilities,
@@ -18,13 +18,13 @@ If you find one of these, please **do not open a public issue**.
 ### How to report
 
 - **Preferred:** GitHub's [private vulnerability reporting](https://docs.github.com/en/code-security/security-advisories/guidance-on-reporting-and-writing-information-about-vulnerabilities/privately-reporting-a-security-vulnerability)
-  on the [security tab](https://github.com/RFingAdam/atlc3/security/advisories/new).
+  on the [security tab](https://github.com/RFingAdam/lineforge/security/advisories/new).
 - **Email fallback:** open a minimal private issue requesting a contact
   channel. We'll set up a private discussion.
 
 Please include:
 
-- Affected version (output of `atlc3 --version`).
+- Affected version (output of `lineforge --version`).
 - Minimal reproduction (commands or a small test case).
 - Impact assessment (confidentiality / integrity / availability, severity).
 - Whether you have a proposed fix.
@@ -48,9 +48,9 @@ here matching SemVer minor versions.
 
 In scope:
 
-- The `atlc3` Python package and its native `atlc3._kernel` extension.
-- The `atlc3-mcp-serve` MCP stdio server.
-- The CLI (`atlc3 ...` commands).
+- The `lineforge` Python package and its native `lineforge._kernel` extension.
+- The `lineforge-mcp-serve` MCP stdio server.
+- The CLI (`lineforge ...` commands).
 - atlc2 file-format parsers (BMP, MoreColors.txt, .txt scripts).
 
 Out of scope:

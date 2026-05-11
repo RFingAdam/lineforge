@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.units import awg_to_meters, parse_frequency, parse_length
+from lineforge.units import awg_to_meters, parse_frequency, parse_length
 
 
 class TestParseLength:

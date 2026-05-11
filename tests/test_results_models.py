@@ -5,8 +5,8 @@ from __future__ import annotations
 import pytest
 from pydantic import ValidationError
 
-from atlc3.geometry.types import Microstrip
-from atlc3.results import DiffResult, SolverWarning, TLineResult
+from lineforge.geometry.types import Microstrip
+from lineforge.results import DiffResult, SolverWarning, TLineResult
 
 
 def test_microstrip_round_trip() -> None:

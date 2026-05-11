@@ -1,13 +1,13 @@
 # MCP server
 
-atlc3 ships a first-class MCP server. Any client (Claude Desktop, Claude
+lineforge ships a first-class MCP server. Any client (Claude Desktop, Claude
 Code, Cursor, custom integrations) can drive the analytical solvers via tool
 calls and read the material database as a resource.
 
 ## Run
 
 ```bash
-atlc3 mcp-serve            # stdio transport (only one in Phase 0/1)
+lineforge mcp-serve            # stdio transport (only one in Phase 0/1)
 ```
 
 Phase 2 will add HTTP/SSE transport for remote use.
@@ -22,8 +22,8 @@ Edit `claude_desktop_config.json`:
 ```json
 {
   "mcpServers": {
-    "atlc3": {
-      "command": "atlc3",
+    "lineforge": {
+      "command": "lineforge",
       "args": ["mcp-serve"]
     }
   }

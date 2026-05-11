@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.analytical.wadell import stripline_asymmetric, stripline_symmetric
-from atlc3.geometry.types import StriplineAsymmetric, StriplineSymmetric
+from lineforge.analytical.wadell import stripline_asymmetric, stripline_symmetric
+from lineforge.geometry.types import StriplineAsymmetric, StriplineSymmetric
 
 
 class TestStriplineSymmetric:

@@ -16,9 +16,9 @@ Run::
 
 from __future__ import annotations
 
-from atlc3.analytical.wadell import stripline_asymmetric
-from atlc3.geometry.dielectric import DielectricLayer, series_reduce
-from atlc3.geometry.types import StriplineAsymmetric
+from lineforge.analytical.wadell import stripline_asymmetric
+from lineforge.geometry.dielectric import DielectricLayer, series_reduce
+from lineforge.geometry.types import StriplineAsymmetric
 
 
 def main() -> None:

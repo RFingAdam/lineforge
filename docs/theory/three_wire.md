@@ -20,7 +20,7 @@ Following atlc2 (and standard microwave-engineering practice), model the
    ───── ZoG ────── ground
 ```
 
-A single atlc2/atlc3 run with **only two of the three conductors active** at
+A single atlc2/lineforge run with **only two of the three conductors active** at
 a time (the third floating) gives one of the three pair-wise impedances:
 
 | Run | Active conductors | Result |
@@ -74,7 +74,7 @@ conditions for each mode (Phase 4's `solve_differential` API).
 ## Net current and ZoG warning
 
 If the grounded conductor carries a non-zero net current $I_\text{gnd}$
-(reported as `Ignd` in atlc2 / `result.ignd_pct` in atlc3), the line is
+(reported as `Ignd` in atlc2 / `result.ignd_pct` in lineforge), the line is
 radiating and the reported $Z_0$ is not a true characteristic impedance.
 
 **Rule of thumb:** if $|I_\text{gnd}/I_R| > 4\%$, reconsider the geometry —

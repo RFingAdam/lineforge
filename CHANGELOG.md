@@ -1,10 +1,43 @@
 # Changelog
 
-All notable changes to atlc3.0 are documented in this file. The format follows
-[Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and the project
-adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+All notable changes to lineforge (formerly atlc3) are documented in this
+file. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/),
+and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
+
+## [2.0.0] — 2026-05-11
+
+**Project renamed: atlc3 → lineforge.** The codebase has grown past the
+"successor to atlc/atlc2" framing into a programmable, agent-friendly
+transmission-line platform with MCP, Touchstone export, optimizer,
+multi-layer stacks, GUI, three-conductor solver, and openEMS-validated
+closed-form accuracy. v2.0.0 reflects that scope.
+
+### Breaking changes
+- Python package renamed: `atlc3` → `lineforge`. Update imports:
+  `from atlc3 import ...` → `from lineforge import ...`.
+- CLI command renamed: `atlc3 <subcommand>` → `lineforge <subcommand>`.
+- MCP server name in `claude_desktop_config.json` snippets: `atlc3` → `lineforge`.
+- Rust crate renamed: `atlc3_kernel` → `lineforge_kernel`.
+- Configuration file extension: `.atlc3.json` → `.lineforge.json`.
+- PyPI package renamed: `pip install atlc3` → `pip install lineforge`.
+  The `atlc3` package on PyPI is frozen at 1.1.0.
+
+### Migration
+For most users, three find/replaces in your project will do it:
+1. `import atlc3` → `import lineforge`
+2. `from atlc3` → `from lineforge`
+3. `atlc3` CLI command → `lineforge`
+
+API surface (function names, geometry models, result fields) is unchanged.
+
+### Unchanged
+- All analytical solvers (microstrip, stripline, CPWG, diff pairs, three-wire)
+- All bitmap solvers (Laplace, Faraday, mode decomposition)
+- atlc2 BMP / MoreColors.txt / .txt script-file drop-in compatibility
+- All v1.1.0 features (multi-layer stacks, Touchstone export, optimizer,
+  GUI launcher, three-conductor solver, L3 SIG1 EM validation case study)
 
 ## [1.1.0] — 2026-05-11
 

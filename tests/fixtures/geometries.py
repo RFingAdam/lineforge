@@ -37,8 +37,8 @@ from dataclasses import dataclass
 
 import numpy as np
 
-from atlc3.analytical._constants import EPS0, ETA0, MU0
-from atlc3.geometry.usermap import Usermap, UsermapMetadata
+from lineforge.analytical._constants import EPS0, ETA0, MU0
+from lineforge.geometry.usermap import Usermap, UsermapMetadata
 
 
 @dataclass(frozen=True)

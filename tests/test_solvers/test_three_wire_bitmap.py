@@ -12,8 +12,8 @@ from __future__ import annotations
 import numpy as np
 import pytest
 
-from atlc3.geometry.usermap import Usermap, UsermapMetadata
-from atlc3.solvers import solve_modes
+from lineforge.geometry.usermap import Usermap, UsermapMetadata
+from lineforge.solvers import solve_modes
 
 
 def _make_three_wire_bitmap(

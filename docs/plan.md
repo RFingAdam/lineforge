@@ -1,8 +1,8 @@
-# atlc3.0 — Open-Source MCP-Enabled Transmission Line Calculator
+# lineforge — Open-Source MCP-Enabled Transmission Line Calculator
 
 ## Context
 
-**Why this is being built.** atlc2 (kq6qv@aol.com) is a powerful but closed-source Windows-only Delphi GUI for computing the full RLGC characterization of arbitrary 2D transmission line cross-sections — the only freely available tool that predicts skin-effect Rs within ±5% for arbitrary geometries. But it is a 2010-era desktop app with no API, no automation hooks, and no path for AI agents. atlc3.0 reimplements its two-solver architecture from physics first principles (the original `atlc` v1 GPL code is a direct reference for the Laplace kernel; atlc2's L/Rs Faraday solver is rebuilt from documented behavior), and exposes everything via a stateless MCP server, a Python API, and a CLI — all first-class from day one.
+**Why this is being built.** atlc2 (kq6qv@aol.com) is a powerful but closed-source Windows-only Delphi GUI for computing the full RLGC characterization of arbitrary 2D transmission line cross-sections — the only freely available tool that predicts skin-effect Rs within ±5% for arbitrary geometries. But it is a 2010-era desktop app with no API, no automation hooks, and no path for AI agents. lineforge reimplements its two-solver architecture from physics first principles (the original `atlc` v1 GPL code is a direct reference for the Laplace kernel; atlc2's L/Rs Faraday solver is rebuilt from documented behavior), and exposes everything via a stateless MCP server, a Python API, and a CLI — all first-class from day one.
 
 **Intended outcome:** A pip-installable Python package (with Rust-accelerated kernels) + MCP server that any Claude/LLM agent, CLI script, or Python notebook can use to characterize PCB transmission lines in seconds for standard geometries and minutes-to-hours for arbitrary cross-sections, with accuracy matching or exceeding atlc2.
 
@@ -12,7 +12,7 @@
 |---|---|
 | **License** | **GPLv3** — direct fork/reference of atlc v1 GPL kernel allowed; copyleft preserved downstream |
 | **Build stack** | **Python (high-level) + Rust FFI (hot loops) from day one** — PyO3 + maturin + cibuildwheel; native speed for SOR/multigrid/Krylov inner loops, NumPy/SciPy for orchestration |
-| **File formats** | **Drop-in atlc2 compat AND JSON-native format** — atlc2 BMPs + MoreColors.txt + script files work unchanged; new `.atlc3.json` is the canonical native format |
+| **File formats** | **Drop-in atlc2 compat AND JSON-native format** — atlc2 BMPs + MoreColors.txt + script files work unchanged; new `.lineforge.json` is the canonical native format |
 | **User surfaces** | **All polished day 1** — MCP server, CLI, Python API, all first-class. Each phase ships all three surfaces for the features in that phase |
 
 ---
@@ -23,8 +23,8 @@
 ┌──────────────────────────────────────────────────────────────────┐
 │  Layer 3: User-facing surfaces (all polished day 1)              │
 │  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
-│  │  MCP server    │  │  CLI: atlc3      │  │  Python API:     │ │
-│  │  (Python SDK,  │  │  (Click/Typer,   │  │  import atlc3    │ │
+│  │  MCP server    │  │  CLI: lineforge      │  │  Python API:     │ │
+│  │  (Python SDK,  │  │  (Click/Typer,   │  │  import lineforge    │ │
 │  │   Tasks,       │  │   rich output,   │  │  (Pydantic        │ │
 │  │   Resources)   │  │   batch + serve) │  │   models, typed) │ │
 │  └────────────────┘  └──────────────────┘  └──────────────────┘ │
@@ -60,7 +60,7 @@
 - Python ≥3.11. Deps: `numpy`, `scipy`, `pyamg` (fallback), `pydantic`, `mcp`, `pillow`, `typer`, `rich`.
 - Rust toolchain via `maturin`. Crates: `ndarray`, `rayon` (parallel inner loops), `sprs` (sparse), `pyo3`.
 - CI: `cibuildwheel` matrix on Linux/macOS/Windows × Python 3.11/3.12/3.13.
-- Repository: `github.com/<org>/atlc3` (single repo, monorepo of Python + Rust crate).
+- Repository: `github.com/<org>/lineforge` (single repo, monorepo of Python + Rust crate).
 
 **MCP server design:**
 - Stateless tools, each call carries the geometry blob (or a resource URI to a saved one).
@@ -73,7 +73,7 @@
 ## Repository layout
 
 ```
-atlc3/
+lineforge/
 ├── README.md
 ├── LICENSE                          # GPLv3
 ├── CONTRIBUTING.md
@@ -89,7 +89,7 @@ atlc3/
 │       ├── bug.md
 │       └── feature.md
 ├── crates/
-│   └── atlc3_kernel/                # Rust crate
+│   └── lineforge_kernel/                # Rust crate
 │       ├── Cargo.toml
 │       └── src/
 │           ├── lib.rs               # PyO3 module entry
@@ -103,7 +103,7 @@ atlc3/
 │           │   └── solve.rs         # BiCGSTAB + ILU0
 │           ├── charge_shift.rs      # Surface-charge E-prediction
 │           └── extension.rs         # 8× progressive grid extension
-├── src/atlc3/
+├── src/lineforge/
 │   ├── __init__.py
 │   ├── version.py
 │   ├── geometry/
@@ -201,10 +201,10 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 #### Issue 0.2 — Python + Rust dual build via maturin
 **AC:**
 - [ ] `pyproject.toml` uses maturin as build backend
-- [ ] `Cargo.toml` workspace with `crates/atlc3_kernel`
-- [ ] Empty PyO3 module exports `atlc3._kernel.version()` returning a string
+- [ ] `Cargo.toml` workspace with `crates/lineforge_kernel`
+- [ ] Empty PyO3 module exports `lineforge._kernel.version()` returning a string
 - [ ] `pip install -e .` works on Linux, macOS, Windows
-- [ ] `python -c "from atlc3._kernel import version; print(version())"` succeeds
+- [ ] `python -c "from lineforge._kernel import version; print(version())"` succeeds
 
 #### Issue 0.3 — CI matrix (lint, type-check, test, build)
 **AC:**
@@ -215,17 +215,17 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 0.4 — Skeleton Pydantic models, empty CLI, empty MCP server
 **AC:**
-- [ ] `atlc3.results.TLineResult` and `atlc3.geometry.types.Microstrip` defined as Pydantic v2 models with proper field validators
-- [ ] `atlc3 --help` works via Typer
-- [ ] `atlc3 mcp-serve` starts an MCP server that exposes a single `ping` tool returning `{"status": "ok"}`
-- [ ] `python -c "import atlc3; print(atlc3.__version__)"` works
+- [ ] `lineforge.results.TLineResult` and `lineforge.geometry.types.Microstrip` defined as Pydantic v2 models with proper field validators
+- [ ] `lineforge --help` works via Typer
+- [ ] `lineforge mcp-serve` starts an MCP server that exposes a single `ping` tool returning `{"status": "ok"}`
+- [ ] `python -c "import lineforge; print(lineforge.__version__)"` works
 
 #### Issue 0.5 — Release pipeline (cibuildwheel → TestPyPI on tags)
 **AC:**
 - [ ] `release.yml` triggered on `v*.*.*` tags
 - [ ] cibuildwheel builds wheels for cp311/cp312/cp313 × {linux x86_64, linux aarch64, macos universal2, windows amd64}
 - [ ] Wheels uploaded to TestPyPI
-- [ ] `pip install -i https://test.pypi.org/simple/ atlc3` works on a fresh machine
+- [ ] `pip install -i https://test.pypi.org/simple/ lineforge` works on a fresh machine
 
 ---
 
@@ -236,7 +236,7 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 1.1 — Hammerstad-Jensen microstrip family
 **AC:**
-- [ ] `atlc3.analytical.hammerstad.microstrip(W, T, H, er) -> TLineResult` implemented
+- [ ] `lineforge.analytical.hammerstad.microstrip(W, T, H, er) -> TLineResult` implemented
 - [ ] Embedded (coated) microstrip variant included
 - [ ] Returns Z₀, εeff, vp, td_per_inch, conductor_loss_db_per_in (analytical estimate)
 - [ ] Validated against IPC-2141A Appendix A reference table within ±0.5%
@@ -245,14 +245,14 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 1.2 — Wadell stripline (sym + asym), CPWG
 **AC:**
-- [ ] `atlc3.analytical.wadell.stripline_symmetric` and `..._asymmetric` implemented
-- [ ] `atlc3.analytical.wadell.cpwg` implemented (uses K(k)/K(k') elliptic integrals via `scipy.special.ellipk`)
+- [ ] `lineforge.analytical.wadell.stripline_symmetric` and `..._asymmetric` implemented
+- [ ] `lineforge.analytical.wadell.cpwg` implemented (uses K(k)/K(k') elliptic integrals via `scipy.special.ellipk`)
 - [ ] All within ±0.5% of IPC-2141A reference values on 10+ test cases
 - [ ] Conductor and dielectric loss estimates included
 
 #### Issue 1.3 — Differential pairs (edge-coupled & broadside-coupled, microstrip & stripline)
 **AC:**
-- [ ] `atlc3.analytical.wadell.edge_coupled_microstrip(W, S, H, T, er)` returns `DiffResult{Z0, Zodd, Zeven, Zdiff, Zcommon, εeff_odd, εeff_even}`
+- [ ] `lineforge.analytical.wadell.edge_coupled_microstrip(W, S, H, T, er)` returns `DiffResult{Z0, Zodd, Zeven, Zdiff, Zcommon, εeff_odd, εeff_even}`
 - [ ] Same for `edge_coupled_stripline`, `broadside_coupled_stripline`
 - [ ] `Zdiff = 2·Zodd`, `Zcommon = Zeven/2` correctness checked
 - [ ] Validated against published reference values within ±1%
@@ -261,30 +261,30 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 **AC:**
 - [ ] All 7 geometry types defined as Pydantic v2 models with units (`pint` integration)
 - [ ] Each type self-validates dimensional sanity (e.g. `H > 0`, `W > 0`, `er >= 1`)
-- [ ] `atlc3.geometry.export_jsonschema()` returns a complete JSON Schema for the geometry union
+- [ ] `lineforge.geometry.export_jsonschema()` returns a complete JSON Schema for the geometry union
 - [ ] Round-trip: `Microstrip(...).model_dump_json()` → `Microstrip.model_validate_json(...)` lossless
 
 #### Issue 1.5 — Analytical dispatcher
 **AC:**
-- [ ] `atlc3.analytical.solve(geometry: GeometryUnion) -> TLineResult` routes to the right formula based on geometry type
+- [ ] `lineforge.analytical.solve(geometry: GeometryUnion) -> TLineResult` routes to the right formula based on geometry type
 - [ ] Unsupported types raise `NotImplementedError` with a helpful message pointing to numerical solver (Phase 2)
 - [ ] No state held; pure function
 
-#### Issue 1.6 — CLI: `atlc3 solve` for all standard geometries
+#### Issue 1.6 — CLI: `lineforge solve` for all standard geometries
 **AC:**
-- [ ] `atlc3 solve --type microstrip --W 6mil --H 4mil --T 1.4mil --er 4.4` prints rich-formatted results
-- [ ] `atlc3 solve --json geometry.json` reads geometry from a JSON file
-- [ ] `atlc3 solve ... --output json` writes machine-readable output
-- [ ] `atlc3 list-geometries` prints all supported types
+- [ ] `lineforge solve --type microstrip --W 6mil --H 4mil --T 1.4mil --er 4.4` prints rich-formatted results
+- [ ] `lineforge solve --json geometry.json` reads geometry from a JSON file
+- [ ] `lineforge solve ... --output json` writes machine-readable output
+- [ ] `lineforge list-geometries` prints all supported types
 - [ ] Unit suffixes (mil, mm, in, AWG) parsed via `pint` — matches atlc2's SI prefix handling
 - [ ] Help text includes example invocations
 
 #### Issue 1.7 — Python API: top-level convenience functions
 **AC:**
-- [ ] `atlc3.microstrip(W, H, T, er) -> TLineResult` as one-liner
-- [ ] `atlc3.solve(geometry) -> TLineResult` accepts any geometry model
+- [ ] `lineforge.microstrip(W, H, T, er) -> TLineResult` as one-liner
+- [ ] `lineforge.solve(geometry) -> TLineResult` accepts any geometry model
 - [ ] All public functions have type hints and docstrings (numpy style)
-- [ ] `atlc3.__all__` is curated and stable
+- [ ] `lineforge.__all__` is curated and stable
 - [ ] Documented usage in `examples/01_microstrip_python_api.py`
 
 #### Issue 1.8 — MCP server: tools for analytical solving
@@ -335,7 +335,7 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 **AC:**
 - [ ] JSON schema for material packs defined and exported
 - [ ] `atlc2_default.json` and `pcb_extended.json` ship in the package
-- [ ] CLI `atlc3 material list / show <name> / load <pack.json>` works
+- [ ] CLI `lineforge material list / show <name> / load <pack.json>` works
 - [ ] Round-trip: MoreColors.txt → JSON → MoreColors.txt produces equivalent file (semantic, not byte-exact)
 
 #### Issue 2.4 — Usermap class: BMP/PNG/TIFF/JSON I/O
@@ -355,10 +355,10 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 2.6 — Rust kernel: SOR Laplace relaxation
 **AC:**
-- [ ] `crates/atlc3_kernel/src/laplace/sor.rs` implements 5-pt FD Gauss-Seidel with εr-weighted stencil
+- [ ] `crates/lineforge_kernel/src/laplace/sor.rs` implements 5-pt FD Gauss-Seidel with εr-weighted stencil
 - [ ] SOR ω configurable, default 1.9
 - [ ] Parallel checkerboard update via `rayon`
-- [ ] PyO3 binding: `atlc3._kernel.laplace_sor(grid, materials, omega, max_iter, tol) -> (V_field, n_iter, residual)`
+- [ ] PyO3 binding: `lineforge._kernel.laplace_sor(grid, materials, omega, max_iter, tol) -> (V_field, n_iter, residual)`
 - [ ] On a 1000×1000 microstrip, 10× faster than NumPy reference implementation
 - [ ] Numerical result matches NumPy reference to 1e-9 relative
 
@@ -397,15 +397,15 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 2.12 — CLI: bitmap workflow
 **AC:**
-- [ ] `atlc3 solve --bmp usermap.bmp --pixel-width 0.1mm --method cgp` works
-- [ ] `atlc3 import-bmp usermap.bmp --output usermap.json` converts to native format
-- [ ] `atlc3 render --result result.json --field V --output v_field.png` renders fields
+- [ ] `lineforge solve --bmp usermap.bmp --pixel-width 0.1mm --method cgp` works
+- [ ] `lineforge import-bmp usermap.bmp --output usermap.json` converts to native format
+- [ ] `lineforge render --result result.json --field V --output v_field.png` renders fields
 - [ ] All CLI commands have `--help` with examples
 
 #### Issue 2.13 — Python API: bitmap workflow
 **AC:**
-- [ ] `atlc3.from_bmp("usermap.bmp", pixel_width="0.1mm").solve_cgp()` works as one-liner
-- [ ] `atlc3.solve(geometry, method="cgp")` works for both rasterized and bitmap-loaded geometries
+- [ ] `lineforge.from_bmp("usermap.bmp", pixel_width="0.1mm").solve_cgp()` works as one-liner
+- [ ] `lineforge.solve(geometry, method="cgp")` works for both rasterized and bitmap-loaded geometries
 - [ ] Result objects have `.render_field("V")` returning PIL Image
 
 #### Issue 2.14 — MCP server: async solve via Tasks (SEP-1686)
@@ -421,7 +421,7 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 **AC:**
 - [ ] All script commands from atlc2 docs implemented: `twinlead`, `square`, `coaxial`, `pixel`, `total`, `frequency`, `separation`, `diameter`, `insulation`, `top`, `bottom`, `side`, `skew`, `width`, `height`, `center`, `inner`, `outer`, `box`, `name`, `folder`, `open`, `solve`, `LRS`, `CGP`, `sweep`, `terminate`, `erase`, `window`, `launch`, `save`, `keyboard`, `threads`, `beep`
 - [ ] Comment syntax (`|`), blank lines, whitespace handling all match atlc2
-- [ ] `atlc3 run-script script.txt` executes and produces equivalent outputs to atlc2
+- [ ] `lineforge run-script script.txt` executes and produces equivalent outputs to atlc2
 - [ ] Output files named `<name> Inductances.txt`, `<name> Capacitances.txt`, etc., match atlc2 conventions
 
 ---
@@ -440,7 +440,7 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 3.2 — Rust kernel: Sparse Faraday system assembly
 **AC:**
-- [ ] `crates/atlc3_kernel/src/faraday/assemble.rs` builds the N×N sparse system (one row per conductor pixel) using CSR/COO via `sprs`
+- [ ] `crates/lineforge_kernel/src/faraday/assemble.rs` builds the N×N sparse system (one row per conductor pixel) using CSR/COO via `sprs`
 - [ ] Per-conductor net-current = 0 constraint added correctly (Lagrange multiplier or row-replacement)
 - [ ] Matrix exposed to Python as a `scipy.sparse.csr_matrix` (zero-copy via SciPy ↔ sprs interop or via NumPy buffers)
 
@@ -473,8 +473,8 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 3.7 — Parameter sweeps
 **AC:**
-- [ ] CLI: `atlc3 sweep --geometry geom.json --param frequency --values 1e6,1e7,1e8,1e9 --output sweep.csv`
-- [ ] Python API: `atlc3.sweep(geometry, "frequency", values, method="full")`
+- [ ] CLI: `lineforge sweep --geometry geom.json --param frequency --values 1e6,1e7,1e8,1e9 --output sweep.csv`
+- [ ] Python API: `lineforge.sweep(geometry, "frequency", values, method="full")`
 - [ ] MCP tool: `sweep(geometry_or_uri, parameter, values, method) -> taskId` with task progress reporting (atlc2 logs progress to atlc2 log.txt; we expose via task notifications)
 - [ ] Caches results keyed by geometry + parameter hash
 
@@ -495,8 +495,8 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 4.1 — Geometry optimizer
 **AC:**
-- [ ] `atlc3 optimize --geometry-template microstrip --target-z0 50 --er 4.4 --H 4mil --vary W` produces optimal W
-- [ ] Python: `atlc3.optimize(template, target={"Z0": 50}, vary=["W"])` returns optimized geometry
+- [ ] `lineforge optimize --geometry-template microstrip --target-z0 50 --er 4.4 --H 4mil --vary W` produces optimal W
+- [ ] Python: `lineforge.optimize(template, target={"Z0": 50}, vary=["W"])` returns optimized geometry
 - [ ] MCP tool: `optimize(template, target, vary, bounds) -> taskId`
 - [ ] Uses `scipy.optimize.minimize_scalar` / `minimize` under the hood
 
@@ -515,7 +515,7 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 #### Issue 4.4 — atlc2 GUI keyboard-command compatibility shim
 **AC:**
-- [ ] `atlc3 view --result result.json` opens a textual viewer with atlc2's keyboard shortcuts (U/V/E/D/T/L/N/B/J/H/S/+/-/etc.)
+- [ ] `lineforge view --result result.json` opens a textual viewer with atlc2's keyboard shortcuts (U/V/E/D/T/L/N/B/J/H/S/+/-/etc.)
 - [ ] Field rendering matches atlc2 visual style on a sample of 3 example geometries
 
 #### Issue 4.5 — Documentation: theory pages
@@ -532,7 +532,7 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 - [ ] CHANGELOG.md complete from 0.1.0 onward
 - [ ] Version bumped to 1.0.0
 - [ ] Wheels for cp311/cp312/cp313 × 4 platforms uploaded to real PyPI
-- [ ] `pip install atlc3` works on a fresh machine
+- [ ] `pip install lineforge` works on a fresh machine
 - [ ] Announcement post drafted (HN/Reddit/r/electronics/r/PrintedCircuitBoard)
 
 ---
@@ -541,14 +541,14 @@ Each phase is a **GitHub milestone**. Each issue listed becomes a GitHub issue w
 
 After each phase, all of these must pass:
 
-1. **Unit tests** — `pytest tests/ -v --cov=atlc3` ≥ 90% coverage on Python, `cargo test` for Rust
-2. **Lint/type** — `ruff check .`, `black --check .`, `mypy src/atlc3`, `cargo clippy -- -D warnings`
+1. **Unit tests** — `pytest tests/ -v --cov=lineforge` ≥ 90% coverage on Python, `cargo test` for Rust
+2. **Lint/type** — `ruff check .`, `black --check .`, `mypy src/lineforge`, `cargo clippy -- -D warnings`
 3. **Integration** — start MCP server, call all tools via `mcp inspector`, validate response shapes
 4. **End-to-end (Phase 1+)** — Claude Desktop ↔ MCP server: ask "50Ω microstrip on 4mil FR4" → get correct W
 5. **End-to-end (Phase 2+)** — Load atlc v1 example BMP → solve → C matches published value within 0.5%
 6. **End-to-end (Phase 3+)** — Run `benchmarks/atlc2_parity.py` → all 5 cases within target tolerances
-7. **CLI smoke** — `atlc3 solve --type microstrip --W 6mil --H 4mil --er 4.4` prints results in <1s
-8. **Wheel install** — Fresh VM, `pip install atlc3==<phase-version>`, run quickstart from docs
+7. **CLI smoke** — `lineforge solve --type microstrip --W 6mil --H 4mil --er 4.4` prints results in <1s
+8. **Wheel install** — Fresh VM, `pip install lineforge==<phase-version>`, run quickstart from docs
 
 ---
 
@@ -578,7 +578,7 @@ After each phase, all of these must pass:
 
 ## Out of scope (deliberate)
 
-- 3D full-wave EM (openEMS already does this; atlc3.0 stays 2D cross-section)
+- 3D full-wave EM (openEMS already does this; lineforge stays 2D cross-section)
 - Ferromagnetic materials (atlc2 also doesn't handle these)
 - Native GUI app (atlc2 GUI shim in Phase 4 is a CLI viewer, not a Win32 replica)
 - Antenna design — explicitly out of scope, just like atlc2

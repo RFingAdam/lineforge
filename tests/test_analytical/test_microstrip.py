@@ -12,8 +12,8 @@ from __future__ import annotations
 
 import pytest
 
-from atlc3.analytical.hammerstad import embedded_microstrip, microstrip
-from atlc3.geometry.types import EmbeddedMicrostrip, Microstrip
+from lineforge.analytical.hammerstad import embedded_microstrip, microstrip
+from lineforge.geometry.types import EmbeddedMicrostrip, Microstrip
 
 
 def _ms(W_mil: float, H_mil: float, T_mil: float, er: float) -> Microstrip:

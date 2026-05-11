@@ -22,8 +22,8 @@ import math
 
 import pytest
 
-from atlc3.solvers.cgp import solve_cgp
-from atlc3.solvers.faraday import solve_lrs as solve_lrs_faraday
+from lineforge.solvers.cgp import solve_cgp
+from lineforge.solvers.faraday import solve_lrs as solve_lrs_faraday
 from tests.fixtures.geometries import (
     CASES,
     air_coax_50ohm,

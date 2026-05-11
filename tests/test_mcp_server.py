@@ -11,8 +11,8 @@ from typing import Any
 
 import pytest
 
-from atlc3.mcp_server.server import build_server
-from atlc3.version import __version__
+from lineforge.mcp_server.server import build_server
+from lineforge.version import __version__
 
 
 def test_server_builds() -> None:

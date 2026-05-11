@@ -1,26 +1,26 @@
 # Phase C example — chat-driven web GUI walkthrough
 
-The atlc3 web GUI lives in a sibling repo, `atlc3-gui`. It bundles a
-FastAPI backend that wraps the atlc3 library with a Next.js + React +
+The lineforge web GUI lives in a sibling repo, `lineforge-gui`. It bundles a
+FastAPI backend that wraps the lineforge library with a Next.js + React +
 Tailwind frontend. A chat panel runs on `claude-agent-sdk` against the
 user's Claude Max subscription, and the agent has tools that mutate the
 GUI's geometry form live as it works.
 
 ## Prerequisites
 
-* `atlc3-gui` cloned next to `atlc3`:
+* `lineforge-gui` cloned next to `lineforge`:
 
   ```bash
   cd ..
-  git clone https://github.com/RFingAdam/atlc3-gui
+  git clone https://github.com/RFingAdam/lineforge-gui
   ```
 
 * Backend venv with FastAPI + uvicorn + claude-agent-sdk:
 
   ```bash
-  cd atlc3-gui/backend
+  cd lineforge-gui/backend
   python3 -m venv .venv
-  .venv/bin/pip install -e ../../atlc3 fastapi 'uvicorn[standard]' \
+  .venv/bin/pip install -e ../../lineforge fastapi 'uvicorn[standard]' \
     websockets claude-agent-sdk pytest pytest-asyncio httpx
   ```
 
@@ -36,20 +36,20 @@ GUI's geometry form live as it works.
 
 ## Launch
 
-From inside the `atlc3` repo:
+From inside the `lineforge` repo:
 
 ```bash
-atlc3 gui
+lineforge gui
 ```
 
 The CLI:
 
-1. Verifies the sibling `../atlc3-gui/` directory exists.
+1. Verifies the sibling `../lineforge-gui/` directory exists.
 2. Verifies the backend venv and frontend `node_modules` exist (prints setup
    commands if not).
 3. Spawns `uvicorn app.main:app --port 8000` and `pnpm dev --port 3000`.
 4. Opens `http://localhost:3000` in your default browser.
-5. Hands you a chat panel with the atlc3 tool surface bound.
+5. Hands you a chat panel with the lineforge tool surface bound.
 
 ## Walkthrough — the L3 SIG1 case from the planning session
 
@@ -74,7 +74,7 @@ messages; the Zustand store applies them and React re-renders.
 
 ## Stopping
 
-`Ctrl-C` in the terminal where `atlc3 gui` runs — both child processes
+`Ctrl-C` in the terminal where `lineforge gui` runs — both child processes
 shut down cleanly.
 
 ## Without the chat

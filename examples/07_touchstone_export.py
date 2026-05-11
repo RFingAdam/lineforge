@@ -15,9 +15,9 @@ from pathlib import Path
 
 import numpy as np
 
-from atlc3.geometry.types import Microstrip
-from atlc3.sweep import sweep
-from atlc3.touchstone import to_touchstone
+from lineforge.geometry.types import Microstrip
+from lineforge.sweep import sweep
+from lineforge.touchstone import to_touchstone
 
 
 def main() -> None:
@@ -26,7 +26,7 @@ def main() -> None:
     freqs = np.linspace(1e8, 2e10, 101).tolist()  # 0.1–20 GHz, 101 points
     points = sweep(geom, parameter="frequency", values=freqs, solver="analytical")
 
-    out_dir = Path("/tmp/atlc3_examples")
+    out_dir = Path("/tmp/lineforge_examples")
     out_dir.mkdir(exist_ok=True)
     out_path = to_touchstone(
         points,

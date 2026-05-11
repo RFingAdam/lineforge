@@ -1,0 +1,113 @@
+{
+  "name": "pcb-extended",
+  "version": "1.1.0",
+  "description": "Common PCB substrate materials beyond atlc2's defaults — modern high-frequency laminate vendors plus shorthand entries for FR4-class generics. Where datasheets publish multi-frequency Dk/Df points, those tables are populated and used by lineforge's log-frequency interpolator.",
+  "materials": [
+    {
+      "rgb": [180, 220, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.66, "tan_delta": 0.0037, "mu_r": 1.0,
+      "name": "Rogers RO4350B",
+      "er_freq": {"1.0e8": 3.66, "1.0e9": 3.66, "1.0e10": 3.66, "4.0e10": 3.65},
+      "tan_freq": {"1.0e8": 0.004, "1.0e9": 0.0037, "1.0e10": 0.0037, "4.0e10": 0.0048}
+    },
+    {
+      "rgb": [180, 200, 220], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.48, "tan_delta": 0.0037, "mu_r": 1.0,
+      "name": "Rogers RO4003C",
+      "er_freq": {"1.0e9": 3.55, "1.0e10": 3.48, "4.0e10": 3.45},
+      "tan_freq": {"1.0e9": 0.0027, "1.0e10": 0.0037, "4.0e10": 0.0042}
+    },
+    {
+      "rgb": [200, 180, 220], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 6.15, "tan_delta": 0.0027, "mu_r": 1.0,
+      "name": "Rogers RO3006"
+    },
+    {
+      "rgb": [200, 220, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 10.2, "tan_delta": 0.0023, "mu_r": 1.0,
+      "name": "Rogers RO3010"
+    },
+    {
+      "rgb": [180, 180, 240], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.0, "tan_delta": 0.001, "mu_r": 1.0,
+      "name": "Rogers RO3003"
+    },
+    {
+      "rgb": [220, 180, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 4.4, "tan_delta": 0.02, "mu_r": 1.0,
+      "name": "FR4 nominal (er=4.4)"
+    },
+    {
+      "rgb": [240, 200, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 4.2, "tan_delta": 0.018, "mu_r": 1.0,
+      "name": "FR4 Core (er=4.2)"
+    },
+    {
+      "rgb": [240, 180, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.7, "tan_delta": 0.018, "mu_r": 1.0,
+      "name": "FR4 Prepreg (er=3.7)"
+    },
+    {
+      "rgb": [180, 240, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.0, "tan_delta": 0.001, "mu_r": 1.0,
+      "name": "Megtron 6 (Panasonic R-5775)",
+      "er_freq": {"1.0e9": 3.71, "5.0e9": 3.66, "1.0e10": 3.61, "2.5e10": 3.59},
+      "tan_freq": {"1.0e9": 0.002, "5.0e9": 0.0024, "1.0e10": 0.0033, "2.5e10": 0.0048}
+    },
+    {
+      "rgb": [180, 240, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.7, "tan_delta": 0.005, "mu_r": 1.0,
+      "name": "Megtron 4 (Panasonic R-5725)",
+      "er_freq": {"1.0e9": 3.7, "1.0e10": 3.6},
+      "tan_freq": {"1.0e9": 0.005, "1.0e10": 0.008}
+    },
+    {
+      "rgb": [200, 240, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.4, "tan_delta": 0.001, "mu_r": 1.0,
+      "name": "Megtron 7-N (Panasonic R-5785N)",
+      "er_freq": {"1.0e9": 3.45, "1.0e10": 3.4, "2.5e10": 3.36},
+      "tan_freq": {"1.0e9": 0.0014, "1.0e10": 0.002, "2.5e10": 0.003}
+    },
+    {
+      "rgb": [240, 200, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.4, "tan_delta": 0.005, "mu_r": 1.0,
+      "name": "Isola 370HR",
+      "er_freq": {"1.0e9": 4.04, "1.0e10": 3.92},
+      "tan_freq": {"1.0e9": 0.021, "1.0e10": 0.025}
+    },
+    {
+      "rgb": [240, 180, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.27, "tan_delta": 0.0037, "mu_r": 1.0,
+      "name": "Isola I-Tera MT40",
+      "er_freq": {"2.0e9": 3.45, "1.0e10": 3.38, "2.5e10": 3.27},
+      "tan_freq": {"2.0e9": 0.0031, "1.0e10": 0.0037, "2.5e10": 0.0044}
+    },
+    {
+      "rgb": [240, 220, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.02, "tan_delta": 0.0023, "mu_r": 1.0,
+      "name": "Isola Tachyon 100G",
+      "er_freq": {"1.0e10": 3.02, "2.5e10": 3.0},
+      "tan_freq": {"1.0e10": 0.0021, "2.5e10": 0.0029}
+    },
+    {
+      "rgb": [220, 240, 200], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 4.7, "tan_delta": 0.014, "mu_r": 1.0,
+      "name": "ITEQ IT-150DA"
+    },
+    {
+      "rgb": [200, 220, 240], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 4.0, "tan_delta": 0.011, "mu_r": 1.0,
+      "name": "ITEQ IT-180A"
+    },
+    {
+      "rgb": [200, 240, 220], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 3.5, "tan_delta": 0.005, "mu_r": 1.0,
+      "name": "polyimide (Kapton)"
+    },
+    {
+      "rgb": [220, 240, 180], "use": "insul",
+      "resistivity_ohm_cm": 1000000.0, "er": 9.8, "tan_delta": 0.0001, "mu_r": 1.0,
+      "name": "alumina (Al2O3, 99%)"
+    }
+  ]
+}
