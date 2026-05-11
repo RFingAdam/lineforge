@@ -46,7 +46,7 @@ from claude_agent_sdk import (
     tool,
 )
 
-from app.state import get_state, reset_state, update_state
+from lineforge.web.state import get_state, reset_state, update_state
 
 # --- atlc3 wrappers -----------------------------------------------------
 
@@ -62,8 +62,8 @@ from app.state import get_state, reset_state, update_state
     },
 )
 async def _t_calculate_impedance(args: dict[str, Any]) -> dict[str, Any]:
-    from atlc3.analytical import solve as analytical_solve
-    from atlc3.geometry import from_dict
+    from lineforge.analytical import solve as analytical_solve
+    from lineforge.geometry import from_dict
 
     geom_dict = args["geometry"]
     freq = args.get("frequency_hz")
@@ -87,7 +87,7 @@ async def _t_calculate_impedance(args: dict[str, Any]) -> dict[str, Any]:
     },
 )
 async def _t_target_z0(args: dict[str, Any]) -> dict[str, Any]:
-    from atlc3.optimize import target_z0 as run_target
+    from lineforge.optimize import target_z0 as run_target
 
     bounds = None
     if args.get("bounds_low") and args.get("bounds_high"):
@@ -126,8 +126,8 @@ async def _t_target_z0(args: dict[str, Any]) -> dict[str, Any]:
     },
 )
 async def _t_sweep(args: dict[str, Any]) -> dict[str, Any]:
-    from atlc3.geometry import from_dict
-    from atlc3.sweep import sweep as run_sweep
+    from lineforge.geometry import from_dict
+    from lineforge.sweep import sweep as run_sweep
 
     geom = from_dict(args["geometry"])
     points = run_sweep(
@@ -158,7 +158,7 @@ async def _t_sweep(args: dict[str, Any]) -> dict[str, Any]:
     {},
 )
 async def _t_list_geometry_types(args: dict[str, Any]) -> dict[str, Any]:
-    from atlc3.geometry import GEOMETRY_TYPES
+    from lineforge.geometry import GEOMETRY_TYPES
 
     out = [
         {

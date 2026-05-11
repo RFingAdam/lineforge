@@ -7,8 +7,8 @@ import json
 import pytest
 from fastapi.testclient import TestClient
 
-from app.main import app
-from app.state import reset_state
+from lineforge.web.app import app
+from lineforge.web.state import reset_state
 
 
 @pytest.fixture(autouse=True)
@@ -486,7 +486,7 @@ class TestProgressWebSocket:
         from the backend; the WebSocket forwards both then closes."""
         import asyncio
 
-        from app.ws_progress import send_progress
+        from lineforge.web.ws_progress import send_progress
 
         with client.websocket_connect("/ws/progress/tsk-123") as ws:
             # Push from another thread/loop

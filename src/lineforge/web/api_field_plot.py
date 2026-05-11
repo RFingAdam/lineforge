@@ -18,17 +18,17 @@ import io
 from typing import Any, Literal
 
 import numpy as np
-from atlc3.geometry import from_dict
-from atlc3.geometry.builders import rasterize as rasterize_geom
-from atlc3.geometry.usermap import Usermap
-from atlc3.solvers.cgp import solve_cgp
-from atlc3.visualization.fields import render_field
+from lineforge.geometry import from_dict
+from lineforge.geometry.builders import rasterize as rasterize_geom
+from lineforge.geometry.usermap import Usermap
+from lineforge.solvers.cgp import solve_cgp
+from lineforge.visualization.fields import render_field
 from fastapi import APIRouter, HTTPException
 from PIL import Image
 from pydantic import BaseModel, ConfigDict, ValidationError
 
-from app.api_solve import _clean_geometry, _sanitize_error
-from app.api_usermap import get_usermap_by_uri
+from lineforge.web.api_solve import _clean_geometry, _sanitize_error
+from lineforge.web.api_usermap import get_usermap_by_uri
 
 router = APIRouter(prefix="/api/solve", tags=["solve"])
 
@@ -135,7 +135,7 @@ async def field_plot_async(req: FieldPlotRequest) -> dict[str, Any]:
     import asyncio
     import uuid as _uuid
 
-    from app.ws_progress import send_progress
+    from lineforge.web.ws_progress import send_progress
 
     task_id = str(_uuid.uuid4())
 

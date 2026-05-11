@@ -10,7 +10,7 @@ import pytest
 from fastapi.testclient import TestClient
 from PIL import Image
 
-from app.main import app
+from lineforge.web.app import app
 
 
 @pytest.fixture

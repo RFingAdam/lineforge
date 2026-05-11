@@ -10,8 +10,8 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import atlc3.materials as atlc3_materials
-from atlc3.materials.morecolors import load_json_pack
+import lineforge.materials as atlc3_materials
+from lineforge.materials.morecolors import load_json_pack
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict
 
@@ -78,8 +78,8 @@ def series_reduce(req: SeriesReduceRequest) -> dict[str, Any]:
     Used by the frontend's StackupEditor to feed reduced (H, εr, tan_δ) back
     into the form as the user adds layers.
     """
-    from atlc3.geometry.dielectric import DielectricLayer
-    from atlc3.geometry.dielectric import series_reduce as run_reduce
+    from lineforge.geometry.dielectric import DielectricLayer
+    from lineforge.geometry.dielectric import series_reduce as run_reduce
 
     if not req.layers:
         raise HTTPException(status_code=400, detail="layers must not be empty")
