@@ -127,7 +127,14 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["B011"]
-"examples/**/*.py" = ["F401", "F403"]
+"examples/**/*.py" = [
+    "F401",   # unused imports OK in examples
+    "F403",   # star imports OK in examples
+    "E402",   # late imports OK — examples often interleave code with closed-form refs
+    "E741",   # ambiguous single-letter names OK in EM examples (I, l, etc., have physics meaning)
+    "N816",   # mixedCase names OK in EM examples (g_T, r_T match formula symbols)
+    "B007",   # unused loop variables OK in tutorial-style examples
+]
 
 [tool.black]
 line-length = 100
