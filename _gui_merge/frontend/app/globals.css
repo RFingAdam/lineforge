@@ -1,0 +1,73 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body,
+#__next {
+  height: 100%;
+}
+
+body {
+  background: #0a0e16;
+  color: #e5e7eb;
+  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  font-feature-settings: "ss01", "cv11";
+}
+
+/* JetBrains Mono via the local stack — falls back gracefully if not installed */
+code,
+pre,
+.font-mono {
+  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, "Cascadia Code", "Source Code Pro",
+    monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Smooth focus ring with the teal accent */
+input:focus,
+select:focus,
+button:focus-visible,
+textarea:focus {
+  outline: none;
+  border-color: #06b6d4 !important;
+  box-shadow: 0 0 0 1px #06b6d4, 0 0 12px rgba(6, 182, 212, 0.35);
+  transition: box-shadow 120ms ease, border-color 120ms ease;
+}
+
+/* Shared transitions */
+button,
+input,
+select {
+  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
+}
+
+/* Scrollbar polish (webkit) */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+::-webkit-scrollbar-track {
+  background: #0a0e16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1a2332;
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #252e3f;
+}
+
+/* Skeleton pulse animation */
+@keyframes pulse-bg {
+  0%,
+  100% {
+    background-color: rgba(30, 41, 59, 0.6);
+  }
+  50% {
+    background-color: rgba(30, 41, 59, 0.9);
+  }
+}
+.skeleton {
+  animation: pulse-bg 1.6s ease-in-out infinite;
+}
