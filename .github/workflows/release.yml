@@ -77,9 +77,10 @@ jobs:
     needs: [build-wheels, build-sdist]
     if: startsWith(github.ref, 'refs/tags/v') || github.event.inputs.target == 'testpypi'
     runs-on: ubuntu-latest
+    continue-on-error: true
     environment:
       name: testpypi
-      url: https://test.pypi.org/p/atlc3
+      url: https://test.pypi.org/p/lineforge
     permissions:
       id-token: write
     steps:
@@ -100,7 +101,7 @@ jobs:
     runs-on: ubuntu-latest
     environment:
       name: pypi
-      url: https://pypi.org/p/atlc3
+      url: https://pypi.org/p/lineforge
     permissions:
       id-token: write
     steps:
