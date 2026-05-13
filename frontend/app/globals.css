@@ -2,47 +2,90 @@
 @tailwind components;
 @tailwind utilities;
 
+/* ── base ───────────────────────────────────────────────────────────────── */
+
 html,
 body,
 #__next {
   height: 100%;
 }
 
-body {
-  background: #0a0e16;
-  color: #e5e7eb;
-  font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-feature-settings: "ss01", "cv11";
+@layer base {
+  html {
+    font-feature-settings: "ss01", "cv11";
+  }
+
+  body {
+    @apply antialiased bg-canvas text-slate-100 font-display;
+  }
+
+  code,
+  pre,
+  .font-mono {
+    font-family: var(--font-mono), "JetBrains Mono", ui-monospace,
+      SFMono-Regular, "Cascadia Code", "Source Code Pro", monospace;
+    font-variant-numeric: tabular-nums;
+  }
+
+  button,
+  input,
+  select {
+    transition: background-color 120ms ease, color 120ms ease,
+      border-color 120ms ease, box-shadow 120ms ease;
+  }
 }
 
-/* JetBrains Mono via the local stack — falls back gracefully if not installed */
-code,
-pre,
-.font-mono {
-  font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, "Cascadia Code", "Source Code Pro",
-    monospace;
-  font-variant-numeric: tabular-nums;
+/* ── components ─────────────────────────────────────────────────────────── */
+
+@layer components {
+  .surface {
+    @apply bg-surface border border-border-subtle rounded-md shadow-card;
+  }
+  .surface-raised {
+    @apply bg-surface-raised border border-border-subtle rounded-md shadow-card;
+  }
+  .surface-overlay {
+    @apply bg-surface-overlay rounded-md;
+  }
+  .panel {
+    @apply bg-surface border border-border-subtle rounded-md shadow-panel;
+  }
+
+  .glass {
+    @apply backdrop-blur-md bg-surface/80 border-b border-border-subtle shadow-topbar;
+  }
+
+  .focus-ring {
+    @apply outline-none focus-visible:ring-2 focus-visible:ring-accent
+           focus-visible:ring-offset-2 focus-visible:ring-offset-canvas
+           transition-shadow;
+  }
+
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-1.5
+           rounded-md px-3 py-1.5 text-sm font-medium text-white
+           bg-gradient-to-r from-accent to-accent-strong shadow-card
+           hover:brightness-110 active:brightness-95
+           disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:brightness-100
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-accent focus-visible:ring-offset-2
+           focus-visible:ring-offset-canvas;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-1.5
+           rounded-md px-3 py-1.5 text-sm font-medium text-slate-200
+           bg-surface-raised hover:bg-surface-overlay
+           border border-border-subtle hover:border-border-strong
+           disabled:opacity-50 disabled:cursor-not-allowed
+           focus-visible:outline-none focus-visible:ring-2
+           focus-visible:ring-accent focus-visible:ring-offset-2
+           focus-visible:ring-offset-canvas;
+  }
 }
 
-/* Smooth focus ring with the teal accent */
-input:focus,
-select:focus,
-button:focus-visible,
-textarea:focus {
-  outline: none;
-  border-color: #06b6d4 !important;
-  box-shadow: 0 0 0 1px #06b6d4, 0 0 12px rgba(6, 182, 212, 0.35);
-  transition: box-shadow 120ms ease, border-color 120ms ease;
-}
+/* ── utilities (legacy parity) ──────────────────────────────────────────── */
 
-/* Shared transitions */
-button,
-input,
-select {
-  transition: background-color 120ms ease, color 120ms ease, border-color 120ms ease;
-}
-
-/* Scrollbar polish (webkit) */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -58,7 +101,6 @@ select {
   background: #252e3f;
 }
 
-/* Skeleton pulse animation */
 @keyframes pulse-bg {
   0%,
   100% {
@@ -70,4 +112,13 @@ select {
 }
 .skeleton {
   animation: pulse-bg 1.6s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .skeleton {
+    animation: none;
+  }
+  .animate-bounce {
+    animation: none;
+  }
 }
