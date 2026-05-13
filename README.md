@@ -12,6 +12,8 @@
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-00BCD4.svg)](https://mypy.readthedocs.io/)
 [![ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
 [![Code style: black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
+[![MCP](https://img.shields.io/badge/MCP-server-A78BFA.svg)](https://modelcontextprotocol.io)
+[![eng-mcp-suite](https://img.shields.io/badge/eng--mcp--suite-member-22D3EE.svg)](https://github.com/RFingAdam/eng-mcp-suite)
 
 **Compute Z₀, εₑff, L, C, Rs, Gp for any 2D transmission line cross-section.**
 **From your Python notebook, terminal, or AI agent.**
@@ -422,6 +424,30 @@ If you use lineforge in published research or designs, a citation is welcome:
 ```
 
 A formal release on [Zenodo](https://zenodo.org/) lands with `v1.0.0`.
+
+---
+
+## Part of eng-mcp-suite
+
+<sub>This MCP server is part of</sub>
+
+[![eng-mcp-suite](https://img.shields.io/badge/eng--mcp--suite-engineering%20MCP%20catalog-22D3EE?style=for-the-badge)](https://github.com/RFingAdam/eng-mcp-suite)
+
+<sub>An open umbrella for engineering MCP servers across RF, EMC, PCB,
+signal integrity, EM simulation, and lab test. Same brand, same docs
+structure, designed to compose. Use lineforge in the `rf-design` or
+`pcb-review` workflow bundle. See the
+[full catalog](https://github.com/RFingAdam/eng-mcp-suite#whats-included)
+or jump to a sibling:</sub>
+
+| Domain                      | Sibling MCPs                                                                 |
+| --------------------------- | ---------------------------------------------------------------------------- |
+| **EM simulation**           | [mcp-nec2-antenna](https://github.com/RFingAdam/mcp-nec2-antenna), [mcp-openems](https://github.com/RFingAdam/mcp-openems) |
+| **Circuit + filter sim**    | [mcp-ltspice-qucs](https://github.com/RFingAdam/mcp-ltspice-qucs)            |
+| **PCB / SI**                | [mcp-pcb-emcopilot](https://github.com/RFingAdam/mcp-pcb-emcopilot)          |
+| **EMC regulatory**          | [mcp-emc-regulations](https://github.com/RFingAdam/mcp-emc-regulations)      |
+| **Diagrams**                | [drawio-engineering-mcp](https://github.com/RFingAdam/drawio-engineering-mcp) |
+| **Lab gear**                | [copper-mountain-vna-mcp](https://github.com/RFingAdam/copper-mountain-vna-mcp) |
 
 ---
 
