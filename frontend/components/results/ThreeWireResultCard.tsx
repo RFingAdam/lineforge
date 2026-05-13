@@ -1,5 +1,6 @@
 "use client";
 
+import { Card, Section } from "../ui";
 import { Stat } from "./Stat";
 
 export function ThreeWireResultCard({ result }: { result: Record<string, unknown> }) {
@@ -12,47 +13,60 @@ export function ThreeWireResultCard({ result }: { result: Record<string, unknown
   const radiating = ignd > 0.04;
   const method = result.method as string | undefined;
 
+  const heroLabel = zr !== null ? "Z₀_R" : zg !== null ? "Z₀_G" : "Z₀_B";
+  const heroValue = zr ?? zg ?? zb;
+
   return (
-    <div className="space-y-3">
-      <div className="text-[11px] uppercase tracking-wider text-slate-500">
-        3-wire Y-decomposition
-      </div>
-      <div className="grid grid-cols-3 gap-3">
-        {zr !== null && (
-          <Stat label="Z₀_R" value={zr.toFixed(2)} unit="Ω" color="text-rose-400" />
-        )}
-        {zg !== null && (
-          <Stat label="Z₀_G" value={zg.toFixed(2)} unit="Ω" color="text-emerald-400" />
-        )}
-        {zb !== null && (
-          <Stat label="Z₀_B" value={zb.toFixed(2)} unit="Ω" color="text-blue-400" />
-        )}
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {zo !== null && (
-          <Stat label="Z_odd" value={zo.toFixed(2)} unit="Ω" color="text-cyan-300" />
-        )}
-        {ze !== null && (
-          <Stat label="Z_even" value={ze.toFixed(2)} unit="Ω" color="text-cyan-300" />
-        )}
-      </div>
-      <Stat
-        label="|I_gnd / I_sig|"
-        value={(ignd * 100).toFixed(2)}
-        unit="%"
-        color={radiating ? "text-rose-400" : "text-slate-300"}
-      />
-      {radiating && (
-        <div className="bg-rose-950/40 border border-rose-800 rounded p-2 text-xs text-rose-300">
-          ⚠ Net ground current &gt; 4% — geometry is radiating; reported Z₀
-          values are approximate.
-        </div>
+    <div className="space-y-4">
+      {heroValue !== null && (
+        <Stat label={heroLabel} value={heroValue.toFixed(2)} unit="Ω" hero tone="accent" />
       )}
-      <div className="text-xs text-slate-500 leading-relaxed">
-        Y-decomposition: Z₀_R / Z₀_G / Z₀_B are the three Y-leg impedances.
-        Z_odd = 2·Z₀_R; Z_even = Z₀_R / 2 + Z₀_B.
-      </div>
-      {method && <div className="text-xs text-slate-500">method: {method}</div>}
+
+      <Section title="Y-decomposition (per leg)">
+        <div className="grid grid-cols-3 gap-2.5">
+          {zr !== null && <Stat label="Z₀_R" value={zr.toFixed(2)} unit="Ω" tone="danger" />}
+          {zg !== null && (
+            <Stat label="Z₀_G" value={zg.toFixed(2)} unit="Ω" tone="success" />
+          )}
+          {zb !== null && <Stat label="Z₀_B" value={zb.toFixed(2)} unit="Ω" tone="info" />}
+        </div>
+      </Section>
+
+      <Section title="Mode impedances">
+        <div className="grid grid-cols-2 gap-2.5">
+          {zo !== null && <Stat label="Z_odd" value={zo.toFixed(2)} unit="Ω" />}
+          {ze !== null && <Stat label="Z_even" value={ze.toFixed(2)} unit="Ω" />}
+        </div>
+      </Section>
+
+      <Section title="Return-path quality">
+        <Stat
+          label="|I_gnd / I_sig|"
+          value={(ignd * 100).toFixed(2)}
+          unit="%"
+          tone={radiating ? "danger" : "default"}
+          hint="Net ground current as a fraction of signal current"
+        />
+        {radiating && (
+          <Card
+            tone="raised"
+            role="alert"
+            className="border-danger/60 bg-danger/10 mt-2 text-[11px] text-danger"
+          >
+            ⚠ Net ground current &gt; 4% — geometry is radiating; reported Z₀ values are
+            approximate.
+          </Card>
+        )}
+      </Section>
+
+      <p className="text-[11px] text-slate-500 leading-relaxed">
+        Y-decomposition: Z₀_R / Z₀_G / Z₀_B are the three Y-leg impedances. Z_odd =
+        2·Z₀_R; Z_even = Z₀_R / 2 + Z₀_B.
+      </p>
+
+      {method && (
+        <div className="text-[11px] text-slate-500 font-mono">method: {method}</div>
+      )}
     </div>
   );
 }

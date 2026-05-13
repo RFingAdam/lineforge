@@ -1,5 +1,6 @@
 "use client";
 
+import { Section } from "../ui";
 import { Stat } from "./Stat";
 
 export function DiffResultCard({ result }: { result: Record<string, unknown> }) {
@@ -12,34 +13,49 @@ export function DiffResultCard({ result }: { result: Record<string, unknown> }) 
   const method = result.method as string | undefined;
 
   return (
-    <div className="space-y-3">
-      <div className="text-[11px] uppercase tracking-wider text-slate-500">
-        Differential pair
-      </div>
-      <div className="grid grid-cols-2 gap-3">
-        {zd !== null && (
-          <Stat
-            label="Z_diff"
-            value={zd.toFixed(2)}
-            unit="Ω"
-            emphasis
-            color="text-emerald-300"
-          />
-        )}
-        {zc !== null && (
-          <Stat label="Z_common" value={zc.toFixed(2)} unit="Ω" color="text-cyan-300" />
-        )}
-        {zo !== null && <Stat label="Z_odd" value={zo.toFixed(2)} unit="Ω" />}
-        {ze !== null && <Stat label="Z_even" value={ze.toFixed(2)} unit="Ω" />}
-        {epsOdd !== null && <Stat label="εeff (odd)" value={epsOdd.toFixed(4)} />}
-        {epsEven !== null && <Stat label="εeff (even)" value={epsEven.toFixed(4)} />}
-      </div>
-      <div className="text-xs text-slate-500 leading-relaxed">
-        Z_diff = 2·Z_odd, Z_common = Z_even / 2. Use Z_diff to design pair
-        impedance against your fab&apos;s controlled-impedance spec; Z_common to
-        check return-path quality.
-      </div>
-      {method && <div className="text-xs text-slate-500">method: {method}</div>}
+    <div className="space-y-4">
+      {zd !== null && (
+        <Stat
+          label="Z_diff"
+          value={zd.toFixed(2)}
+          unit="Ω"
+          hero
+          tone="accent"
+          hint="Differential-mode characteristic impedance — 2·Z_odd"
+        />
+      )}
+
+      <Section title="Odd-mode">
+        <div className="grid grid-cols-2 gap-2.5">
+          {zo !== null && <Stat label="Z_odd" value={zo.toFixed(2)} unit="Ω" />}
+          {epsOdd !== null && <Stat label="ε_eff_odd" value={epsOdd.toFixed(4)} />}
+        </div>
+      </Section>
+
+      <Section title="Even-mode">
+        <div className="grid grid-cols-2 gap-2.5">
+          {ze !== null && <Stat label="Z_even" value={ze.toFixed(2)} unit="Ω" />}
+          {zc !== null && (
+            <Stat
+              label="Z_common"
+              value={zc.toFixed(2)}
+              unit="Ω"
+              tone="info"
+              hint="Common-mode impedance — Z_even / 2"
+            />
+          )}
+          {epsEven !== null && <Stat label="ε_eff_even" value={epsEven.toFixed(4)} />}
+        </div>
+      </Section>
+
+      <p className="text-[11px] text-slate-500 leading-relaxed">
+        Z_diff = 2·Z_odd governs your fab&apos;s controlled-impedance spec;
+        Z_common = Z_even / 2 indicates return-path quality.
+      </p>
+
+      {method && (
+        <div className="text-[11px] text-slate-500 font-mono">method: {method}</div>
+      )}
     </div>
   );
 }
