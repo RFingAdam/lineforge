@@ -57,7 +57,9 @@ class TestTopLevel:
             )
 
     def test_solve_with_dict(self) -> None:
-        r = lineforge.solve({"type": "microstrip", "W": "6mil", "H": "4mil", "T": "1.4mil", "er": 4.4})
+        r = lineforge.solve(
+            {"type": "microstrip", "W": "6mil", "H": "4mil", "T": "1.4mil", "er": 4.4}
+        )
         assert isinstance(r, TLineResult)
 
     def test_solve_with_geometry_model(self) -> None:

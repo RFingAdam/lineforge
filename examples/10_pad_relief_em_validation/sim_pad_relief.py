@@ -16,6 +16,7 @@ Run:
     python sim_pad_relief.py            # runs all three, writes results
     python sim_pad_relief.py --option A # runs just A
 """
+
 from __future__ import annotations
 
 import argparse
@@ -36,13 +37,14 @@ MIL = 25.4  # micron per mil — we work in μm with unit=1e-6
 @dataclass
 class StackZ:
     """Z coordinates (μm) of each layer surface, bottom-up."""
+
     L4_bot: float = 0
     L4_top: float = 0
-    D2_top: float = 0       # bottom of L3 trace
+    D2_top: float = 0  # bottom of L3 trace
     L3_top: float = 0
-    D4_top: float = 0       # bottom of L2 GND
+    D4_top: float = 0  # bottom of L2 GND
     L2_top: float = 0
-    D1_top: float = 0       # bottom of L1 trace
+    D1_top: float = 0  # bottom of L1 trace
     L1_top: float = 0
 
 
@@ -52,11 +54,11 @@ def make_stack() -> StackZ:
     L_cu = 1.4 * MIL
     Lsig_cu = 0.689 * MIL
     s.L4_top = s.L4_bot + L_cu
-    s.D2_top = s.L4_top + 5.30 * MIL   # 5.3 mil prepreg
+    s.D2_top = s.L4_top + 5.30 * MIL  # 5.3 mil prepreg
     s.L3_top = s.D2_top + Lsig_cu
-    s.D4_top = s.L3_top + 3.50 * MIL   # 3.5 mil core
+    s.D4_top = s.L3_top + 3.50 * MIL  # 3.5 mil core
     s.L2_top = s.D4_top + L_cu
-    s.D1_top = s.L2_top + 2.73 * MIL   # 2.73 mil prepreg
+    s.D1_top = s.L2_top + 2.73 * MIL  # 2.73 mil prepreg
     s.L1_top = s.D1_top + L_cu
     return s
 
@@ -84,12 +86,12 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     s = make_stack()
 
     # Pad and feed geometry (μm)
-    W_pad = 400.0      # 0.4 mm
-    W_relief = 500.0   # pad + 0.1 mm margin
-    W_feed = 125.34    # 50 Ω microstrip over 2.73 mil prepreg, εr=3.7
-    L_feed = 3000.0    # 3 mm feed line
-    L_feed + W_pad / 2     # trace runs from port to pad far edge
-    side = 4000.0      # lateral margin
+    W_pad = 400.0  # 0.4 mm
+    W_relief = 500.0  # pad + 0.1 mm margin
+    W_feed = 125.34  # 50 Ω microstrip over 2.73 mil prepreg, εr=3.7
+    L_feed = 3000.0  # 3 mm feed line
+    L_feed + W_pad / 2  # trace runs from port to pad far edge
+    side = 4000.0  # lateral margin
 
     f_min = 0.1e9
     f_max = 8e9
@@ -114,8 +116,8 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     # X mesh: feed + pad region. Extend simulation box past trace ends so
     # PML has room (8-cell padding minimum).
     x_port = -L_feed - W_pad / 2
-    x_min = x_port - 8 * res_bulk      # PML padding on -x
-    x_max = side                        # +x already padded
+    x_min = x_port - 8 * res_bulk  # PML padding on -x
+    x_max = side  # +x already padded
     mesh.AddLine("x", [x_min, x_port, -W_pad / 2, 0, W_pad / 2, x_max])
     mesh.AddLine("x", np.linspace(-W_relief / 2, W_relief / 2, 10))
     mesh.SmoothMeshLines("x", res_bulk)
@@ -133,8 +135,12 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     z_lines = [s.L4_bot, s.L4_top, s.D2_top, s.L3_top, s.D4_top, s.L2_top, s.D1_top, s.L1_top]
     mesh.AddLine("z", z_lines)
     # Resolve each thin metal layer with at least 2 cells
-    for z_bot, z_top in [(s.L4_bot, s.L4_top), (s.L2_top, s.D1_top),
-                         (s.D1_top, s.L1_top), (s.D4_top, s.L2_top)]:
+    for z_bot, z_top in [
+        (s.L4_bot, s.L4_top),
+        (s.L2_top, s.D1_top),
+        (s.D1_top, s.L1_top),
+        (s.D4_top, s.L2_top),
+    ]:
         mesh.AddLine("z", np.linspace(z_bot, z_top, 3))
     # Thinner D4 + D2 dielectrics
     mesh.AddLine("z", np.linspace(s.D2_top, s.L3_top, 3))
@@ -146,7 +152,7 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
 
     # Materials
     prepreg = CSX.AddMaterial("prepreg", epsilon=3.7)
-    core    = CSX.AddMaterial("core",    epsilon=4.2)
+    core = CSX.AddMaterial("core", epsilon=4.2)
     # D1 (between L1 and L2)
     prepreg.AddBox(
         [-side - 1000, -side - 1000, s.L2_top],
@@ -178,7 +184,7 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     # Pad
     pec.AddBox(
         [-W_pad / 2, -W_pad / 2, L1_z],
-        [W_pad / 2,  W_pad / 2,  L1_z],
+        [W_pad / 2, W_pad / 2, L1_z],
         priority=10,
     )
 
@@ -190,29 +196,27 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     # ─── L2 GND plane (thin sheet at z = L2_top, with optional hole) ─────
     L2_z = s.L2_top
     if option == "A":
-        pec.AddBox([-plane_side, -plane_side, L2_z],
-                   [plane_side,   plane_side,  L2_z], priority=10)
+        pec.AddBox([-plane_side, -plane_side, L2_z], [plane_side, plane_side, L2_z], priority=10)
     else:
         # L2 sheet with rectangular hole under the pad. Build as 4 rectangles.
         rb = W_relief / 2
-        pec.AddBox([-plane_side, -plane_side, L2_z], [-rb,         plane_side,  L2_z], priority=10)
-        pec.AddBox([ rb,         -plane_side, L2_z], [plane_side,  plane_side,  L2_z], priority=10)
-        pec.AddBox([-rb,          rb,         L2_z], [ rb,         plane_side,  L2_z], priority=10)
-        pec.AddBox([-rb,         -plane_side, L2_z], [ rb,        -rb,          L2_z], priority=10)
+        pec.AddBox([-plane_side, -plane_side, L2_z], [-rb, plane_side, L2_z], priority=10)
+        pec.AddBox([rb, -plane_side, L2_z], [plane_side, plane_side, L2_z], priority=10)
+        pec.AddBox([-rb, rb, L2_z], [rb, plane_side, L2_z], priority=10)
+        pec.AddBox([-rb, -plane_side, L2_z], [rb, -rb, L2_z], priority=10)
 
     # ─── L3 plane (option B adds local GND island) ───────────────────────
     L3_z = s.L3_top
     if option == "B":
         pec.AddBox(
             [-W_relief / 2, -W_relief / 2, L3_z],
-            [W_relief / 2,   W_relief / 2,  L3_z],
+            [W_relief / 2, W_relief / 2, L3_z],
             priority=10,
         )
 
     # ─── L4 GND plane (thin sheet at z = L4_top, always solid) ───────────
     L4_z = s.L4_top
-    pec.AddBox([-plane_side, -plane_side, L4_z],
-               [plane_side,   plane_side,  L4_z], priority=10)
+    pec.AddBox([-plane_side, -plane_side, L4_z], [plane_side, plane_side, L4_z], priority=10)
 
     # ─── Stitching vias around the relief (B and C only) ─────────────────
     # Approximated as thin rectangular posts (z-extent = L2_top to L3 or L4)
@@ -220,17 +224,17 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     if option in ("B", "C"):
         stitch_z_top = s.L2_top
         stitch_z_bot = s.L3_top if option == "B" else s.L4_top
-        stitch_d = 200.0   # 0.2 mm via barrel diameter, approx as square post
+        stitch_d = 200.0  # 0.2 mm via barrel diameter, approx as square post
         # 4 corners just outside the relief boundary
         for sx, sy in [
-            ( W_relief / 2 + 250,  W_relief / 2 + 250),
-            (-W_relief / 2 - 250,  W_relief / 2 + 250),
-            ( W_relief / 2 + 250, -W_relief / 2 - 250),
+            (W_relief / 2 + 250, W_relief / 2 + 250),
+            (-W_relief / 2 - 250, W_relief / 2 + 250),
+            (W_relief / 2 + 250, -W_relief / 2 - 250),
             (-W_relief / 2 - 250, -W_relief / 2 - 250),
         ]:
             pec.AddBox(
-                [sx - stitch_d/2, sy - stitch_d/2, stitch_z_bot],
-                [sx + stitch_d/2, sy + stitch_d/2, stitch_z_top],
+                [sx - stitch_d / 2, sy - stitch_d / 2, stitch_z_bot],
+                [sx + stitch_d / 2, sy + stitch_d / 2, stitch_z_top],
                 priority=20,
             )
 
@@ -238,10 +242,13 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     # With thin sheets: L1 is at z=D1_top, L2 GND is at z=L2_top.
     # Port spans the D1 prepreg gap from L2_top up to L1 (D1_top).
     port = FDTD.AddLumpedPort(
-        1, 50,
-        [x_port,                  -W_feed / 2, L2_z],
-        [x_port + res_bulk / 2,    W_feed / 2, L1_z],
-        "z", excite=1, priority=5,
+        1,
+        50,
+        [x_port, -W_feed / 2, L2_z],
+        [x_port + res_bulk / 2, W_feed / 2, L1_z],
+        "z",
+        excite=1,
+        priority=5,
     )
 
     # ─── Run ─────────────────────────────────────────────────────────────
@@ -292,12 +299,13 @@ def analyse(result: dict) -> dict:
 def summary_print(results: list[dict]) -> None:
     """Print the comparison summary."""
     import math
+
     bands = [
-        ("LTE B5",    0.85),
-        ("LTE B3",    1.80),
+        ("LTE B5", 0.85),
+        ("LTE B3", 1.80),
         ("Wi-Fi 2.4", 2.40),
-        ("Wi-Fi 5",   5.50),
-        ("Top",       6.00),
+        ("Wi-Fi 5", 5.50),
+        ("Top", 6.00),
     ]
     # Closed-form pad caps (from analytical calculation)
     cf = {
@@ -342,8 +350,13 @@ def summary_print(results: list[dict]) -> None:
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--option", type=str, choices=["A", "B", "C", "all"],
-                        default="all", help="Which option to run")
+    parser.add_argument(
+        "--option",
+        type=str,
+        choices=["A", "B", "C", "all"],
+        default="all",
+        help="Which option to run",
+    )
     args = parser.parse_args()
 
     options = ["A", "B", "C"] if args.option == "all" else [args.option]

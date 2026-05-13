@@ -806,9 +806,7 @@ def gui(
         console.print(f"Installing frontend deps in {frontend_dir}...")
         subprocess.run([pnpm, "install"], cwd=frontend_dir, check=True)
 
-    console.print(
-        f"Starting backend on port {backend_port}{' (--reload)' if reload else ''}..."
-    )
+    console.print(f"Starting backend on port {backend_port}{' (--reload)' if reload else ''}...")
     backend_cmd = [
         sys.executable,
         "-m",

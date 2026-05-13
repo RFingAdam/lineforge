@@ -8,6 +8,7 @@ frequency gives the pad capacitance directly: C ≈ 1/(jω·Z_in).
 This avoids the microstrip/transmission-line dynamics that destabilized
 the earlier sim and gives a clean cap measurement.
 """
+
 from __future__ import annotations
 
 import os
@@ -20,7 +21,7 @@ from CSXCAD import ContinuousStructure
 from openEMS import openEMS
 from openEMS.physical_constants import C0
 
-MIL = 25.4   # micron per mil
+MIL = 25.4  # micron per mil
 
 
 def run_option(option: str) -> dict:
@@ -31,19 +32,19 @@ def run_option(option: str) -> dict:
     W_pad_h = W_pad / 2
 
     # Stackup heights (μm)
-    h_D1   = 2.73 * MIL    # L1 to L2 prepreg
-    h_L2   = 1.4 * MIL     # L2 GND
-    h_D4   = 3.5 * MIL     # L2 to L3 core
-    h_L3   = 0.689 * MIL   # L3 trace
-    h_D2   = 5.3 * MIL     # L3 to L4 prepreg
+    h_D1 = 2.73 * MIL  # L1 to L2 prepreg
+    h_L2 = 1.4 * MIL  # L2 GND
+    h_D4 = 3.5 * MIL  # L2 to L3 core
+    h_L3 = 0.689 * MIL  # L3 trace
+    h_D2 = 5.3 * MIL  # L3 to L4 prepreg
 
     # Z coordinates, building down from pad at z=0
-    z_pad  = 0
-    z_L2_top    = -h_D1
-    z_L2_bot    = z_L2_top - h_L2
-    z_L3_top    = z_L2_bot - h_D4
-    z_L3_bot    = z_L3_top - h_L3
-    z_L4_top    = z_L3_bot - h_D2
+    z_pad = 0
+    z_L2_top = -h_D1
+    z_L2_bot = z_L2_top - h_L2
+    z_L3_top = z_L2_bot - h_D4
+    z_L3_bot = z_L3_top - h_L3
+    z_L4_top = z_L3_bot - h_D2
 
     # For Option A: pad over L2, all we need is L2 GND
     # For Option B: void L2 under pad, GND island on L3
@@ -51,18 +52,18 @@ def run_option(option: str) -> dict:
 
     # The "deepest reference" depends on the option
     if option == "A":
-        z_ref = z_L2_top   # bottom of D1 = top of L2 GND
+        z_ref = z_L2_top  # bottom of D1 = top of L2 GND
     elif option == "B":
-        z_ref = z_L3_top   # bottom of (D1+L2-void+D4) = top of L3
+        z_ref = z_L3_top  # bottom of (D1+L2-void+D4) = top of L3
     elif option == "C":
-        z_ref = z_L4_top   # bottom of full stack = top of L4
+        z_ref = z_L4_top  # bottom of full stack = top of L4
     else:
         raise ValueError(option)
 
     h_total = abs(z_ref)  # depth from pad to its deepest reference
 
     f_min = 0.01e9
-    f_max = 2e9       # low f — pad acts purely capacitive
+    f_max = 2e9  # low f — pad acts purely capacitive
 
     side = 4000.0
 
@@ -80,13 +81,24 @@ def run_option(option: str) -> dict:
     fine = 15  # 15 μm fine mesh near pad
 
     # X mesh: fine near pad edges
-    mesh.AddLine("x", [-side, -W_pad_h - fine, -W_pad_h, -W_pad_h + fine,
-                       0, W_pad_h - fine, W_pad_h, W_pad_h + fine, side])
+    mesh.AddLine(
+        "x",
+        [
+            -side,
+            -W_pad_h - fine,
+            -W_pad_h,
+            -W_pad_h + fine,
+            0,
+            W_pad_h - fine,
+            W_pad_h,
+            W_pad_h + fine,
+            side,
+        ],
+    )
     mesh.SmoothMeshLines("x", res)
 
     # Y mesh: fine near pad edges
-    mesh.AddLine("y", [-side, -W_pad_h - fine, -W_pad_h, 0,
-                       W_pad_h, W_pad_h + fine, side])
+    mesh.AddLine("y", [-side, -W_pad_h - fine, -W_pad_h, 0, W_pad_h, W_pad_h + fine, side])
     mesh.SmoothMeshLines("y", res)
 
     # Z mesh: lines at every layer surface, with refinement in dielectrics
@@ -103,12 +115,12 @@ def run_option(option: str) -> dict:
     elif option == "B":
         # Series: D1 prepreg + L2 fill (prepreg) + D4 core
         layers = [(h_D1, 3.7), (h_L2, 3.7), (h_D4, 4.2)]
-        inv = sum(h/e for h, e in layers)
+        inv = sum(h / e for h, e in layers)
         er_eff = h_total / inv
     else:
         # Series: D1 + L2 fill + D4 + L3 fill + D2
         layers = [(h_D1, 3.7), (h_L2, 3.7), (h_D4, 4.2), (h_L3, 3.7), (h_D2, 3.7)]
-        inv = sum(h/e for h, e in layers)
+        inv = sum(h / e for h, e in layers)
         er_eff = h_total / inv
 
     diel = CSX.AddMaterial("diel", epsilon=er_eff)
@@ -117,25 +129,26 @@ def run_option(option: str) -> dict:
     pec = CSX.AddMetal("PEC")
 
     # Pad: thin square sheet at z=0
-    pec.AddBox([-W_pad_h, -W_pad_h, z_pad],
-               [W_pad_h, W_pad_h, z_pad], priority=10)
+    pec.AddBox([-W_pad_h, -W_pad_h, z_pad], [W_pad_h, W_pad_h, z_pad], priority=10)
 
     # Reference plane: solid sheet at z=z_ref, with rectangular hole
     # only if the relief is needed at the reference level (it isn't —
     # by construction, the reference is the FIRST solid plane the pad
     # sees, with all relief above it removed)
     plane_side = side - 12 * res
-    pec.AddBox([-plane_side, -plane_side, z_ref],
-               [plane_side, plane_side, z_ref], priority=10)
+    pec.AddBox([-plane_side, -plane_side, z_ref], [plane_side, plane_side, z_ref], priority=10)
 
     # Lumped port: drives the pad against the reference plane
     # Place the port at one corner of the pad (asymmetric drive is OK
     # since we're measuring lumped C, not transmission-line behavior)
     port = FDTD.AddLumpedPort(
-        1, 1000,  # high reference impedance to better measure high-Z cap
+        1,
+        1000,  # high reference impedance to better measure high-Z cap
         [W_pad_h - res, -res, z_ref],
-        [W_pad_h,        res, z_pad],
-        "z", excite=1, priority=5,
+        [W_pad_h, res, z_pad],
+        "z",
+        excite=1,
+        priority=5,
     )
 
     sim_path = os.path.join(tempfile.gettempdir(), f"atlc3_padcap_{option}")
@@ -183,8 +196,10 @@ def main():
     for r in results:
         c_fF = r["C_pF"] * 1000 if r["C_pF"] else None
         c_str = f"{c_fF:.1f}" if c_fF else "—"
-        print(f"  {r['option']:<4} {r['h_total_mil']:>8.2f} {r['er_eff']:>7.2f} "
-              f"{c_str:>12} {pp[r['option']]:>12.1f}")
+        print(
+            f"  {r['option']:<4} {r['h_total_mil']:>8.2f} {r['er_eff']:>7.2f} "
+            f"{c_str:>12} {pp[r['option']]:>12.1f}"
+        )
 
 
 if __name__ == "__main__":

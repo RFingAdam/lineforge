@@ -1,4 +1,5 @@
 """Tests for lineforge.design_rules.pad_classification."""
+
 from __future__ import annotations
 
 import pytest

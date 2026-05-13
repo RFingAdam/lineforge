@@ -9,6 +9,7 @@ For each width:
 
 Geometry: H = 2.73 mil prepreg, εr = 3.7, T → 0 (MSLPort intrinsic).
 """
+
 import os
 import shutil
 import tempfile
@@ -19,8 +20,15 @@ from openEMS import openEMS
 from openEMS.physical_constants import C0
 
 
-def run_msl_z0(trace_w_um, trace_l_um=25400.0, sub_h_um=69.34, sub_er=3.7,
-               f_max=8e9, f_min=0.1e9, sim_label="msl"):
+def run_msl_z0(
+    trace_w_um,
+    trace_l_um=25400.0,
+    sub_h_um=69.34,
+    sub_er=3.7,
+    f_max=8e9,
+    f_min=0.1e9,
+    sim_label="msl",
+):
     """Run an MSLPort microstrip sim and return the EM-extracted Z0 sweep."""
     unit = 1e-6
 
@@ -42,8 +50,8 @@ def run_msl_z0(trace_w_um, trace_l_um=25400.0, sub_h_um=69.34, sub_er=3.7,
     mesh.AddLine("x", [-trace_l_um, trace_l_um])
     mesh.SmoothMeshLines("x", res)
     mesh.AddLine("y", 0)
-    mesh.AddLine("y",  trace_w_um/2 + third)
-    mesh.AddLine("y", -trace_w_um/2 - third)
+    mesh.AddLine("y", trace_w_um / 2 + third)
+    mesh.AddLine("y", -trace_w_um / 2 - third)
     mesh.SmoothMeshLines("y", res / 4)
     mesh.AddLine("y", [-side, side])
     mesh.SmoothMeshLines("y", res)
@@ -59,20 +67,24 @@ def run_msl_z0(trace_w_um, trace_l_um=25400.0, sub_h_um=69.34, sub_er=3.7,
 
     pec = CSX.AddMetal("PEC")
     port1 = FDTD.AddMSLPort(
-        1, pec,
-        [-trace_l_um, -trace_w_um/2, sub_h_um],
-        [0,            trace_w_um/2, 0],
-        "x", "z",
+        1,
+        pec,
+        [-trace_l_um, -trace_w_um / 2, sub_h_um],
+        [0, trace_w_um / 2, 0],
+        "x",
+        "z",
         excite=-1,
         FeedShift=10 * res,
         MeasPlaneShift=trace_l_um / 3,
         priority=10,
     )
     port2 = FDTD.AddMSLPort(
-        2, pec,
-        [trace_l_um,  -trace_w_um/2, sub_h_um],
-        [0,            trace_w_um/2, 0],
-        "x", "z",
+        2,
+        pec,
+        [trace_l_um, -trace_w_um / 2, sub_h_um],
+        [0, trace_w_um / 2, 0],
+        "x",
+        "z",
         MeasPlaneShift=trace_l_um / 3,
         priority=10,
     )
@@ -109,9 +121,11 @@ def run_msl_z0(trace_w_um, trace_l_um=25400.0, sub_h_um=69.34, sub_er=3.7,
 def closed_form_z0(W_mil, T_mil, H_mil, er):
     """Closed-form Wadell microstrip via lineforge."""
     import sys
+
     sys.path.insert(0, os.path.expanduser("~/projects/github/lineforge/src"))
     from lineforge.analytical import microstrip
     from lineforge.geometry.types import Microstrip
+
     g = Microstrip(W=f"{W_mil}mil", T=f"{T_mil}mil", H=f"{H_mil}mil", er=er)
     r = microstrip(g)
     return r.z0, r.eps_eff
@@ -119,16 +133,18 @@ def closed_form_z0(W_mil, T_mil, H_mil, er):
 
 if __name__ == "__main__":
     # Sweep widths (in microns), T → 0 to match MSLPort
-    sub_h_um = 69.34   # 2.73 mil
+    sub_h_um = 69.34  # 2.73 mil
     sub_er = 3.7
     H_mil = sub_h_um / 25.4
 
-    widths_um = [80.0, 100.0, 125.34, 150.0, 175.0, 200.0]   # 3.15 to 7.87 mil
+    widths_um = [80.0, 100.0, 125.34, 150.0, 175.0, 200.0]  # 3.15 to 7.87 mil
     print("=" * 88)
     print("MICROSTRIP Z₀ SWEEP — openEMS MSLPort vs Wadell closed-form (T → 0)")
     print(f"  H = {sub_h_um:.2f} μm ({H_mil:.3f} mil), εr = {sub_er}")
     print("=" * 88)
-    print(f"{'W (μm)':>8} {'W (mil)':>8} {'Z₀ EM':>9} {'Z₀ CF':>9} {'Δ Ω':>7} {'Δ %':>6} {'εr_eff EM':>10} {'εr_eff CF':>10}")
+    print(
+        f"{'W (μm)':>8} {'W (mil)':>8} {'Z₀ EM':>9} {'Z₀ CF':>9} {'Δ Ω':>7} {'Δ %':>6} {'εr_eff EM':>10} {'εr_eff CF':>10}"
+    )
     print("-" * 88)
 
     results = []
@@ -145,9 +161,18 @@ if __name__ == "__main__":
         delta = Z0_em - Z0_cf
         delta_pct = 100 * delta / Z0_cf
 
-        print(f"{w_um:8.2f} {W_mil:8.3f} {Z0_em:8.2f}Ω {Z0_cf:8.2f}Ω {delta:+7.2f} {delta_pct:+6.2f}% {er_eff_em:10.3f} {er_eff_cf:10.3f}")
-        results.append({"w_um": w_um, "Z0_em": Z0_em, "Z0_cf": Z0_cf,
-                        "er_eff_em": er_eff_em, "er_eff_cf": er_eff_cf})
+        print(
+            f"{w_um:8.2f} {W_mil:8.3f} {Z0_em:8.2f}Ω {Z0_cf:8.2f}Ω {delta:+7.2f} {delta_pct:+6.2f}% {er_eff_em:10.3f} {er_eff_cf:10.3f}"
+        )
+        results.append(
+            {
+                "w_um": w_um,
+                "Z0_em": Z0_em,
+                "Z0_cf": Z0_cf,
+                "er_eff_em": er_eff_em,
+                "er_eff_cf": er_eff_cf,
+            }
+        )
 
     print()
     print("Mid-band (1–6 GHz) average Z₀ comparison.")

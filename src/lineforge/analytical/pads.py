@@ -174,8 +174,13 @@ def pad_capacitance(
 
     if method == "pp":
         return PadCapResult(
-            C_F=C_pp, method="pp", W_m=W_m, L_m=L_m, h_m=h_m,
-            eps_eff=eps_eff, fringing_factor=1.0,
+            C_F=C_pp,
+            method="pp",
+            W_m=W_m,
+            L_m=L_m,
+            h_m=h_m,
+            eps_eff=eps_eff,
+            fringing_factor=1.0,
         )
 
     if method == "ya":
@@ -185,8 +190,13 @@ def pad_capacitance(
         ratio = h_m / W_eq
         fringing = 1.0 + 0.78 * math.sqrt(ratio) + 0.34 * ratio
         return PadCapResult(
-            C_F=C_pp * fringing, method="ya", W_m=W_m, L_m=L_m, h_m=h_m,
-            eps_eff=eps_eff, fringing_factor=fringing,
+            C_F=C_pp * fringing,
+            method="ya",
+            W_m=W_m,
+            L_m=L_m,
+            h_m=h_m,
+            eps_eff=eps_eff,
+            fringing_factor=fringing,
         )
 
     # method == "hj": treat the pad as a microstrip line of length L_m, with
@@ -198,7 +208,10 @@ def pad_capacitance(
         T_m = 1e-9
     h_unit = "m"
     g = Microstrip(
-        W=f"{W_m}{h_unit}", T=f"{T_m}{h_unit}", H=f"{h_m}{h_unit}", er=eps_eff,
+        W=f"{W_m}{h_unit}",
+        T=f"{T_m}{h_unit}",
+        H=f"{h_m}{h_unit}",
+        er=eps_eff,
     )
     r = microstrip(g)
     # C per unit length: C/m = √εr_eff / (Z₀ · c)
@@ -206,8 +219,13 @@ def pad_capacitance(
     C_total = C_per_m * L_m
     fringing = C_total / C_pp if C_pp > 0 else 1.0
     return PadCapResult(
-        C_F=C_total, method="hj", W_m=W_m, L_m=L_m, h_m=h_m,
-        eps_eff=eps_eff, fringing_factor=fringing,
+        C_F=C_total,
+        method="hj",
+        W_m=W_m,
+        L_m=L_m,
+        h_m=h_m,
+        eps_eff=eps_eff,
+        fringing_factor=fringing,
     )
 
 
@@ -228,10 +246,10 @@ class ReliefAdviceRow:
 
     name: str
     C: PadCapResult
-    Z_at_band_max: float        # |Z_pad| at band_max_ghz (ohms)
-    RL_at_band_max: float       # RL in dB at band_max_ghz
+    Z_at_band_max: float  # |Z_pad| at band_max_ghz (ohms)
+    RL_at_band_max: float  # RL in dB at band_max_ghz
     meets_target: bool
-    headroom_dB: float           # RL_at_band_max - rl_target_dB
+    headroom_dB: float  # RL_at_band_max - rl_target_dB
 
 
 @dataclass
@@ -307,9 +325,12 @@ def pad_relief_advisor(
         headroom = RL_top - rl_target_dB
         rows.append(
             ReliefAdviceRow(
-                name=opt.name, C=C,
-                Z_at_band_max=Z_top, RL_at_band_max=RL_top,
-                meets_target=meets, headroom_dB=headroom,
+                name=opt.name,
+                C=C,
+                Z_at_band_max=Z_top,
+                RL_at_band_max=RL_top,
+                meets_target=meets,
+                headroom_dB=headroom,
             )
         )
         if recommendation is None and meets:

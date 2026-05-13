@@ -284,7 +284,10 @@ async def sweep(req: SweepRequest) -> dict[str, Any]:
             # download via Blob without exposing the server's filesystem.
             tmp = _Path(tempfile.mkstemp(suffix=".s2p")[1])
             out_path = to_touchstone(
-                points, tmp, line_length=req.line_length, z_ref=req.z_ref,
+                points,
+                tmp,
+                line_length=req.line_length,
+                z_ref=req.z_ref,
             )
             content = out_path.read_text()
             response["touchstone"] = {

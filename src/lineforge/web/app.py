@@ -34,13 +34,12 @@ def _chat_available() -> bool:
         return True
     if shutil.which("claude"):
         try:
-            r = subprocess.run(
-                ["claude", "--version"], capture_output=True, timeout=2, check=False
-            )
+            r = subprocess.run(["claude", "--version"], capture_output=True, timeout=2, check=False)
             return r.returncode == 0
         except (FileNotFoundError, subprocess.TimeoutExpired):
             return False
     return False
+
 
 from lineforge.web import __version__
 from lineforge.web.api_field_plot import router as field_plot_router

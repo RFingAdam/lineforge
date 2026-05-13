@@ -145,8 +145,14 @@ def classify_pad(
 
     # Module pads with modular grant → Category 1
     module_kinds = {
-        "wifi_module", "lte_module", "ble_module", "cellular_module",
-        "5g_module", "lora_module", "bt_module", "uwb_module",
+        "wifi_module",
+        "lte_module",
+        "ble_module",
+        "cellular_module",
+        "5g_module",
+        "lora_module",
+        "bt_module",
+        "uwb_module",
     }
     if ct in module_kinds or has_modular_grant:
         return PadClassification(
@@ -163,8 +169,7 @@ def classify_pad(
             risks_if_deviating=[
                 "Modular FCC grant may not transfer to your host — full "
                 "intentional-radiator testing becomes required.",
-                "Module's internal LC match detunes; TX power and RX "
-                "sensitivity degrade.",
+                "Module's internal LC match detunes; TX power and RX " "sensitivity degrade.",
                 "Vendor support / warranty claims may be voided.",
             ],
             references=[
@@ -176,11 +181,24 @@ def classify_pad(
 
     # RF connectors → Category 1 (the connector IS the 50 Ω structure)
     connector_kinds = {
-        "u.fl", "ufl", "u_fl", "w.fl", "wfl",
-        "mmcx", "sma", "rp-sma", "rpsma",
-        "mcx", "smp", "smpm", "smpc",
-        "n_type", "bnc", "tnc",
-        "rf_connector", "rf_jack",
+        "u.fl",
+        "ufl",
+        "u_fl",
+        "w.fl",
+        "wfl",
+        "mmcx",
+        "sma",
+        "rp-sma",
+        "rpsma",
+        "mcx",
+        "smp",
+        "smpm",
+        "smpc",
+        "n_type",
+        "bnc",
+        "tnc",
+        "rf_connector",
+        "rf_jack",
     }
     if ct in connector_kinds:
         return PadClassification(
@@ -198,8 +216,7 @@ def classify_pad(
                 "Connector's 50 Ω characterization no longer applies.",
                 "Mechanical retention compromised — connector can crack or "
                 "lift after mating cycles.",
-                "VSWR mismatch with the connector that no amount of trace "
-                "tuning can recover.",
+                "VSWR mismatch with the connector that no amount of trace " "tuning can recover.",
             ],
             references=[
                 "Connector datasheet — 'Recommended PCB Land Pattern' section",
@@ -209,11 +226,20 @@ def classify_pad(
 
     # User-designed RF circuit → Category 2
     user_rf_kinds = {
-        "triplexer", "diplexer", "duplexer",
-        "discrete_lc", "matching_component", "matching_network",
-        "antenna_feed", "antenna",
-        "filter", "saw_filter", "baw_filter",
-        "balun", "coupler", "splitter",
+        "triplexer",
+        "diplexer",
+        "duplexer",
+        "discrete_lc",
+        "matching_component",
+        "matching_network",
+        "antenna_feed",
+        "antenna",
+        "filter",
+        "saw_filter",
+        "baw_filter",
+        "balun",
+        "coupler",
+        "splitter",
     }
     if ct in user_rf_kinds or is_user_designed_rf:
         return PadClassification(
@@ -235,8 +261,7 @@ def classify_pad(
         )
 
     # Other RF ICs (LNA, mixer, PA) — check datasheet, usually Category 1
-    other_rf_ic_kinds = {"lna", "mixer", "pa", "vco", "synthesizer",
-                          "rf_ic", "rfic", "transceiver"}
+    other_rf_ic_kinds = {"lna", "mixer", "pa", "vco", "synthesizer", "rf_ic", "rfic", "transceiver"}
     if ct in other_rf_ic_kinds:
         return PadClassification(
             category=PadCategory.FOLLOW_REFERENCE,

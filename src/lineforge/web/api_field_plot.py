@@ -161,7 +161,11 @@ async def field_plot_async(req: FieldPlotRequest) -> dict[str, Any]:
                 if usermap is None:
                     await send_progress(
                         task_id,
-                        {"type": "error", "task_id": task_id, "error": f"unknown usermap {req.usermap_uri!r}"},
+                        {
+                            "type": "error",
+                            "task_id": task_id,
+                            "error": f"unknown usermap {req.usermap_uri!r}",
+                        },
                     )
                     return
             else:
