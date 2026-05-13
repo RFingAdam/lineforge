@@ -735,6 +735,129 @@ def view(
     run_viewer(bmp, pixel_width=pixel_width)
 
 
+# ---------------------------------------------------------------------------
+# GUI helpers (module-level so unit tests can import them)
+# ---------------------------------------------------------------------------
+
+
+def _pick_port(preferred: int, name: str) -> int:
+    """Return the preferred port if free, otherwise the next free port within
+    a 20-port window. Raises typer.Exit on exhaustion.
+
+    Uses a transient bind on 127.0.0.1 to test availability — the same
+    semantics uvicorn/Next will use a moment later.
+    """
+    import socket
+
+    for candidate in range(preferred, preferred + 21):
+        try:
+            with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+                sock.bind(("127.0.0.1", candidate))
+            if candidate != preferred:
+                console.print(
+                    f"[yellow][{name}] port {preferred} busy, falling back to {candidate}[/yellow]"
+                )
+            return candidate
+        except OSError:
+            continue
+
+    err_console.print(
+        f"No free ports in [{preferred}, {preferred + 20}] for {name}. "
+        f"Pass --{name}-port explicitly or free a port."
+    )
+    raise typer.Exit(code=2)
+
+
+def _check_node_toolchain() -> tuple[str, str]:
+    """Return (node_path, pkg_manager_path). pnpm preferred, npm as fallback.
+
+    Raises typer.Exit with a friendly install hint when Node or the package
+    manager is missing.
+    """
+    import shutil
+
+    node = shutil.which("node")
+    if node is None:
+        err_console.print(
+            "Node.js not found on PATH. Install via your package manager or nvm "
+            "(https://github.com/nvm-sh/nvm), then `npm i -g pnpm`."
+        )
+        raise typer.Exit(code=2)
+
+    pnpm = shutil.which("pnpm")
+    if pnpm is not None:
+        return node, pnpm
+
+    npm = shutil.which("npm")
+    if npm is not None:
+        console.print(
+            "[yellow]pnpm not found; falling back to npm. "
+            "Install pnpm with `npm i -g pnpm` for faster installs.[/yellow]"
+        )
+        return node, npm
+
+    err_console.print(
+        "Neither pnpm nor npm found on PATH. Install Node.js + pnpm "
+        "(https://pnpm.io/installation)."
+    )
+    raise typer.Exit(code=2)
+
+
+def _wait_for_backend(host: str, port: int, timeout_s: float = 15.0) -> bool:
+    """Poll http://host:port/api/health until it returns 200 or timeout.
+
+    Returns True on success, False on timeout. Uses stdlib only — no httpx
+    dependency for headless installs.
+    """
+    import time
+    import urllib.error
+    import urllib.request
+
+    deadline = time.monotonic() + timeout_s
+    url = f"http://{host}:{port}/api/health"
+    start = time.monotonic()
+    while time.monotonic() < deadline:
+        try:
+            with urllib.request.urlopen(url, timeout=0.5) as resp:  # noqa: S310
+                if getattr(resp, "status", 200) == 200:
+                    elapsed_ms = (time.monotonic() - start) * 1000.0
+                    console.print(f"[dim][api] backend healthy ({elapsed_ms:.0f} ms)[/dim]")
+                    return True
+        except (urllib.error.URLError, ConnectionError, TimeoutError, OSError):
+            pass
+        time.sleep(0.25)
+    return False
+
+
+def _stream_with_color(proc: object, prefix: str, color: str) -> None:
+    """Stream a subprocess's stdout to the rich console with a colored prefix.
+
+    Each line is emitted atomically as a single Rich `Text` so the two
+    streamer threads can't interleave half-lines.
+    """
+    import subprocess as _sub
+
+    from rich.text import Text
+
+    popen = proc  # type: _sub.Popen[str]  # narrow only for type checkers
+    assert isinstance(popen, _sub.Popen)
+    if popen.stdout is None:
+        return
+    for raw in popen.stdout:
+        line = raw.rstrip("\n")
+        if not line:
+            continue
+        msg = Text()
+        msg.append(f"[{prefix}] ", style=color)
+        msg.append(line)
+        console.print(msg)
+
+
+# ---------------------------------------------------------------------------
+# gui command
+# ---------------------------------------------------------------------------
+
+
 @app.command()
 def gui(
     backend_port: int = typer.Option(8000, "--backend-port"),
@@ -742,7 +865,24 @@ def gui(
     reload: bool = typer.Option(
         True,
         "--reload/--no-reload",
-        help="Pass --reload to uvicorn so backend file changes hot-reload (dev mode).",
+        help="Pass --reload to uvicorn (deprecated alias for --dev). "
+        "--no-reload implies --prod.",
+    ),
+    prod: bool = typer.Option(
+        False,
+        "--prod/--dev",
+        help="Production-local mode: uvicorn without --reload, `next start` against "
+        "a prebuilt .next/ (auto-builds if missing). Default is --dev (hot reload).",
+    ),
+    open_browser: bool = typer.Option(
+        True,
+        "--open/--no-browser",
+        help="Open the GUI URL in the default browser once the backend is healthy.",
+    ),
+    host: str = typer.Option(
+        "127.0.0.1",
+        "--host",
+        help="Backend bind host (forwarded to uvicorn). Next.js always binds 0.0.0.0 in dev.",
     ),
     frontend_dir: Path | None = typer.Option(
         None,
@@ -753,25 +893,32 @@ def gui(
     r"""Launch the chat-driven web GUI (FastAPI backend + Next.js frontend).
 
     Starts uvicorn against ``lineforge.web.app:app`` on ``--backend-port`` using
-    the current Python interpreter (so the GUI runs in the same venv that
-    invoked ``lineforge``). Starts the Next.js dev server on
-    ``--frontend-port`` and opens ``http://localhost:<frontend-port>`` in the
-    default browser.
+    the current Python interpreter. Starts the Next.js server on
+    ``--frontend-port`` and (unless ``--no-browser``) opens the URL once the
+    backend's ``/api/health`` endpoint is reachable.
 
     Both processes inherit the parent's environment, so ``ANTHROPIC_API_KEY``
     or ``CLAUDE_API_KEY`` (or a local ``claude /login`` session) flows through
-    to the agent.
+    to the agent. The backend port is forwarded to Next via
+    ``LINEFORGE_BACKEND_PORT`` so the dev-server rewrite proxy follows any
+    port-conflict fallback.
+
+    Modes:
+      - ``--dev`` (default): hot reload, ``pnpm dev``.
+      - ``--prod``: ``pnpm build`` (on demand) then ``pnpm start``; no reload.
 
     Requirements:
       - ``pip install 'lineforge\[gui]'`` (pulls fastapi, uvicorn, claude-agent-sdk…).
-      - The repo's ``frontend/`` directory must exist on disk and have its
-        node_modules installed (this command will ``pnpm install`` if missing).
-        When ``lineforge`` is installed from a wheel without the source tree,
-        pass ``--frontend-dir`` to point at a checked-out copy.
+      - Node + pnpm on PATH (npm works but pnpm is preferred). The repo's
+        ``frontend/`` directory must exist; ``pnpm install`` runs the first
+        time. When installed from a wheel without the source tree, pass
+        ``--frontend-dir`` to point at a checked-out copy.
     """
-    import shutil
+    import os
+    import signal
     import subprocess
     import sys
+    import threading
     import time
     import webbrowser
 
@@ -782,8 +929,12 @@ def gui(
         err_console.print(r"Install the GUI extras: [bold]pip install 'lineforge\[gui]'[/bold]")
         raise typer.Exit(code=2) from err
 
+    # --no-reload implies --prod for the closest behavioural match.
+    if not reload and not prod:
+        console.print("[yellow]--no-reload implies --prod (use --prod directly).[/yellow]")
+        prod = True
+
     if frontend_dir is None:
-        # src/lineforge/cli.py → parents[2] is the repo root.
         repo_root = Path(__file__).resolve().parents[2]
         frontend_dir = repo_root / "frontend"
     else:
@@ -797,63 +948,118 @@ def gui(
         )
         raise typer.Exit(code=2)
 
-    pnpm = shutil.which("pnpm") or shutil.which("npm")
-    if pnpm is None:
-        err_console.print("Neither pnpm nor npm found on PATH; install Node.js.")
-        raise typer.Exit(code=2)
+    _, pkg_mgr = _check_node_toolchain()
 
     if not (frontend_dir / "node_modules").exists():
-        console.print(f"Installing frontend deps in {frontend_dir}...")
-        subprocess.run([pnpm, "install"], cwd=frontend_dir, check=True)
+        console.print(f"Installing frontend deps in {frontend_dir}…")
+        subprocess.run([pkg_mgr, "install"], cwd=frontend_dir, check=True)
 
-    console.print(f"Starting backend on port {backend_port}{' (--reload)' if reload else ''}...")
+    backend_port = _pick_port(backend_port, "backend")
+    frontend_port = _pick_port(frontend_port, "frontend")
+
+    # ── backend
     backend_cmd = [
         sys.executable,
+        "-u",  # unbuffered → prefix streamer sees lines promptly
         "-m",
         "uvicorn",
         "lineforge.web.app:app",
         "--host",
-        "127.0.0.1",
+        host,
         "--port",
         str(backend_port),
     ]
-    if reload:
+    if not prod:
         backend_cmd += ["--reload"]
-    backend_proc = subprocess.Popen(backend_cmd)
 
-    console.print(f"Starting frontend on port {frontend_port}...")
-    frontend_proc = subprocess.Popen(
-        [pnpm, "dev", "--port", str(frontend_port)],
-        cwd=frontend_dir,
+    console.print(
+        f"[dim]starting backend on {host}:{backend_port} "
+        f"({'prod' if prod else 'dev --reload'})…[/dim]"
+    )
+    backend_proc = subprocess.Popen(
+        backend_cmd,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
     )
 
-    url = f"http://localhost:{frontend_port}"
-    time.sleep(2.5)  # let dev servers boot
-    import contextlib
+    # ── frontend
+    env = os.environ.copy()
+    env["LINEFORGE_BACKEND_PORT"] = str(backend_port)
+    env["PORT"] = str(frontend_port)
 
-    with contextlib.suppress(Exception):
-        webbrowser.open(url)
+    if prod:
+        next_dir = frontend_dir / ".next"
+        if not next_dir.exists():
+            console.print(f"[dim]no prebuilt {next_dir} — running {pkg_mgr} build…[/dim]")
+            subprocess.run([pkg_mgr, "build"], cwd=frontend_dir, env=env, check=True)
+        frontend_cmd = [pkg_mgr, "start"]
+    else:
+        frontend_cmd = [pkg_mgr, "dev"]
+
+    console.print(f"[dim]starting frontend on port {frontend_port}…[/dim]")
+    frontend_proc = subprocess.Popen(
+        frontend_cmd,
+        cwd=frontend_dir,
+        env=env,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        bufsize=1,
+    )
+
+    # Prefix-and-stream both subprocesses' output.
+    threading.Thread(
+        target=_stream_with_color, args=(backend_proc, "api", "yellow"), daemon=True
+    ).start()
+    threading.Thread(
+        target=_stream_with_color, args=(frontend_proc, "web", "cyan"), daemon=True
+    ).start()
+
+    # Wait for backend health; open browser when ready (or 5s elapses).
+    healthy = _wait_for_backend(host, backend_port, timeout_s=15.0)
+    if not healthy:
+        console.print(
+            "[yellow]backend did not respond to /api/health within 15s — "
+            "the GUI may still come up, but check `[api]` logs above.[/yellow]"
+        )
+
+    url = f"http://localhost:{frontend_port}"
     console.print(f"\nlineforge GUI running → [bold green]{url}[/bold green]")
     console.print("[dim]Ctrl-C to stop both servers.[/dim]\n")
 
+    if open_browser:
+        import contextlib
+
+        with contextlib.suppress(Exception):
+            webbrowser.open_new_tab(url)
+
+    # ── graceful shutdown
+    shutdown = threading.Event()
+
+    def _on_sigint(_signum: int, _frame: object) -> None:
+        if not shutdown.is_set():
+            console.print("\n[dim]shutting down…[/dim]")
+            shutdown.set()
+
+    signal.signal(signal.SIGINT, _on_sigint)
+
     try:
-        # Wait on either process; forward exit code from whichever finishes first.
-        while True:
+        while not shutdown.is_set():
             if backend_proc.poll() is not None:
                 err_console.print("backend exited")
                 break
             if frontend_proc.poll() is not None:
                 err_console.print("frontend exited")
                 break
-            time.sleep(0.5)
-    except KeyboardInterrupt:
-        console.print("\nshutting down...")
+            time.sleep(0.25)
     finally:
         for proc in (frontend_proc, backend_proc):
             if proc.poll() is None:
                 proc.terminate()
                 try:
-                    proc.wait(timeout=5)
+                    proc.wait(timeout=3)
                 except subprocess.TimeoutExpired:
                     proc.kill()
 

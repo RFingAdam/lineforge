@@ -172,15 +172,22 @@ backed by `claude-agent-sdk` — the agent fills in your geometry form, runs
 the solver, and renders V/E/D/T field plots live as you converse with it.
 
 ```bash
-pip install 'lineforge[gui]'   # fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
-lineforge gui                  # launches backend + Next.js dev server
+pip install 'lineforge[gui]'   # one-time install — fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
+lineforge gui                  # launch the local web GUI (dev mode, hot reload)
+lineforge gui --prod           # production-local mode (no hot reload, prebuilt frontend)
+lineforge gui --no-browser     # headless / SSH boxes — print the URL instead of opening it
 ```
 
-Then open <http://localhost:3000>. Type the geometry into the chat, watch the
-form fill in, results update, and field plots stream in. Agent credentials
-come from `ANTHROPIC_API_KEY` (or `CLAUDE_API_KEY`), or from a local
-`claude /login` session — no env vars needed in the second case. Set
-`ATLC3_GUI_CHAT_STUB=1` to use the echo handler for offline / CI testing.
+`lineforge gui` auto-bumps the backend (8000) and frontend (3000) ports if either
+is busy, polls `/api/health` until the backend is ready, then opens the browser.
+Both processes' stdout streams to the terminal with colored `[api]` / `[web]`
+prefixes; Ctrl-C sends `SIGTERM` to both and `SIGKILL` after a 3-second grace.
+
+Type the geometry into the chat, watch the form fill in, results update, and
+field plots stream in. Agent credentials come from `ANTHROPIC_API_KEY` (or
+`CLAUDE_API_KEY`), or from a local `claude /login` session — no env vars
+needed in the second case. Set `ATLC3_GUI_CHAT_STUB=1` to use the echo
+handler for offline / CI testing.
 
 The backend is the importable subpackage `lineforge.web` (`lineforge.web.app:app`
 is the uvicorn target). The frontend lives at `<repo>/frontend/`; `pnpm install`
