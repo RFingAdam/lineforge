@@ -18,15 +18,15 @@ import io
 from typing import Any, Literal
 
 import numpy as np
+from fastapi import APIRouter, HTTPException
+from PIL import Image
+from pydantic import BaseModel, ConfigDict, ValidationError
+
 from lineforge.geometry import from_dict
 from lineforge.geometry.builders import rasterize as rasterize_geom
 from lineforge.geometry.usermap import Usermap
 from lineforge.solvers.cgp import solve_cgp
 from lineforge.visualization.fields import render_field
-from fastapi import APIRouter, HTTPException
-from PIL import Image
-from pydantic import BaseModel, ConfigDict, ValidationError
-
 from lineforge.web.api_solve import _clean_geometry, _sanitize_error
 from lineforge.web.api_usermap import get_usermap_by_uri
 

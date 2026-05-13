@@ -645,6 +645,217 @@ def build_server() -> FastMCP:
             "geometry_kind": interp.state.geometry_kind,
         }
 
+    # ======================================================== v2.1.0 RF pad / RL tools
+
+    @server.tool()
+    def pad_capacitance(
+        W: str,
+        L: str | None = None,
+        h: str | None = None,
+        er: float | None = None,
+        method: str = "ya",
+        T: str | None = None,
+    ) -> dict[str, Any]:
+        """Compute the capacitance of an electrically small RF pad.
+
+        Parameters
+        ----------
+        W, L
+            Pad width and length as unit-suffixed strings (e.g. "0.4mm", "15mil").
+            L defaults to W (square pad).
+        h, er
+            Dielectric height to reference plane + relative permittivity.
+        method
+            "pp" (parallel-plate), "ya" (Yamashita-Atsuki finite-pad, default),
+            or "hj" (Hammerstad-Jensen upper bound).
+        T
+            Optional trace thickness for the HJ method.
+        """
+        from lineforge.analytical.pads import pad_capacitance as _pad_capacitance
+
+        try:
+            r = _pad_capacitance(W, L, h=h, er=er, method=method, T=T)  # type: ignore[arg-type]
+        except (ValueError, TypeError) as exc:
+            return {"error": f"{type(exc).__name__}: {exc}"}
+        return {
+            "C_fF": r.C_fF,
+            "C_pF": r.C_pF,
+            "method": r.method,
+            "W_mm": r.W_m * 1e3,
+            "L_mm": r.L_m * 1e3,
+            "h_mil": r.h_m / 25.4e-6,
+            "eps_eff": r.eps_eff,
+            "fringing_factor": r.fringing_factor,
+        }
+
+    @server.tool()
+    def pad_relief_advisor(
+        W: str,
+        L: str | None = None,
+        relief_options: list[dict[str, Any]] | None = None,
+        band_max_ghz: float = 6.0,
+        rl_target_dB: float = 30.0,
+        Z0_line: float = 50.0,
+        method: str = "ya",
+    ) -> dict[str, Any]:
+        """Rank pad-relief stackup options against an RL target at band edge.
+
+        Each entry in ``relief_options`` is a dict with ``name`` and ``stack``,
+        where stack is a list of ``{h, er}`` dicts representing layers between
+        pad and reference plane.
+        """
+        from lineforge.analytical.pads import ReliefOption
+        from lineforge.analytical.pads import (
+            pad_relief_advisor as _pad_relief_advisor,
+        )
+        from lineforge.geometry.dielectric import DielectricLayer
+
+        if not relief_options:
+            return {"error": "relief_options must be a non-empty list of {name, stack}"}
+        try:
+            options = [
+                ReliefOption(
+                    name=opt["name"],
+                    stack=[DielectricLayer(**layer) for layer in opt["stack"]],
+                )
+                for opt in relief_options
+            ]
+            advice = _pad_relief_advisor(
+                W, L, options=options,
+                band_max_ghz=band_max_ghz,
+                rl_target_dB=rl_target_dB,
+                Z0_line=Z0_line,
+                method=method,  # type: ignore[arg-type]
+            )
+        except (KeyError, ValueError, TypeError) as exc:
+            return {"error": f"{type(exc).__name__}: {exc}"}
+
+        return {
+            "recommendation": advice.recommendation,
+            "band_max_ghz": advice.band_max_ghz,
+            "rl_target_dB": advice.rl_target_dB,
+            "rows": [
+                {
+                    "name": r.name,
+                    "C_fF": r.C.C_fF,
+                    "Z_at_band_max_ohm": r.Z_at_band_max,
+                    "RL_at_band_max_dB": r.RL_at_band_max,
+                    "meets_target": r.meets_target,
+                    "headroom_dB": r.headroom_dB,
+                }
+                for r in advice.rows
+            ],
+        }
+
+    @server.tool()
+    def laminate_lookup(name: str, frequency_ghz: float | None = None) -> dict[str, Any]:
+        """Look up a PCB laminate by name (fuzzy-matched) with optional
+        frequency interpolation. Examples: "FR4 prepreg", "Isola 370HR",
+        "Megtron 6", "RO4350B".
+        """
+        from lineforge.materials.laminates import laminate_lookup as _laminate_lookup
+
+        try:
+            r = _laminate_lookup(name, frequency_ghz=frequency_ghz)
+        except KeyError as exc:
+            return {"error": str(exc)}
+        return {
+            "name": r.name,
+            "er": r.er,
+            "tan_delta": r.tan_delta,
+            "frequency_ghz": r.frequency_ghz,
+            "matched_by": r.matched_by,
+        }
+
+    @server.tool()
+    def rf_path_budget(
+        freq_ghz: list[float],
+        source_pad: dict[str, Any] | None = None,
+        trace_Z0_ohm: float | None = None,
+        end_pad: dict[str, Any] | None = None,
+        Z0_port: float = 50.0,
+    ) -> dict[str, Any]:
+        """Compute end-to-end RF path return-loss budget.
+
+        ``source_pad`` and ``end_pad`` are dicts with at least ``C_fF`` or
+        the keys accepted by ``pad_capacitance`` (W, L, h, er, method).
+        ``trace_Z0_ohm`` is the trace characteristic impedance.
+        """
+        from lineforge.analytical.pads import pad_capacitance as _pad_capacitance
+        from lineforge.path_budget import TraceSpec
+        from lineforge.path_budget import rf_path_budget as _rf_path_budget
+
+        def _resolve_pad(p: dict[str, Any] | None):
+            if p is None:
+                return None
+            if "C_fF" in p:
+                # Synthetic PadCapResult-like
+                from lineforge.analytical.pads import PadCapResult
+                return PadCapResult(
+                    C_F=float(p["C_fF"]) * 1e-15, method="pp",
+                    W_m=0.0, L_m=0.0, h_m=0.0, eps_eff=1.0, fringing_factor=1.0,
+                )
+            return _pad_capacitance(**p)
+
+        try:
+            src = _resolve_pad(source_pad)
+            end = _resolve_pad(end_pad)
+            trace = TraceSpec(Z0=trace_Z0_ohm) if trace_Z0_ohm else None
+            budget = _rf_path_budget(
+                freq_ghz=freq_ghz,
+                source_pad=src,
+                trace=trace,
+                end_pad=end,
+                Z0_port=Z0_port,
+            )
+        except (KeyError, ValueError, TypeError) as exc:
+            return {"error": f"{type(exc).__name__}: {exc}"}
+
+        return {
+            "Z0_port": budget.Z0_port,
+            "worst_rl_dB": budget.worst_rl_dB,
+            "rows": [
+                {
+                    "frequency_ghz": r.frequency_ghz,
+                    "s11_source_dB": r.s11_source_dB,
+                    "s11_trace_dB": r.s11_trace_dB,
+                    "s11_end_dB": r.s11_end_dB,
+                    "combined_rl_dB": r.combined_rl_dB,
+                    "dominant": r.dominant,
+                }
+                for r in budget.rows
+            ],
+        }
+
+    @server.tool()
+    def classify_pad(
+        component_type: str,
+        has_modular_grant: bool = False,
+        is_user_designed_rf: bool = False,
+        operating_freq_ghz: float | None = None,
+    ) -> dict[str, Any]:
+        """Classify a pad into Category 1 (follow reference design),
+        Category 2 (optimize freely), or Category 3 (standard practice).
+
+        Use to decide whether to relieve GND under an RF pad vs follow
+        the manufacturer's reference layout vs use plain solid GND.
+        """
+        from lineforge.design_rules import classify_pad as _classify_pad
+
+        r = _classify_pad(
+            component_type=component_type,
+            has_modular_grant=has_modular_grant,
+            is_user_designed_rf=is_user_designed_rf,
+            operating_freq_ghz=operating_freq_ghz,
+        )
+        return {
+            "category": r.category.name,
+            "category_label": r.category.value,
+            "guidance": r.guidance,
+            "risks_if_deviating": r.risks_if_deviating,
+            "references": r.references,
+        }
+
     # ====================================================== Resources
 
     @server.resource(

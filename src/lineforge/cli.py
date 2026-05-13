@@ -750,7 +750,7 @@ def gui(
         help="Override the path to the Next.js frontend (default: <repo>/frontend/).",
     ),
 ) -> None:
-    """Launch the chat-driven web GUI (FastAPI backend + Next.js frontend).
+    r"""Launch the chat-driven web GUI (FastAPI backend + Next.js frontend).
 
     Starts uvicorn against ``lineforge.web.app:app`` on ``--backend-port`` using
     the current Python interpreter (so the GUI runs in the same venv that

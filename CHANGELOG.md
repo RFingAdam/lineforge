@@ -6,6 +6,82 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.1.0] — 2026-05-12
+
+RF pad analytics, design-rule decision logic, and an end-to-end RF path
+return-loss budget. Adds five new public APIs plus matching MCP tools.
+Distilled from the L3 SIG1 stripline and 0.4 mm/0.3 mm/U.FL pad
+case-study work in `examples/09_*` and `examples/10_*`.
+
+### Added
+
+#### RF pad capacitance analytics — `lineforge.analytical.pads`
+- `pad_capacitance(W, L, h, er, method)` — finite-pad C with three
+  methods: parallel-plate ("pp", lower bound), Yamashita-Atsuki square-
+  pad with fringing ("ya", **default**, best for finite pads), and
+  Hammerstad-Jensen wide-microstrip ("hj", upper bound).
+- `pad_relief_advisor(W, L, options, band_max_ghz, rl_target_dB)` —
+  ranks multiple stackup options (no relief / relieve one plane /
+  relieve two planes) against an RL target at the band edge and returns
+  the first option that qualifies plus full per-option comparison data.
+- `PadCapResult.impedance(f)` and `.return_loss_dB(f)` for direct RL
+  contribution at any frequency.
+- Multi-layer dielectric input via `DielectricLayer` stacks (matches the
+  existing asymmetric-stripline machinery from v1.0.0).
+
+#### Design-rule decision logic — `lineforge.design_rules`
+- `classify_pad(component_type, has_modular_grant, is_user_designed_rf,
+  operating_freq_ghz)` returns one of three categories:
+  - **Category 1 — Follow reference design** (Wi-Fi/LTE modules with FCC
+    modular grants, U.FL/SMA/MMCX connectors, RF ICs)
+  - **Category 2 — Optimize freely** (your own triplexers/diplexers/
+    matching networks/antennas)
+  - **Category 3 — Standard practice** (DC, low-speed, power)
+- Plus guidance text, risks-if-deviating, and references suitable for
+  design review notes or agent reports.
+
+#### Path-budget calculator — `lineforge.path_budget`
+- `rf_path_budget(freq_ghz, source_pad, trace, end_pad, Z0_port)`
+  combines source-pad shunt cap + trace impedance mismatch + end-pad
+  shunt cap into a worst-case end-to-end RL across a frequency sweep.
+- Per-frequency rows include the dominant contributor so you know which
+  element to optimize first.
+
+#### Laminate lookup — `lineforge.materials.laminates`
+- `laminate_lookup(name, frequency_ghz)` — fuzzy-name match against the
+  18 entries in `pcb_extended.json`. Handles aliases like "FR4 prepreg",
+  "FR4 core", "RO4350B", "M6", "Megtron 6", "Isola 370HR", etc.
+- `list_laminates()` returns the sorted canonical names.
+- Frequency interpolation via the existing log-frequency interpolator
+  when the laminate has tabulated εr/Df.
+
+#### MCP tools (5 new)
+All five new APIs are exposed as MCP tools in
+`lineforge.mcp_server.server`:
+- `pad_capacitance`
+- `pad_relief_advisor`
+- `laminate_lookup`
+- `rf_path_budget`
+- `classify_pad`
+
+Total MCP tools now: 21.
+
+#### Tests
+- 51 new tests in `tests/test_analytical/test_pads.py`,
+  `tests/test_laminates.py`, `tests/test_path_budget.py`,
+  `tests/test_design_rules.py`.
+- Total: 469 passing (up from 418 in 2.0.0).
+
+### Changed
+- Nothing breaking. All v2.0.0 APIs continue to work unchanged.
+
+### Known issues
+- Some laminate database entries (Isola 370HR, Megtron 6) have εr/Df
+  values that don't match the canonical published datasheet numbers.
+  Lookup tool works correctly; data correction tracked separately.
+
+## [Unreleased — pre-2.1.0]
+
 ### Added
 - **Web GUI consolidated into the main package.** The former standalone
   `atlc3-gui` sibling repo is now `lineforge.web` (importable Python

@@ -4,8 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from lineforge.geometry import GEOMETRY_TYPES, export_jsonschema
 from fastapi import APIRouter, HTTPException
+
+from lineforge.geometry import GEOMETRY_TYPES, export_jsonschema
 
 router = APIRouter(prefix="/api/geometries", tags=["geometries"])
 

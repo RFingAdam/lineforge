@@ -65,7 +65,6 @@ def run_option(option: str) -> dict:
     f_max = 2e9       # low f — pad acts purely capacitive
 
     side = 4000.0
-    relief_side = 250.0   # half-width of pad relief (0.5mm relief = 250um half)
 
     FDTD = openEMS(NrTS=100000, EndCriteria=1e-6)
     FDTD.SetGaussExcite((f_max + f_min) / 2, (f_max - f_min) / 2)
