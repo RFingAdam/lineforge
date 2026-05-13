@@ -114,9 +114,7 @@ async def chat_websocket(ws: WebSocket) -> None:
                 continue
 
             if role != "user":
-                await ws.send_json(
-                    {"role": "error", "content": f"unsupported role {role!r}"}
-                )
+                await ws.send_json({"role": "error", "content": f"unsupported role {role!r}"})
                 continue
 
             content = msg.get("content", "")

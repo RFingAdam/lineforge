@@ -1,4 +1,5 @@
 """Tests for lineforge.analytical.pads."""
+
 from __future__ import annotations
 
 import pytest
@@ -55,7 +56,8 @@ class TestPadCapacitance:
         """Stack with one layer matches single (h, er) input."""
         single = pad_capacitance("0.4mm", "0.4mm", h="2.73mil", er=3.7)
         stack = pad_capacitance(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             stack=[DielectricLayer(h="2.73mil", er=3.7)],
         )
         assert single.C_F == pytest.approx(stack.C_F)
@@ -63,11 +65,12 @@ class TestPadCapacitance:
     def test_stack_multi_layer_series_reduce(self):
         """Three-layer stack matches the analytical series reduction."""
         r = pad_capacitance(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             stack=[
                 DielectricLayer(h="2.73mil", er=3.7),
-                DielectricLayer(h="1.4mil",  er=3.7),
-                DielectricLayer(h="3.5mil",  er=4.2),
+                DielectricLayer(h="1.4mil", er=3.7),
+                DielectricLayer(h="3.5mil", er=4.2),
             ],
         )
         # Session expected: ~49 fF
@@ -101,7 +104,10 @@ class TestPadCapacitance:
     def test_cannot_provide_both_h_er_and_stack(self):
         with pytest.raises(ValueError, match=r"either .* OR stack"):
             pad_capacitance(
-                "0.4mm", "0.4mm", h="2.73mil", er=3.7,
+                "0.4mm",
+                "0.4mm",
+                h="2.73mil",
+                er=3.7,
                 stack=[DielectricLayer(h="2.73mil", er=3.7)],
             )
 
@@ -125,18 +131,18 @@ class TestPadReliefAdvisor:
                 name="B: relieve L2 → L3",
                 stack=[
                     DielectricLayer(h="2.73mil", er=3.7),
-                    DielectricLayer(h="1.4mil",  er=3.7),
-                    DielectricLayer(h="3.5mil",  er=4.2),
+                    DielectricLayer(h="1.4mil", er=3.7),
+                    DielectricLayer(h="3.5mil", er=4.2),
                 ],
             ),
             ReliefOption(
                 name="C: relieve L2+L3 → L4",
                 stack=[
-                    DielectricLayer(h="2.73mil",  er=3.7),
-                    DielectricLayer(h="1.4mil",   er=3.7),
-                    DielectricLayer(h="3.5mil",   er=4.2),
+                    DielectricLayer(h="2.73mil", er=3.7),
+                    DielectricLayer(h="1.4mil", er=3.7),
+                    DielectricLayer(h="3.5mil", er=4.2),
                     DielectricLayer(h="0.689mil", er=3.7),
-                    DielectricLayer(h="5.3mil",   er=3.7),
+                    DielectricLayer(h="5.3mil", er=3.7),
                 ],
             ),
         ]
@@ -144,7 +150,8 @@ class TestPadReliefAdvisor:
     def test_recommends_option_C_for_strict_RL(self, triplexer_options):
         """At 6 GHz with 30 dB target, only Option C qualifies."""
         advice = pad_relief_advisor(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             options=triplexer_options,
             band_max_ghz=6.0,
             rl_target_dB=30.0,
@@ -154,7 +161,8 @@ class TestPadReliefAdvisor:
     def test_recommends_option_A_when_target_easy(self, triplexer_options):
         """At 1 GHz with 30 dB target, even Option A qualifies."""
         advice = pad_relief_advisor(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             options=triplexer_options,
             band_max_ghz=1.0,
             rl_target_dB=30.0,
@@ -165,7 +173,8 @@ class TestPadReliefAdvisor:
     def test_no_recommendation_when_unmeetable(self, triplexer_options):
         """At 6 GHz with 50 dB target, nothing qualifies."""
         advice = pad_relief_advisor(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             options=triplexer_options,
             band_max_ghz=6.0,
             rl_target_dB=50.0,
@@ -174,7 +183,8 @@ class TestPadReliefAdvisor:
 
     def test_rows_have_capacitance_and_RL(self, triplexer_options):
         advice = pad_relief_advisor(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             options=triplexer_options,
             band_max_ghz=6.0,
         )
@@ -188,7 +198,8 @@ class TestPadReliefAdvisor:
     def test_RL_decreases_with_more_capacitance(self, triplexer_options):
         """More capacitance (Option A) → worse RL than less (Option C)."""
         advice = pad_relief_advisor(
-            "0.4mm", "0.4mm",
+            "0.4mm",
+            "0.4mm",
             options=triplexer_options,
             band_max_ghz=6.0,
         )

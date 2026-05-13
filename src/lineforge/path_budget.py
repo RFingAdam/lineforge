@@ -61,8 +61,8 @@ class PathBudgetRow:
         """Name of the contributor with the largest |S11| at this frequency."""
         contributors = [
             ("source_pad", self.s11_source_dB),
-            ("trace",      self.s11_trace_dB),
-            ("end_pad",    self.s11_end_dB),
+            ("trace", self.s11_trace_dB),
+            ("end_pad", self.s11_end_dB),
         ]
         # Largest |S11| = least negative dB
         return max(contributors, key=lambda x: x[1])[0]

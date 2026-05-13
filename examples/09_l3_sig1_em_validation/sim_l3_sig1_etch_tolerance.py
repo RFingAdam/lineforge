@@ -11,6 +11,7 @@ Run all three in EM with realistic Cu + FR4 to confirm the closed-form
 sensitivity holds. This is the actual fab variability your manufacturer
 will deliver — important for setting the controlled-impedance spec.
 """
+
 import os
 import shutil
 import tempfile
@@ -53,11 +54,11 @@ def run_l3(trace_w_um, label):
     third = np.array([2 * res / 3, -res / 3]) / 4
 
     x_pad = 5 * res
-    mesh.AddLine("x", [-trace_l/2 - x_pad, -trace_l/2, 0, trace_l/2, trace_l/2 + x_pad])
+    mesh.AddLine("x", [-trace_l / 2 - x_pad, -trace_l / 2, 0, trace_l / 2, trace_l / 2 + x_pad])
     mesh.SmoothMeshLines("x", res)
     mesh.AddLine("y", 0)
-    mesh.AddLine("y",  trace_w_um/2 + third)
-    mesh.AddLine("y", -trace_w_um/2 - third)
+    mesh.AddLine("y", trace_w_um / 2 + third)
+    mesh.AddLine("y", -trace_w_um / 2 - third)
     mesh.SmoothMeshLines("y", res / 4)
     mesh.AddLine("y", [-side, side])
     mesh.SmoothMeshLines("y", res)
@@ -74,33 +75,38 @@ def run_l3(trace_w_um, label):
 
     mat_below = CSX.AddMaterial("prepreg", epsilon=er_below, kappa=sigma_below)
     mat_below.AddBox(
-        [-trace_l/2 - 2000, -side - 1000, 0],
-        [trace_l/2 + 2000,  side + 1000,  z_trace_bot],
+        [-trace_l / 2 - 2000, -side - 1000, 0],
+        [trace_l / 2 + 2000, side + 1000, z_trace_bot],
     )
     mat_above = CSX.AddMaterial("core", epsilon=er_above, kappa=sigma_above)
     mat_above.AddBox(
-        [-trace_l/2 - 2000, -side - 1000, z_trace_bot],
-        [trace_l/2 + 2000,  side + 1000,  z_l2],
+        [-trace_l / 2 - 2000, -side - 1000, z_trace_bot],
+        [trace_l / 2 + 2000, side + 1000, z_l2],
     )
 
     cond = CSX.AddConductingSheet("Cu", conductivity=5.8e7, thickness=trace_t * 1e-6)
     cond.AddBox(
-        [-trace_l/2, -trace_w_um/2, z_trace_bot],
-        [trace_l/2, trace_w_um/2, z_trace_top],
+        [-trace_l / 2, -trace_w_um / 2, z_trace_bot],
+        [trace_l / 2, trace_w_um / 2, z_trace_top],
         priority=10,
     )
 
     port1 = FDTD.AddLumpedPort(
-        1, 50,
-        [-trace_l/2, -trace_w_um/2, 0],
-        [-trace_l/2 + res/2, trace_w_um/2, z_trace_bot],
-        "z", excite=1, priority=5,
+        1,
+        50,
+        [-trace_l / 2, -trace_w_um / 2, 0],
+        [-trace_l / 2 + res / 2, trace_w_um / 2, z_trace_bot],
+        "z",
+        excite=1,
+        priority=5,
     )
     port2 = FDTD.AddLumpedPort(
-        2, 50,
-        [trace_l/2 - res/2, -trace_w_um/2, 0],
-        [trace_l/2, trace_w_um/2, z_trace_bot],
-        "z", priority=5,
+        2,
+        50,
+        [trace_l / 2 - res / 2, -trace_w_um / 2, 0],
+        [trace_l / 2, trace_w_um / 2, z_trace_bot],
+        "z",
+        priority=5,
     )
 
     x_meas = -trace_l / 6
@@ -112,8 +118,8 @@ def run_l3(trace_w_um, label):
     i_loop_z_top = z_trace_top + 2 * res / 4
     i_box = CSX.AddProbe("i_loop", p_type=1)
     i_box.AddBox(
-        [x_meas, -i_loop_w/2, i_loop_z_bot],
-        [x_meas,  i_loop_w/2, i_loop_z_top],
+        [x_meas, -i_loop_w / 2, i_loop_z_bot],
+        [x_meas, i_loop_w / 2, i_loop_z_top],
     )
 
     sim_path = os.path.join(tempfile.gettempdir(), f"lineforge_l3etch_{label}")
@@ -129,7 +135,7 @@ def run_l3(trace_w_um, label):
     port2.uf_ref / port1.uf_inc
 
     v_below_d = np.loadtxt(os.path.join(sim_path, "v_below"), comments="%")
-    i_d  = np.loadtxt(os.path.join(sim_path, "i_loop"), comments="%")
+    i_d = np.loadtxt(os.path.join(sim_path, "i_loop"), comments="%")
 
     V_f = DFT_time2freq(v_below_d[:, 0], v_below_d[:, 1], freq)
     I_f = DFT_time2freq(i_d[:, 0], i_d[:, 1], freq)
@@ -145,9 +151,9 @@ from lineforge.geometry.types import StriplineAsymmetric
 
 
 def cf_z0(W_mil):
-    g = StriplineAsymmetric(W=f"{W_mil}mil", T="0.689mil",
-                            H1="3.5mil", H2="5.3mil",
-                            er=4.0, er_above=4.2, er_below=3.7)
+    g = StriplineAsymmetric(
+        W=f"{W_mil}mil", T="0.689mil", H1="3.5mil", H2="5.3mil", er=4.0, er_above=4.2, er_below=3.7
+    )
     return stripline_asymmetric(g).z0
 
 
@@ -186,14 +192,16 @@ print(f"  Wadell Z₀ window: {cf_min:.1f} – {cf_max:.1f} Ω")
 print("  Window matches closed-form within ~2 Ω.")
 print()
 
+
 # Computed return loss against 50 Ω port
 def rl_vs_50(z):
     g = abs(z - 50) / abs(z + 50)
-    return -20 * np.log10(g) if g > 0 else float('inf')
+    return -20 * np.log10(g) if g > 0 else float("inf")
+
 
 print(f"  At nominal W=2.92: Wadell={cf_z0(2.92):.2f} Ω, RL = {rl_vs_50(cf_z0(2.92)):.1f} dB")
 print(f"  Worst etch case:   Wadell={max(cf_z0(2.42), cf_z0(3.42)):.2f} Ω,")
-worst_z = max([(abs(z-50), z) for z in [cf_z0(2.42), cf_z0(3.42)]])[1]
+worst_z = max([(abs(z - 50), z) for z in [cf_z0(2.42), cf_z0(3.42)]])[1]
 print(f"                     RL @ 50Ω port = {rl_vs_50(worst_z):.1f} dB")
 print()
 print("Triplexer typical passband RL spec is 15-20 dB; trace contribution above")

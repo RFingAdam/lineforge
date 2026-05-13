@@ -1,4 +1,5 @@
 """Tests for lineforge.path_budget."""
+
 from __future__ import annotations
 
 from lineforge.analytical.pads import pad_capacitance
@@ -33,7 +34,9 @@ class TestRfPathBudget:
         # Each individual contribution is some negative dB; combined is more
         # negative (= worse RL = lower combined_rl_dB number)
         worst_individual = min(
-            row.s11_source_dB, row.s11_trace_dB, row.s11_end_dB,
+            row.s11_source_dB,
+            row.s11_trace_dB,
+            row.s11_end_dB,
         )
         # combined_rl_dB = -s11_combined_dB; should be ≤ worst |individual|
         assert row.combined_rl_dB <= -worst_individual

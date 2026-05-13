@@ -130,8 +130,7 @@ class TestRasterizeStriplineAsymmetricSplitEr:
         unique.discard((0, 255, 0))
         unique.discard((255, 255, 255))
         assert len(unique) >= 2, (
-            f"expected two distinct dielectric colors above/below the strip; "
-            f"got {unique}"
+            f"expected two distinct dielectric colors above/below the strip; " f"got {unique}"
         )
 
 

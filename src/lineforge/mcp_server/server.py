@@ -721,7 +721,9 @@ def build_server() -> FastMCP:
                 for opt in relief_options
             ]
             advice = _pad_relief_advisor(
-                W, L, options=options,
+                W,
+                L,
+                options=options,
                 band_max_ghz=band_max_ghz,
                 rl_target_dB=rl_target_dB,
                 Z0_line=Z0_line,
@@ -791,9 +793,15 @@ def build_server() -> FastMCP:
             if "C_fF" in p:
                 # Synthetic PadCapResult-like
                 from lineforge.analytical.pads import PadCapResult
+
                 return PadCapResult(
-                    C_F=float(p["C_fF"]) * 1e-15, method="pp",
-                    W_m=0.0, L_m=0.0, h_m=0.0, eps_eff=1.0, fringing_factor=1.0,
+                    C_F=float(p["C_fF"]) * 1e-15,
+                    method="pp",
+                    W_m=0.0,
+                    L_m=0.0,
+                    h_m=0.0,
+                    eps_eff=1.0,
+                    fringing_factor=1.0,
                 )
             return _pad_capacitance(**p)
 
