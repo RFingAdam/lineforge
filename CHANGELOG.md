@@ -6,6 +6,29 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.2.0] — 2026-05-13
+
+### Changed
+
+**License: GPL-3.0-or-later → AGPL-3.0-or-later.** The AGPL closes the
+"wrap as a paid SaaS without contributing back" gap that GPL leaves
+open (GPL's copyleft only triggers on distribution; AGPL's also triggers
+on network use). The atlc / atlc2 lineage is preserved — GPL-3.0 →
+AGPL-3.0 is explicitly permitted by GPL-3.0 §13. Existing GPL-3.0 forks
+remain valid under their original terms; future commits and the v2.2.0
+release are AGPL-3.0-or-later.
+
+Files changed: `LICENSE` (canonical AGPLv3 text), `pyproject.toml`,
+`Cargo.toml`, `src/lineforge/version.py`, README license badge.
+No API changes.
+
+### Materials database fix
+- `pcb_extended.json`: corrected scalar `er`/`tan_delta` defaults for
+  Isola 370HR (3.4 → 4.04, 0.005 → 0.021) and Megtron 6 R-5775
+  (3.0 → 3.71, 0.001 → 0.002) to match canonical datasheet values
+  at 1 GHz. The frequency-resolved `er_freq` tables were already
+  correct; only the no-frequency-specified fallback was wrong.
+
 ## [2.1.0] — 2026-05-12
 
 RF pad analytics, design-rule decision logic, and an end-to-end RF path

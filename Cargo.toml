@@ -3,11 +3,11 @@ members = ["crates/lineforge_kernel"]
 resolver = "2"
 
 [workspace.package]
-version = "2.1.0"
+version = "2.2.0"
 edition = "2021"
 rust-version = "1.75"
 authors = ["lineforge contributors"]
-license = "GPL-3.0-or-later"
+license = "AGPL-3.0-or-later"
 repository = "https://github.com/RFingAdam/lineforge"
 homepage = "https://github.com/RFingAdam/lineforge"
 
