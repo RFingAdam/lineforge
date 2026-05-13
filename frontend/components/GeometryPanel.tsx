@@ -9,15 +9,20 @@ import {
   type GeometryListItem,
 } from "@/lib/api";
 import { useGuiStore } from "@/lib/store";
-import { ensureUnit, parseLengthStr } from "@/lib/units";
 import { CustomUsermapPanel } from "./CustomUsermapPanel";
 import { MaterialPicker } from "./MaterialPicker";
 import { StackupEditor } from "./StackupEditor";
 import { GeometryDiagram } from "./diagrams";
+import {
+  BooleanRow,
+  FieldRow,
+  NestedFieldRow,
+  XCircleIcon,
+  type FieldInfo,
+} from "./GeometryFieldRows";
+import { Button, Card, Input, Section, Select } from "./ui";
 
-// Length-typed fields use a unit-aware input. A field is treated as a
-// length if its name appears here OR its schema has a numeric type with
-// gt:0 and a description mentioning "length"/"thickness"/"width"/etc.
+// Length-typed fields use a unit-aware input.
 const KNOWN_LENGTH_FIELDS = new Set([
   "W",
   "H",
@@ -32,18 +37,7 @@ const KNOWN_LENGTH_FIELDS = new Set([
   "y",
 ]);
 
-type FieldInfo = {
-  name: string;
-  required: boolean;
-  isLength: boolean;
-  description?: string;
-  defaultValue?: unknown;
-  /** When the schema property is a $ref into $defs, resolve to the nested
-   * fields (e.g. WirePosition → [x, y]). Otherwise undefined. */
-  nestedFields?: FieldInfo[];
-  /** True for type=boolean. */
-  isBoolean?: boolean;
-};
+const DIELECTRIC_FIELDS = new Set(["er", "er2", "tan_delta"]);
 
 function classifyFields(schema: GeometrySchema): FieldInfo[] {
   const required = new Set(schema.required);
@@ -84,128 +78,13 @@ function classifyFields(schema: GeometrySchema): FieldInfo[] {
   return out;
 }
 
-function NestedFieldRow({
-  field,
-  value,
-  onChange,
-  unit,
-}: {
-  field: FieldInfo;
-  value: Record<string, unknown> | undefined;
-  onChange: (v: Record<string, unknown>) => void;
-  unit: "mil" | "mm" | "in" | "um";
-}) {
-  const current = value ?? {};
-  return (
-    <div className="bg-navy-900/40 border border-navy-800 rounded p-2 space-y-2">
-      <div className="text-xs text-slate-400" title={field.description}>
-        {field.name}
-        {field.required && <span className="text-rose-400 ml-0.5">*</span>}
-      </div>
-      <div className="pl-2 space-y-2">
-        {field.nestedFields!.map((sub) => (
-          <FieldRow
-            key={sub.name}
-            field={sub}
-            value={String((current[sub.name] as string | number | undefined) ?? "")}
-            onChange={(v) => onChange({ ...current, [sub.name]: v })}
-            unit={unit}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
+type SectionId = "dielectric" | "dimensions" | "advanced";
 
-function BooleanRow({
-  field,
-  value,
-  onChange,
-}: {
-  field: FieldInfo;
-  value: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <label className="flex items-center justify-between gap-2 text-xs" title={field.description}>
-      <span className="text-slate-400">
-        {field.name}
-        {field.required && <span className="text-rose-400 ml-0.5">*</span>}
-      </span>
-      <input
-        type="checkbox"
-        checked={value}
-        onChange={(e) => onChange(e.target.checked)}
-        className="accent-emerald-500 w-4 h-4"
-      />
-    </label>
-  );
-}
-
-function FieldRow({
-  field,
-  value,
-  onChange,
-  unit,
-}: {
-  field: FieldInfo;
-  value: string;
-  onChange: (v: string) => void;
-  unit: "mil" | "mm" | "in" | "um";
-}) {
-  const [touched, setTouched] = useState(false);
-
-  const validation = useMemo(() => {
-    if (!field.required && value === "") return { ok: true };
-    if (field.required && value === "") {
-      return touched ? { ok: false, msg: "required" } : { ok: true };
-    }
-    if (field.isLength) {
-      const parsed = parseLengthStr(value);
-      if (!parsed) return { ok: false, msg: "invalid length" };
-      if (parsed.value <= 0) return { ok: false, msg: "must be > 0" };
-      return { ok: true };
-    }
-    // Generic float field (er, tan_delta, etc.)
-    if (Number.isNaN(Number(value))) return { ok: false, msg: "must be a number" };
-    return { ok: true };
-  }, [field, value, touched]);
-
-  const showError = touched && !validation.ok;
-  const placeholder = field.isLength ? `e.g. 6${unit}` : field.name === "er" ? "4.4" : "";
-
-  return (
-    <label className="block" title={field.description}>
-      <span className="flex items-center gap-1 text-xs text-slate-400 mb-1">
-        <span>
-          {field.name}
-          {field.required && <span className="text-rose-400 ml-0.5">*</span>}
-        </span>
-        {field.isLength && (
-          <span className="text-[10px] text-slate-500 ml-auto">[{unit}]</span>
-        )}
-      </span>
-      <input
-        type="text"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        onBlur={() => {
-          setTouched(true);
-          if (field.isLength && value && parseLengthStr(value)?.unit === null) {
-            onChange(ensureUnit(value, unit));
-          }
-        }}
-        placeholder={placeholder}
-        className={
-          "w-full bg-navy-900 border rounded px-2 py-1.5 text-slate-100 placeholder-slate-600 " +
-          (showError ? "border-rose-500" : "border-navy-700")
-        }
-      />
-      {showError && (
-        <span className="block text-[11px] text-rose-400 mt-0.5">⚠ {validation.msg}</span>
-      )}
-    </label>
-  );
+function sectionFor(f: FieldInfo): SectionId {
+  if (DIELECTRIC_FIELDS.has(f.name)) return "dielectric";
+  if (f.isLength) return "dimensions";
+  // Booleans, nested fields, anything non-required and non-dimensional.
+  return "advanced";
 }
 
 type Tab = "builtin" | "custom";
@@ -228,15 +107,15 @@ export function GeometryPanel() {
 
   const currentType = (geometry?.type as string | undefined) ?? "";
 
-  // Switch tab automatically if the current geometry came from elsewhere
-  // (chat agent, custom upload, etc.)
   useEffect(() => {
     if (geometry?.usermap_uri) setTab("custom");
     else if (geometry?.type) setTab("builtin");
   }, [geometry]);
 
   useEffect(() => {
-    listGeometries().then(setTypes).catch((e) => setErr(String(e)));
+    listGeometries()
+      .then(setTypes)
+      .catch((e) => setErr(String(e)));
   }, []);
 
   useEffect(() => {
@@ -258,6 +137,15 @@ export function GeometryPanel() {
   }, [currentType]);
 
   const fields = useMemo(() => (schema ? classifyFields(schema) : []), [schema]);
+  const buckets = useMemo(() => {
+    const b: Record<SectionId, FieldInfo[]> = {
+      dielectric: [],
+      dimensions: [],
+      advanced: [],
+    };
+    for (const f of fields) b[sectionFor(f)].push(f);
+    return b;
+  }, [fields]);
 
   function setField(field: string, value: string) {
     const current = (geometry ?? { type: currentType }) as Record<string, unknown>;
@@ -270,7 +158,6 @@ export function GeometryPanel() {
 
   async function runCalculate() {
     if (!geometry) return;
-    // Allow Calculate even when there's no `type` (e.g. usermap_uri-only path).
     setBusy(true);
     setIsSolving(true);
     setErr(null);
@@ -289,62 +176,89 @@ export function GeometryPanel() {
     }
   }
 
-  const showDiagram = tab === "builtin" && currentType !== "";
+  function renderField(f: FieldInfo) {
+    if (f.nestedFields) {
+      return (
+        <NestedFieldRow
+          key={f.name}
+          field={f}
+          value={geometry?.[f.name] as Record<string, unknown> | undefined}
+          onChange={(v) => {
+            const current = (geometry ?? { type: currentType }) as Record<string, unknown>;
+            setGeometry({ ...current, [f.name]: v });
+          }}
+          unit={unit}
+        />
+      );
+    }
+    if (f.isBoolean) {
+      return (
+        <BooleanRow
+          key={f.name}
+          field={f}
+          value={Boolean(geometry?.[f.name])}
+          onChange={(v) => {
+            const current = (geometry ?? { type: currentType }) as Record<string, unknown>;
+            setGeometry({ ...current, [f.name]: v });
+          }}
+        />
+      );
+    }
+    return (
+      <FieldRow
+        key={f.name}
+        field={f}
+        value={String((geometry?.[f.name] as string | number | undefined) ?? "")}
+        onChange={(v) => setField(f.name, v)}
+        unit={unit}
+      />
+    );
+  }
 
   return (
-    <div className="flex h-full flex-col bg-navy-950 border-r border-navy-800">
-      <div className="px-4 py-2 border-b border-navy-800 flex items-center justify-between">
-        <span className="text-xs uppercase tracking-wider text-slate-500">Geometry</span>
-        <div className="flex items-center gap-1 text-xs">
-          {(["builtin", "custom"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              onClick={() => setTab(t)}
-              className={
-                tab === t
-                  ? "px-2 py-0.5 rounded bg-navy-800 text-slate-100"
-                  : "px-2 py-0.5 rounded text-slate-500 hover:text-slate-300"
-              }
-            >
-              {t === "builtin" ? "Built-in" : "Custom BMP"}
-            </button>
-          ))}
+    <div className="flex h-full flex-col">
+      {/* ── header ─────────────────────────────────────────────────────── */}
+      <div className="px-3 py-2 border-b border-border-subtle flex items-center justify-between gap-2">
+        <span className="text-[11px] uppercase tracking-widest text-slate-400 font-display">
+          Geometry
+        </span>
+        <div
+          className="flex items-center gap-0.5 bg-surface-raised rounded-md p-0.5"
+          role="tablist"
+          aria-label="Geometry source"
+        >
+          {(["builtin", "custom"] as const).map((t) => {
+            const active = tab === t;
+            return (
+              <Button
+                key={t}
+                variant="ghost"
+                size="sm"
+                role="tab"
+                aria-selected={active}
+                onClick={() => setTab(t)}
+                className={
+                  active
+                    ? "bg-surface-overlay text-slate-100"
+                    : "text-slate-400 hover:text-slate-200"
+                }
+              >
+                {t === "builtin" ? "Built-in" : "Custom BMP"}
+              </Button>
+            );
+          })}
         </div>
       </div>
 
-      {/* Diagram preview (built-in only) */}
-      {showDiagram && (
-        <div className="border-b border-navy-800 p-3 bg-navy-900/40">
-          <GeometryDiagram />
-        </div>
-      )}
-
-      <div className="flex-1 overflow-y-auto p-3 space-y-3 text-sm">
+      {/* ── body ───────────────────────────────────────────────────────── */}
+      <div className="flex-1 overflow-y-auto p-3 space-y-4 text-sm">
         {tab === "builtin" ? (
           <>
-            <label className="block">
-              <span className="flex items-center gap-1 text-xs text-slate-400 mb-1">
-                <span>Frequency</span>
-                <span className="text-[10px] text-slate-500 ml-auto italic">
-                  optional — for loss / dispersion
-                </span>
-              </span>
-              <input
-                type="text"
-                value={frequency}
-                onChange={(e) => setFrequency(e.target.value)}
-                placeholder="e.g. 1GHz"
-                className="w-full bg-navy-900 border border-navy-700 rounded px-2 py-1.5 text-slate-100 placeholder-slate-600"
-              />
-            </label>
-
-            <label className="block">
-              <span className="block text-xs text-slate-400 mb-1">Type</span>
-              <select
+            <Section title="Topology">
+              <Select
+                label="Type"
                 value={currentType}
                 onChange={(e) => setType(e.target.value)}
-                className="w-full bg-navy-900 border border-navy-700 rounded px-2 py-1.5 text-slate-100"
               >
                 <option value="">(select type)</option>
                 {types.map((t) => (
@@ -352,109 +266,113 @@ export function GeometryPanel() {
                     {t.type}
                   </option>
                 ))}
-              </select>
-            </label>
+              </Select>
+              {currentType && (
+                <Card tone="raised" padded>
+                  <GeometryDiagram />
+                </Card>
+              )}
+            </Section>
+
+            <Section title="Frequency" subtitle="optional · for loss / dispersion">
+              <Input
+                label="Frequency"
+                suffix="Hz / MHz / GHz"
+                value={frequency}
+                onChange={(e) => setFrequency(e.target.value)}
+                placeholder="e.g. 1GHz"
+              />
+            </Section>
 
             {schema && fields.length === 0 && (
               <div className="text-slate-500 text-xs">No editable fields.</div>
             )}
 
-            {/* Material picker — appears when both er + tan_delta are
-                expected fields (i.e. for any insulator-using geometry). */}
-            {fields.some((f) => f.name === "er") && (
-              <MaterialPicker
-                onPick={(er, tanD, _name) => {
-                  const current = (geometry ?? { type: currentType }) as Record<string, unknown>;
-                  setGeometry({
-                    ...current,
-                    er,
-                    ...(fields.some((f) => f.name === "tan_delta") ? { tan_delta: tanD } : {}),
-                  });
-                }}
-                currentEr={typeof geometry?.er === "number" ? geometry.er : Number(geometry?.er)}
-                currentTanDelta={
-                  typeof geometry?.tan_delta === "number"
-                    ? geometry.tan_delta
-                    : Number(geometry?.tan_delta ?? 0)
-                }
-              />
+            {buckets.dielectric.length > 0 && (
+              <Section title="Dielectric">
+                {fields.some((f) => f.name === "er") && (
+                  <MaterialPicker
+                    onPick={(er, tanD, _name) => {
+                      const current = (geometry ?? { type: currentType }) as Record<
+                        string,
+                        unknown
+                      >;
+                      setGeometry({
+                        ...current,
+                        er,
+                        ...(fields.some((f) => f.name === "tan_delta")
+                          ? { tan_delta: tanD }
+                          : {}),
+                      });
+                    }}
+                    currentEr={
+                      typeof geometry?.er === "number" ? geometry.er : Number(geometry?.er)
+                    }
+                    currentTanDelta={
+                      typeof geometry?.tan_delta === "number"
+                        ? geometry.tan_delta
+                        : Number(geometry?.tan_delta ?? 0)
+                    }
+                  />
+                )}
+                {buckets.dielectric.map(renderField)}
+              </Section>
             )}
 
-            {/* Stackup editor — only meaningful on stripline_asymmetric */}
+            {buckets.dimensions.length > 0 && (
+              <Section title="Dimensions">
+                {buckets.dimensions.map(renderField)}
+              </Section>
+            )}
+
             {currentType === "stripline_asymmetric" && (
-              <button
-                type="button"
-                onClick={() => setStackupOpen(true)}
-                className="w-full text-xs bg-navy-800 hover:bg-slate-700 text-slate-200 py-1.5 rounded border border-navy-700"
-              >
-                ▤ Edit multi-layer stack…
-              </button>
+              <Section title="Stackup" collapsible defaultOpen={false}>
+                <Button
+                  variant="secondary"
+                  className="w-full"
+                  onClick={() => setStackupOpen(true)}
+                >
+                  ▤ Edit multi-layer stack…
+                </Button>
+              </Section>
             )}
 
-            {fields.map((f) => {
-              if (f.nestedFields) {
-                return (
-                  <NestedFieldRow
-                    key={f.name}
-                    field={f}
-                    value={geometry?.[f.name] as Record<string, unknown> | undefined}
-                    onChange={(v) => {
-                      const current = (geometry ?? { type: currentType }) as Record<
-                        string,
-                        unknown
-                      >;
-                      setGeometry({ ...current, [f.name]: v });
-                    }}
-                    unit={unit}
-                  />
-                );
-              }
-              if (f.isBoolean) {
-                return (
-                  <BooleanRow
-                    key={f.name}
-                    field={f}
-                    value={Boolean(geometry?.[f.name])}
-                    onChange={(v) => {
-                      const current = (geometry ?? { type: currentType }) as Record<
-                        string,
-                        unknown
-                      >;
-                      setGeometry({ ...current, [f.name]: v });
-                    }}
-                  />
-                );
-              }
-              return (
-                <FieldRow
-                  key={f.name}
-                  field={f}
-                  value={String((geometry?.[f.name] as string | number | undefined) ?? "")}
-                  onChange={(v) => setField(f.name, v)}
-                  unit={unit}
-                />
-              );
-            })}
+            {buckets.advanced.length > 0 && (
+              <Section title="Advanced" collapsible defaultOpen={false}>
+                {buckets.advanced.map(renderField)}
+              </Section>
+            )}
           </>
         ) : (
           <CustomUsermapPanel />
         )}
 
         {err && (
-          <div className="bg-rose-950/40 border border-rose-800 rounded p-2 text-xs text-rose-300">
-            <div className="font-semibold mb-1">Error</div>
-            <div className="break-words">{err}</div>
-          </div>
+          <Card
+            tone="raised"
+            role="alert"
+            className="border-danger/60 bg-danger/10 flex gap-2 items-start"
+          >
+            <XCircleIcon />
+            <div className="min-w-0">
+              <div className="text-xs font-semibold text-danger mb-0.5">Error</div>
+              <div className="text-xs text-slate-200 break-words">{err}</div>
+            </div>
+          </Card>
         )}
       </div>
-      <div className="p-3 border-t border-navy-800">
-        <button
-          onClick={runCalculate}
+
+      {/* ── primary CTA ────────────────────────────────────────────────── */}
+      <div className="p-3 border-t border-border-subtle bg-surface/40">
+        <Button
+          variant="primary"
+          className="w-full"
+          loading={busy}
           disabled={!geometry || busy}
-          className="w-full bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 disabled:text-slate-500 text-white text-sm py-2 rounded transition-colors"
+          onClick={runCalculate}
         >
-          {busy ? "Solving…" : "Calculate Z₀"}
-        </button>
+          {busy ? "Calculating…" : "Calculate Z₀"}
+        </Button>
       </div>
 
       <StackupEditor open={stackupOpen} onClose={() => setStackupOpen(false)} />
@@ -464,7 +382,6 @@ export function GeometryPanel() {
 
 function extractErrorMessage(e: unknown): string {
   if (e instanceof Error) {
-    // Backend errors come through fetch as "calculate: 400 <body>"
     const m = e.message.match(/^[a-zA-Z]+: \d+ (.+)$/);
     if (m) {
       try {
