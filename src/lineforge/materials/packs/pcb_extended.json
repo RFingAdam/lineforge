@@ -49,7 +49,7 @@
     },
     {
       "rgb": [180, 240, 200], "use": "insul",
-      "resistivity_ohm_cm": 1000000.0, "er": 3.0, "tan_delta": 0.001, "mu_r": 1.0,
+      "resistivity_ohm_cm": 1000000.0, "er": 3.71, "tan_delta": 0.002, "mu_r": 1.0,
       "name": "Megtron 6 (Panasonic R-5775)",
       "er_freq": {"1.0e9": 3.71, "5.0e9": 3.66, "1.0e10": 3.61, "2.5e10": 3.59},
       "tan_freq": {"1.0e9": 0.002, "5.0e9": 0.0024, "1.0e10": 0.0033, "2.5e10": 0.0048}
@@ -70,7 +70,7 @@
     },
     {
       "rgb": [240, 200, 180], "use": "insul",
-      "resistivity_ohm_cm": 1000000.0, "er": 3.4, "tan_delta": 0.005, "mu_r": 1.0,
+      "resistivity_ohm_cm": 1000000.0, "er": 4.04, "tan_delta": 0.021, "mu_r": 1.0,
       "name": "Isola 370HR",
       "er_freq": {"1.0e9": 4.04, "1.0e10": 3.92},
       "tan_freq": {"1.0e9": 0.021, "1.0e10": 0.025}
