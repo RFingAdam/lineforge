@@ -10,10 +10,11 @@ from __future__ import annotations
 from pathlib import Path
 from typing import Any
 
-import lineforge.materials as atlc3_materials
-from lineforge.materials.morecolors import load_json_pack
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel, ConfigDict
+
+import lineforge.materials as atlc3_materials
+from lineforge.materials.morecolors import load_json_pack
 
 router = APIRouter(prefix="/api/materials", tags=["materials"])
 

@@ -88,7 +88,7 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     W_relief = 500.0   # pad + 0.1 mm margin
     W_feed = 125.34    # 50 Ω microstrip over 2.73 mil prepreg, εr=3.7
     L_feed = 3000.0    # 3 mm feed line
-    L_trace = L_feed + W_pad / 2     # trace runs from port to pad far edge
+    L_feed + W_pad / 2     # trace runs from port to pad far edge
     side = 4000.0      # lateral margin
 
     f_min = 0.1e9
@@ -308,7 +308,7 @@ def summary_print(results: list[dict]) -> None:
 
     print()
     print("=" * 78)
-    print(f"PAD RELIEF EM VALIDATION — 0.4 mm RF pad, 50 Ω feed, all four ports")
+    print("PAD RELIEF EM VALIDATION — 0.4 mm RF pad, 50 Ω feed, all four ports")
     print("=" * 78)
     print()
     print(f"{'Option':<10} {'C_em (fF)':>10} {'C_cf (fF)':>10} {'Δ%':>7}")

@@ -17,15 +17,16 @@ DB1 hardening:
 
 from __future__ import annotations
 
+import contextlib
 from typing import Any
+
+from fastapi import APIRouter, HTTPException
+from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
 
 from lineforge.analytical import solve as analytical_solve
 from lineforge.geometry import GEOMETRY_TYPES, from_dict
 from lineforge.sweep import sweep as run_sweep
 from lineforge.units import parse_frequency, parse_length
-from fastapi import APIRouter, HTTPException
-from pydantic import BaseModel, ConfigDict, ValidationError, field_validator
-
 from lineforge.web.state import update_state
 
 router = APIRouter(prefix="/api/solve", tags=["solve"])
@@ -194,7 +195,6 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
     if req.usermap_uri is not None:
         # Bitmap solve path
         from lineforge.solvers.cgp import solve_cgp
-
         from lineforge.web.api_usermap import get_usermap_by_uri
 
         usermap = get_usermap_by_uri(req.usermap_uri)
@@ -294,10 +294,8 @@ async def sweep(req: SweepRequest) -> dict[str, Any]:
                 "line_length": req.line_length,
                 "content": content,
             }
-            try:
+            with contextlib.suppress(OSError):
                 out_path.unlink()
-            except OSError:
-                pass
         except (ValueError, OSError) as exc:
             response["touchstone_error"] = _sanitize_error(exc)
 

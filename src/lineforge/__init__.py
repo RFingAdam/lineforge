@@ -30,8 +30,21 @@ from __future__ import annotations
 from typing import Any
 
 from lineforge.analytical import solve as _analytical_solve
+from lineforge.analytical.pads import (
+    PadCapResult,
+    ReliefAdvice,
+    ReliefAdviceRow,
+    ReliefOption,
+    pad_capacitance,
+    pad_relief_advisor,
+)
 from lineforge.cache import cached, clear_cache
 from lineforge.cache import is_disabled as cache_disabled
+from lineforge.design_rules import (
+    PadCategory,
+    PadClassification,
+    classify_pad,
+)
 from lineforge.geometry import (
     CPWG,
     GEOMETRY_TYPES,
@@ -47,8 +60,14 @@ from lineforge.geometry import (
 )
 from lineforge.geometry.builders import rasterize
 from lineforge.geometry.usermap import Usermap
+from lineforge.materials.laminates import (
+    LaminateResult,
+    laminate_lookup,
+    list_laminates,
+)
 from lineforge.optimize import OptimizeResult
 from lineforge.optimize import optimize_for as _optimize_for
+from lineforge.path_budget import PathBudget, PathBudgetRow, TraceSpec, rf_path_budget
 from lineforge.results import DiffResult, SolverWarning, TLineResult
 from lineforge.solvers import (
     CGPResult,
@@ -392,28 +411,44 @@ __all__ = [
     "EdgeCoupledDiffStripline",
     "EmbeddedMicrostrip",
     "GeometryUnion",
+    "LaminateResult",
     "Microstrip",
     "OptimizeResult",
+    "PadCapResult",
+    "PadCategory",
+    "PadClassification",
+    "PathBudget",
+    "PathBudgetRow",
     "RLGCResult",
+    "ReliefAdvice",
+    "ReliefAdviceRow",
+    "ReliefOption",
     "SolverWarning",
     "StriplineAsymmetric",
     "StriplineSymmetric",
     "SweepPoint",
     "TLineResult",
+    "TraceSpec",
     "Usermap",
     "__version__",
     "cache_disabled",
     "cached",
+    "classify_pad",
     "clear_cache",
     "cpwg",
     "edge_coupled_diff",
     "from_bmp",
     "from_dict",
+    "laminate_lookup",
+    "list_laminates",
     "microstrip",
     "optimize_for",
+    "pad_capacitance",
+    "pad_relief_advisor",
     "parse_frequency",
     "parse_length",
     "rasterize",
+    "rf_path_budget",
     "solve",
     "solve_cgp",
     "solve_full",

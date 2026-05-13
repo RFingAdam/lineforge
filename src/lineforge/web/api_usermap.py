@@ -26,11 +26,12 @@ import uuid
 from typing import Any
 
 import numpy as np
-from lineforge.geometry.usermap import Usermap, UsermapMetadata
-from lineforge.units import parse_length
 from fastapi import APIRouter, HTTPException
 from PIL import Image
 from pydantic import BaseModel, ConfigDict
+
+from lineforge.geometry.usermap import Usermap, UsermapMetadata
+from lineforge.units import parse_length
 
 router = APIRouter(prefix="/api/usermap", tags=["usermap"])
 

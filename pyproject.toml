@@ -126,6 +126,7 @@ ignore = [
     "N803",   # argument name should be lowercase (we use W, H, T, S, etc., as physics dictates)
     "N806",   # variable name should be lowercase (same reason)
     "N802",   # function name should be lowercase (we use Z0, Zdiff, etc. for clarity)
+    "N815",   # mixedCase class attribute — same reason (s11_dB, rl_target_dB, C_F, etc.)
     "RUF001", # ambiguous unicode in identifier (we use Greek letters: δ, ε, μ, ω, etc.)
     "RUF002", # ambiguous unicode in docstring (×, ²,  etc., are domain-correct)
     "RUF003", # ambiguous unicode in comment (same)
@@ -139,6 +140,8 @@ ignore = [
 
 [tool.ruff.lint.per-file-ignores]
 "tests/**/*.py" = ["B011"]
+"src/lineforge/web/app.py" = ["E402"]  # imports after function definition by design (claude-cli check)
+"src/lineforge/web/api_field_plot.py" = ["RUF006"]  # fire-and-forget background task is intentional
 "examples/**/*.py" = [
     "F401",   # unused imports OK in examples
     "F403",   # star imports OK in examples
