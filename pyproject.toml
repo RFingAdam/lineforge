@@ -216,3 +216,6 @@ exclude_lines = [
     "@overload",
 ]
 show_missing = true
+# CLI commands and viewer are exercised in integration tests; this threshold
+# guards regression in the core solvers + API surfaces.
+fail_under = 75

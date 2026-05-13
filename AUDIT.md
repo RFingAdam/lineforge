@@ -16,7 +16,7 @@ would lock in atlc-parity claims).**
 | Install + native build | ✅ Linux/macOS/Windows × py3.11/3.12/3.13 wired (CI matrix) |
 | Phase 1 analytical solvers | ✅ all 8 geometries within their formula's accuracy ceiling |
 | Phase 2 bitmap C/Gp | ✅ **validated** vs analytical coax to ±10% (was previously 0% off — found and fixed a real `× pixel_width²` bug) |
-| Phase 3 Faraday L/Rs | ✅ **validated** vs analytical coax + wire-pair DC inductance to ±25% |
+| Phase 3 Faraday L/Rs | ✅ **validated** vs analytical coax + wire-pair DC inductance to ±25%; **AC Rs at 1 GHz validated** for coax and round-wire pair within ±10% on tighter grids (slow tier) and ±15-20% on coarser CI-friendly grids. Low-confidence warning fires when skin-depth resolution δ/pixel\_width < 30. See `tests/test_analytical/test_coax_ac_rs.py` and `tests/test_analytical/test_round_wire_ac_rs.py`. |
 | Phase 4 polish | ✅ optimizer + caching + viewer + docs all wired and tested |
 | Test coverage | ⚠️ ~60% (unchanged) — viz/viewer/diff_modes still 0% |
 | MCP server | ✅ 14 tools, async Tasks lifecycle tested end-to-end |

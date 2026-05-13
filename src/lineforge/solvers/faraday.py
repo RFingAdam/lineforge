@@ -219,30 +219,72 @@ def _solve_bicgstab_with_ilu(Z: np.ndarray, b: np.ndarray, tol: float = 1e-8) ->
     return x_arr
 
 
-def _check_rs_geometry(usermap: Usermap, ys: np.ndarray, xs: np.ndarray) -> tuple[bool, str | None]:
-    """Detect "conductors too close" per atlc2 §"Getting an accurate Rs".
+def _check_rs_geometry(
+    usermap: Usermap,
+    ys: np.ndarray,
+    xs: np.ndarray,
+    frequency_hz: float = 0.0,
+) -> tuple[bool, str | None]:
+    """Detect Rs-accuracy hazards.
 
-    Per atlc2: a corner pixel must be ≥ 16 pixels from another corner pixel of
-    different voltage, or ≥ 8 pixels from a flat or curved surface of different
-    voltage. If violated, Rs is reported as low-confidence (atlc2 prints in red).
+    Two independent triggers, either of which sets ``rs_low_confidence``:
+
+    1. **Conductor separation** — per atlc2 §"Getting an accurate Rs": a corner
+       pixel must be ≥ 16 pixels from another corner pixel of different voltage,
+       or ≥ 8 pixels from a flat or curved surface of different voltage. If
+       violated, Rs is flagged (atlc2 prints in red).
+    2. **Skin-depth resolution** — for the AC skin-effect formula
+       ``R_s = 1/(σ·δ·P)`` to be reproduced to ±1%, the grid must resolve δ
+       with at least ~30 pixels. When the smallest conductor material has
+       ``δ / pixel_width < 30`` the bitmap solver under-resolves the surface
+       current density and Rs accuracy degrades (≥10% error). Skipped at DC
+       (``frequency_hz <= 0``) where the formula isn't applicable.
     """
     plus = usermap.conductor_mask("+1")
     minus = usermap.conductor_mask("-1")
-    if not (plus.any() and minus.any()):
-        return False, None
 
-    from scipy.ndimage import distance_transform_edt
+    messages: list[str] = []
 
-    dist_to_minus = distance_transform_edt(~minus)
-    if isinstance(dist_to_minus, tuple):
-        dist_to_minus = dist_to_minus[0]
-    min_separation = float(np.min(dist_to_minus[plus]))
-    if min_separation < 8.0:
-        return True, (
-            f"+1 and -1 conductors are only {min_separation:.1f} pixels apart; "
-            "Rs accuracy may be > 5% (atlc2 §'Getting an accurate Rs'). "
-            "Consider a finer grid (smaller pixel_width)."
-        )
+    # ----- Conductor separation check -----
+    if plus.any() and minus.any():
+        from scipy.ndimage import distance_transform_edt
+
+        dist_to_minus = distance_transform_edt(~minus)
+        if isinstance(dist_to_minus, tuple):
+            dist_to_minus = dist_to_minus[0]
+        min_separation = float(np.min(dist_to_minus[plus]))
+        if min_separation < 8.0:
+            messages.append(
+                f"+1 and -1 conductors are only {min_separation:.1f} pixels apart; "
+                "Rs accuracy may be > 5% (atlc2 §'Getting an accurate Rs'). "
+                "Consider a finer grid (smaller pixel_width)."
+            )
+
+    # ----- Skin-depth resolution check -----
+    if frequency_hz > 0:
+        from lineforge.solvers.skin_depth import compute_delta
+
+        px = usermap.pixel_width_m
+        # Find the smallest δ across all conductor materials present in the map.
+        min_delta_px: float | None = None
+        for idx, mat in enumerate(usermap.materials):
+            if not mat.is_conductor:
+                continue
+            if not (usermap.codes == idx).any():
+                continue
+            d = compute_delta(mat, frequency_hz)
+            d_px = d / px
+            if min_delta_px is None or d_px < min_delta_px:
+                min_delta_px = d_px
+        if min_delta_px is not None and min_delta_px < 30.0:
+            messages.append(
+                f"skin depth δ resolved by only {min_delta_px:.1f} pixels (< 30); "
+                f"AC Rs accuracy may exceed ±10% (target ±1% requires δ ≥ 30·px). "
+                "Reduce pixel_width or lower the frequency."
+            )
+
+    if messages:
+        return True, " | ".join(messages)
     return False, None
 
 
@@ -331,7 +373,7 @@ def solve_lrs(
     R_per_m = float(np.real(delta_V))
     L_per_m = float(np.imag(delta_V) / omega)
 
-    rs_warn, rs_msg = _check_rs_geometry(usermap, ys, xs)
+    rs_warn, rs_msg = _check_rs_geometry(usermap, ys, xs, frequency_hz=frequency_hz)
 
     return FaradayResult(
         L_per_m=L_per_m,
