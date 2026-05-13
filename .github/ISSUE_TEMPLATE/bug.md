@@ -20,7 +20,7 @@ reference value you're comparing against. -->
 
 ## Environment
 
-- atlc3 version: <!-- output of `atlc3 --version` -->
+- lineforge version: <!-- output of `lineforge --version` -->
 - Python version:
 - Rust version (`rustc --version`):
 - OS / arch:
