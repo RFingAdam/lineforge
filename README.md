@@ -6,7 +6,7 @@
 
 [![CI](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml)
 [![Docs](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml)
-[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-1E40AF.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-1E40AF.svg)](LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB.svg)](https://www.python.org/downloads/)
 [![Rust](https://img.shields.io/badge/rust-stable-DEA584.svg)](https://www.rust-lang.org/)
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-00BCD4.svg)](https://mypy.readthedocs.io/)
@@ -472,7 +472,10 @@ shapes — just rename your `import atlc3` to `import lineforge`.
 
 ## License
 
-[GPLv3](LICENSE).
+[AGPLv3](LICENSE). Relicensed from GPLv3 in v2.2.0 to close the
+"wrap as a paid SaaS without contributing back" gap; the atlc / atlc2
+lineage is preserved and the GPL → AGPL move is explicitly permitted
+by GPL-3.0 section 13.
 
 ## Acknowledgments
 
