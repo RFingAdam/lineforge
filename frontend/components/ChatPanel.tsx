@@ -79,9 +79,18 @@ export function ChatPanel() {
     return () => client.close();
   }, []);
 
-  // Auto-scroll to bottom when the log grows.
+  // Auto-scroll to bottom when the log grows — but only if the user was
+  // already near the bottom. If they've scrolled up to read history, don't
+  // yank them back when a new message arrives.
   useEffect(() => {
-    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
+    const el = scrollRef.current;
+    if (!el) return;
+    const NEAR_BOTTOM_PX = 16;
+    const wasNearBottom =
+      el.scrollTop + el.clientHeight >= el.scrollHeight - NEAR_BOTTOM_PX;
+    if (wasNearBottom) {
+      el.scrollTo({ top: el.scrollHeight });
+    }
   }, [chatHistory.length]);
 
   // Auto-grow the textarea (capped at MAX_TEXTAREA_ROWS lines).

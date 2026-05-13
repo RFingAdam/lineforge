@@ -1,11 +1,13 @@
 //! V-cycle multigrid Laplace solver.
 //!
-//! Implementation lands in Phase 2 (issue 2.7). The kernel will provide a
-//! V-cycle multigrid for the Laplace operator with εr coefficients.
+//! Deferred to Phase 5 (issue #6). The production path is PyAMG (Python AMG)
+//! which already implements competitive V-cycle multigrid for the Laplace
+//! operator with εr coefficients. Rust implementation is optimization, not
+//! correctness gap.
 
 use pyo3::prelude::*;
 
 pub fn register(_m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Phase 0: no functions yet. Phase 2 adds laplace_multigrid().
+    // Phase 5 will add laplace_multigrid(). PyAMG is the production path.
     Ok(())
 }

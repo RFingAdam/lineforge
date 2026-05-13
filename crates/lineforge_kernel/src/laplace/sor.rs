@@ -1,6 +1,9 @@
 //! Successive over-relaxation Laplace solver.
 //!
-//! Implementation lands in Phase 2 (issue 2.6). The kernel will:
+//! Deferred to Phase 5 (issue #6). The production path is NumPy + PyAMG +
+//! scipy.sparse, which covers practical PCB cross-sections (a few thousand
+//! pixels) with adequate performance. Rust acceleration is an optimization,
+//! not a correctness gap. When implemented, the kernel will:
 //!   - 5-point FD with εr-weighted stencil
 //!   - Configurable ω (default 1.9)
 //!   - Parallel checkerboard update via `rayon`
@@ -9,6 +12,6 @@
 use pyo3::prelude::*;
 
 pub fn register(_m: &Bound<'_, PyModule>) -> PyResult<()> {
-    // Phase 0: no functions yet. Phase 2 adds laplace_sor().
+    // Phase 5 will add laplace_sor(). NumPy + PyAMG is the production path.
     Ok(())
 }
