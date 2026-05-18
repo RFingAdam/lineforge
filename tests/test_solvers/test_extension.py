@@ -61,11 +61,25 @@ class TestExtend:
         """The outer-pad branch brings the grid close to (but not necessarily
         exactly at) target_size due to integer division."""
         um = _tiny_usermap(h=11, w=11)
-        extended = extension.extend(um, target_size=200, inner_pad=10)
+        # Raise max_factor so the input-size cap doesn't kick in for this test.
+        extended = extension.extend(
+            um, target_size=200, inner_pad=10, max_factor=100
+        )
         eh, ew = extended.shape
         # 11 + 2*10 = 31; pad = (200-31)//2 = 84; final = 31 + 2*84 = 199 (off by 1)
         assert eh >= 199
         assert ew >= 199
+
+    def test_input_size_cap_prevents_3200_blowup(self) -> None:
+        """Regression for #32: a small synthetic usermap must not be padded to
+        the atlc2 3200 default, which would produce a ~10 M-pixel grid."""
+        um = _tiny_usermap(h=44, w=90)  # the microstrip OOM repro size
+        extended = extension.extend(um)  # default target_size=3200, max_factor=16
+        eh, ew = extended.shape
+        # Effective target = min(3200, 16 * max(44, 90)) = 16 * 90 = 1440
+        # so the final grid must be well under 3200×3200.
+        assert eh < 1700, f"height {eh} exceeded expected cap"
+        assert ew < 1700, f"width {ew} exceeded expected cap"
 
     def test_returns_usermap_instance(self) -> None:
         um = _tiny_usermap()

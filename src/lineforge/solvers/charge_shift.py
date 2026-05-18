@@ -121,23 +121,42 @@ def predict_v_field(
         # Diverged — return zeros and let relaxation do all the work
         return np.zeros((h, w), dtype=np.float64)
 
+    # Loop-invariant scaling factor — hoisted out of the refinement loop so
+    # we don't recompute (G @ G.T) on every iteration.
+    refine_denom = max(1.0, float(np.diag(G @ G.T).max()))
+
     # Apply ``iterations`` of damped refinement (capture the docstring contract)
     for _ in range(max(0, iterations - 1)):
         residual = target_v - G @ sigma
         if np.max(np.abs(residual)) < 1e-9:
             break
-        sigma = sigma + relaxation * residual / max(1.0, np.diag(G @ G.T).max())
+        sigma = sigma + relaxation * residual / refine_denom
 
-    # Now compute V at every grid pixel from this σ distribution
+    # Compute V at every grid pixel from the σ distribution. The naïve form is
+    # ``G_full = -0.5 * log(r2)`` with shape ``(h*w, n_surface)``, but that
+    # tries to allocate ~ 8 · h · w · n_surface bytes — 256+ GiB for extended-
+    # boundary grids (issue #32). Stream the same computation in pixel-chunks
+    # so the working-set stays bounded regardless of grid size.
     yy, xx = np.meshgrid(np.arange(h), np.arange(w), indexing="ij")
     yy_flat = yy.ravel()
     xx_flat = xx.ravel()
-    dy = yy_flat[:, None] - ys[None, :]
-    dx = xx_flat[:, None] - xs[None, :]
-    r2_full = dy * dy + dx * dx
-    r2_full = np.where(r2_full == 0, 0.25, r2_full)
-    G_full = -0.5 * np.log(r2_full)
-    v_flat = G_full @ sigma
+
+    v_flat = np.zeros(h * w, dtype=np.float64)
+    # Target ~64 MB temp working set per chunk.
+    max_block_bytes = 64 * 1024 * 1024
+    bytes_per_pixel = 8 * n
+    chunk_pixels = max(1024, max_block_bytes // bytes_per_pixel)
+
+    ys_row = ys[None, :]
+    xs_row = xs[None, :]
+    for start in range(0, h * w, chunk_pixels):
+        end = min(start + chunk_pixels, h * w)
+        dy_blk = yy_flat[start:end, None] - ys_row
+        dx_blk = xx_flat[start:end, None] - xs_row
+        r2_blk = dy_blk * dy_blk + dx_blk * dx_blk
+        r2_blk = np.where(r2_blk == 0, 0.25, r2_blk)
+        v_flat[start:end] = (-0.5 * np.log(r2_blk)) @ sigma
+
     v_field = v_flat.reshape(h, w)
 
     # Clamp to BC-respecting bounds (numerical safety)

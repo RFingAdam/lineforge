@@ -295,16 +295,23 @@ def _apply_dirichlet(
     set their diagonal to 1, and put ``v_value`` in ``b``. Move ``A[free, masked]
     @ val_flat[masked]`` to the RHS for free rows so the solve doesn't have to
     iterate against fixed values.
+
+    The earlier implementation slammed into a scipy quirk: ``A[:, masked]`` for
+    a CSR matrix builds a dense ``(n, len(masked))`` int64 indexing
+    intermediate, which OOMs on extended-boundary grids (issue #32). We now
+    project via a sparse boundary vector instead — O(nnz(A)) regardless of
+    mask size.
     """
-    A = A.tolil()
+    n = A.shape[0]
     masked = np.where(mask_flat)[0]
 
-    # Move masked-column contributions to RHS for free rows
-    A_csr_view = A.tocsr()
-    contrib = A_csr_view[:, masked] @ val_flat[masked]
+    # Move masked-column contributions to RHS via a one-shot sparse mat-vec.
+    boundary = np.zeros(n, dtype=np.float64)
+    boundary[masked] = val_flat[masked]
+    contrib = A @ boundary
     b = b - contrib
 
-    # Now zero masked rows + columns and set the diagonal to 1
+    # Zero masked rows + masked columns of A.
     A_csc = A.tocsc()
     for ri in masked:
         ptr = slice(A_csc.indptr[ri], A_csc.indptr[ri + 1])
@@ -314,13 +321,17 @@ def _apply_dirichlet(
         ptr = slice(A_csr.indptr[ri], A_csr.indptr[ri + 1])
         A_csr.data[ptr] = 0.0
 
-    # Set diagonal = 1 and RHS = val for masked rows
-    A_lil = A_csr.tolil()
-    for ri in masked:
-        A_lil[ri, ri] = 1.0
+    # Set diagonal = 1 for masked rows and RHS = val. Build a tiny diagonal
+    # patch matrix instead of round-tripping through LIL so we never allocate
+    # a (n,)-sized object array for large grids.
+    diag_patch = sp.coo_matrix(
+        (np.ones(len(masked), dtype=np.float64), (masked, masked)),
+        shape=(n, n),
+    ).tocsr()
+    A_csr = A_csr + diag_patch
     b[masked] = val_flat[masked]
 
-    return A_lil.tocsr(), b
+    return A_csr, b
 
 
 def solve_amg(

@@ -25,6 +25,7 @@ def extend(
     *,
     target_size: int = 3200,
     inner_pad: int = 100,
+    max_factor: int = 16,
 ) -> Usermap:
     """Extend a usermap to approximate an open boundary.
 
@@ -34,9 +35,17 @@ def extend(
         Source usermap.
     target_size
         Target side length in *original* pixel units. Default 3200 matches
-        atlc2's hard-coded simulation extent.
+        atlc2's hard-coded simulation extent. The *effective* target is
+        ``min(target_size, max_factor * max(h, w))`` so a tiny synthetic
+        rasterization (e.g. 44×90 px) doesn't get padded to 3200×3200 (10 M
+        pixels) — boundary effects of an open Dirichlet box fall off as
+        1/r², so ~16× the input characteristic length is plenty.
     inner_pad
         Number of edge-replicated pixels to insert before further padding.
+    max_factor
+        Upper bound on the extension factor relative to the input size.
+        Default 16 — enough open-boundary margin for typical PCB cross-
+        sections without producing multi-million-pixel grids for small inputs.
 
     Returns
     -------
@@ -46,16 +55,23 @@ def extend(
         Dirichlet V=0 (or whatever the corner pixel's BC is) boundary.
     """
     h, w = usermap.shape
-    if h >= target_size and w >= target_size:
+
+    # Cap target to a reasonable multiple of the input dimensions. atlc2's
+    # 3200 absolute target was tuned for usermaps where conductor features
+    # are already ~100s of pixels wide; our synthetic rasterizations are
+    # often 50–200 px total, where 3200 is 30× overkill.
+    effective_target = min(target_size, max_factor * max(h, w))
+
+    if h >= effective_target and w >= effective_target:
         return usermap
 
     # First pad with the requested number of normal pixels by edge replication
     extended = usermap.replicate_edges(inner_pad)
 
-    # Then pad outward to ``target_size`` if still smaller
+    # Then pad outward to ``effective_target`` if still smaller
     eh, ew = extended.shape
-    pad_h = max(0, (target_size - eh) // 2)
-    pad_w = max(0, (target_size - ew) // 2)
+    pad_h = max(0, (effective_target - eh) // 2)
+    pad_w = max(0, (effective_target - ew) // 2)
     if pad_h == 0 and pad_w == 0:
         return extended
 
