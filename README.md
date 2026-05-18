@@ -171,6 +171,10 @@ A chat-driven design studio that wraps the same library. FastAPI + Next.js
 backed by `claude-agent-sdk` — the agent fills in your geometry form, runs
 the solver, and renders V/E/D/T field plots live as you converse with it.
 
+<p align="center">
+  <img src="assets/screenshots/gui-desktop-microstrip-result.png" alt="lineforge GUI showing a microstrip Calculate Z₀ result with hero impedance card, grouped distributed-parameter sections, and an E-field plot" width="100%"/>
+</p>
+
 ```bash
 pip install 'lineforge[gui]'   # one-time install — fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
 lineforge gui                  # launch the local web GUI (dev mode, hot reload)
