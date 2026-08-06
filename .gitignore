@@ -72,3 +72,13 @@ src/atlc3/_kernel.pyi.bak
 
 # Claude Code session artifacts
 .claude/
+.mcp.json
+.playwright-mcp/
+.assistant_extract.txt
+.user_msgs_extract.txt
+.obsidian-session-extract-*.md
+
+# JS frontend build/deps (not this repo's Rust/Python build system)
+frontend/node_modules/
+frontend/.next/
+frontend/tsconfig.tsbuildinfo
