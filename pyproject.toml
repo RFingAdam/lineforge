@@ -63,7 +63,7 @@ dev = [
     "hypothesis>=6.100",
     "ruff>=0.5",
     "black>=24.4",
-    "mypy>=1.10",
+    "mypy>=1.13",
     "types-pillow",
     "scikit-rf>=1.1",
     "maturin>=1.7",
@@ -156,7 +156,7 @@ line-length = 100
 target-version = ["py311", "py312", "py313"]
 
 [tool.mypy]
-python_version = "3.11"
+python_version = "3.13"
 strict = true
 warn_redundant_casts = true
 warn_unused_ignores = true

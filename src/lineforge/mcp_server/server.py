@@ -34,7 +34,7 @@ import base64
 import json
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from lineforge.analytical import solve as analytical_solve
 from lineforge.geometry import GEOMETRY_TYPES, export_jsonschema, from_dict
@@ -74,9 +74,9 @@ class _UsermapStore:
 # ---------------------------------------------------------------------------
 
 
-def build_server() -> FastMCP:
-    """Construct the FastMCP server with all currently-implemented tools/resources."""
-    server = FastMCP(
+def build_server() -> MCPServer:
+    """Construct the MCPServer with all currently-implemented tools/resources."""
+    server = MCPServer(
         name="lineforge",
         instructions=(
             "lineforge — open-source transmission line calculator. "
