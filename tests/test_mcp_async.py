@@ -15,11 +15,11 @@ import pytest
 from lineforge.mcp_server.server import build_server
 
 
-def _structured(call_result: tuple[Any, Any]) -> dict[str, Any]:
-    content, structured = call_result
+def _structured(call_result: Any) -> dict[str, Any]:
+    structured = call_result.structured_content
     if structured:
         return structured  # type: ignore[no-any-return]
-    return json.loads(content[0].text)  # type: ignore[no-any-return]
+    return json.loads(call_result.content[0].text)  # type: ignore[no-any-return]
 
 
 @pytest.mark.asyncio

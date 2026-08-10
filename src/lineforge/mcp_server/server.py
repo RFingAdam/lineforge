@@ -235,7 +235,7 @@ def build_server() -> MCPServer:
         }
 
     @server.tool()
-    def solve_cgp(
+    async def solve_cgp(
         geometry: dict[str, Any] | None = None,
         usermap_uri: str | None = None,
         frequency: float | str | None = None,
@@ -340,7 +340,7 @@ def build_server() -> MCPServer:
         return {"cancelled": ok}
 
     @server.tool()
-    def solve_lrs(
+    async def solve_lrs(
         geometry: dict[str, Any] | None = None,
         usermap_uri: str | None = None,
         frequency: float | str = 1e9,
@@ -392,7 +392,7 @@ def build_server() -> MCPServer:
         return {"taskId": task.id, "status": task.status}
 
     @server.tool()
-    def solve_full(
+    async def solve_full(
         geometry: dict[str, Any] | None = None,
         usermap_uri: str | None = None,
         frequency: float | str = 1e9,
@@ -433,7 +433,7 @@ def build_server() -> MCPServer:
         return {"taskId": task.id, "status": task.status}
 
     @server.tool()
-    def sweep(
+    async def sweep(
         geometry: dict[str, Any],
         parameter: str,
         values: list[float],

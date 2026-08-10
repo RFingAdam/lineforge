@@ -1,8 +1,8 @@
 """MCP server tests covering Phase 0 (ping) and Phase 1 (analytical tools, material resource).
 
-FastMCP 1.27's ``call_tool`` returns a 2-tuple of (content_list,
-structured_content). Tests below use the structured-content path which is
-already a parsed dict — no JSON re-parsing needed.
+MCP 2.0's ``call_tool`` returns a ``CallToolResult`` with ``.content`` and
+``.structured_content`` fields. Tests below use the structured-content path
+which is already a parsed dict — no JSON re-parsing needed.
 """
 
 from __future__ import annotations
@@ -33,15 +33,15 @@ async def test_phase1_tools_registered() -> None:
     } <= names
 
 
-def _structured(call_result: tuple[Any, Any]) -> dict[str, Any]:
-    """Extract the structured-content dict from FastMCP's call_tool result."""
-    content, structured = call_result
+def _structured(call_result: Any) -> dict[str, Any]:
+    """Extract the structured-content dict from MCP 2.0's CallToolResult."""
+    structured = call_result.structured_content
     if structured:
         return structured  # type: ignore[no-any-return]
     # Fallback: parse the JSON text from the first content block
     import json
 
-    return json.loads(content[0].text)  # type: ignore[no-any-return]
+    return json.loads(call_result.content[0].text)  # type: ignore[no-any-return]
 
 
 @pytest.mark.asyncio
