@@ -160,7 +160,11 @@ def pad_capacitance(
         Capacitance + diagnostics. See :class:`PadCapResult`.
     """
     W_m = parse_length(W) if isinstance(W, str) else float(cast(float | int, W))
-    L_m = W_m if L is None else (parse_length(L) if isinstance(L, str) else float(cast(float | int, L)))
+    L_m = (
+        W_m
+        if L is None
+        else (parse_length(L) if isinstance(L, str) else float(cast(float | int, L)))
+    )
     if W_m <= 0 or L_m <= 0:
         raise ValueError("W and L must be positive")
 
@@ -202,7 +206,9 @@ def pad_capacitance(
     # method == "hj": treat the pad as a microstrip line of length L_m, with
     # trace width = W_m. Compute C-per-length via HJ, then C_total = C/m · L.
     T_m: float
-    T_m = 0.0 if T is None else parse_length(T) if isinstance(T, str) else float(cast(float | int, T))
+    T_m = (
+        0.0 if T is None else parse_length(T) if isinstance(T, str) else float(cast(float | int, T))
+    )
     # HJ requires T > 0; use a very thin value if not specified.
     if T_m <= 0:
         T_m = 1e-9
