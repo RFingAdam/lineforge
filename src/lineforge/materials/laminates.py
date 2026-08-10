@@ -32,6 +32,7 @@ import json
 import re
 from dataclasses import dataclass
 from importlib import resources
+from typing import Any, cast
 
 from lineforge.materials.dispersion import material_at_frequency
 
@@ -104,12 +105,12 @@ _ALIASES: dict[str, str] = {
 }
 
 
-def _load_pack() -> list[dict]:
+def _load_pack() -> list[dict[str, Any]]:
     """Load the pcb_extended.json pack as a list of material dicts."""
     pack_path = resources.files("lineforge.materials.packs").joinpath("pcb_extended.json")
     with pack_path.open("r") as f:
-        data = json.load(f)
-    return data.get("materials", [])
+        data = cast(dict[str, Any], json.load(f))
+    return cast(list[dict[str, Any]], data.get("materials", []))
 
 
 def _normalize(name: str) -> str:
@@ -191,7 +192,7 @@ def laminate_lookup(
     er_freq_raw = record.get("er_freq")
     tan_freq_raw = record.get("tan_freq")
 
-    def _parse_freq_table(raw: dict | None) -> dict[float, float] | None:
+    def _parse_freq_table(raw: dict[str, Any] | None) -> dict[float, float] | None:
         if not raw:
             return None
         return {float(k): float(v) for k, v in raw.items()}

@@ -836,10 +836,11 @@ def _stream_with_color(proc: object, prefix: str, color: str) -> None:
     streamer threads can't interleave half-lines.
     """
     import subprocess as _sub
+    from typing import cast
 
     from rich.text import Text
 
-    popen = proc  # type: _sub.Popen[str]  # narrow only for type checkers
+    popen = cast(_sub.Popen[str], proc)
     assert isinstance(popen, _sub.Popen)
     if popen.stdout is None:
         return

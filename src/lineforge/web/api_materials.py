@@ -61,7 +61,7 @@ def list_laminates() -> dict[str, Any]:
         for rec in records
         if rec.use == "insul" and rec.er > 1.0
     ]
-    laminates.sort(key=lambda r: r["name"])
+    laminates.sort(key=lambda r: str(r.get("name", "")))
     return {"laminates": laminates}
 
 
@@ -86,8 +86,9 @@ def series_reduce(req: SeriesReduceRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="layers must not be empty")
 
     try:
+        from lineforge.units import parse_length
         dl = [
-            DielectricLayer(h=layer.h, er=layer.er, tan_delta=layer.tan_delta, name=layer.name)
+            DielectricLayer(h=parse_length(layer.h) if isinstance(layer.h, str) else layer.h, er=layer.er, tan_delta=layer.tan_delta, name=layer.name)
             for layer in req.layers
         ]
         h_total, er_eq, tan_eq = run_reduce(dl)

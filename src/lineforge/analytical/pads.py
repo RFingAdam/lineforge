@@ -28,7 +28,7 @@ from __future__ import annotations
 
 import math
 from dataclasses import dataclass
-from typing import Literal
+from typing import Literal, cast
 
 from lineforge.analytical.hammerstad import microstrip
 from lineforge.geometry.dielectric import DielectricLayer, series_reduce
@@ -116,7 +116,7 @@ def _resolve_stack(
         return h_total, eps_eff
     if h is None or er is None:
         raise ValueError("Provide (h, er) when stack is not given")
-    h_m = parse_length(h) if isinstance(h, str) else float(h)
+    h_m = parse_length(h) if isinstance(h, str) else float(cast(float | int, h))
     if h_m <= 0:
         raise ValueError("h must be positive")
     return h_m, float(er)
@@ -159,8 +159,8 @@ def pad_capacitance(
     PadCapResult
         Capacitance + diagnostics. See :class:`PadCapResult`.
     """
-    W_m = parse_length(W) if isinstance(W, str) else float(W)
-    L_m = W_m if L is None else (parse_length(L) if isinstance(L, str) else float(L))
+    W_m = parse_length(W) if isinstance(W, str) else float(cast(float | int, W))
+    L_m = W_m if L is None else (parse_length(L) if isinstance(L, str) else float(cast(float | int, L)))
     if W_m <= 0 or L_m <= 0:
         raise ValueError("W and L must be positive")
 
@@ -202,15 +202,14 @@ def pad_capacitance(
     # method == "hj": treat the pad as a microstrip line of length L_m, with
     # trace width = W_m. Compute C-per-length via HJ, then C_total = C/m · L.
     T_m: float
-    T_m = 0.0 if T is None else parse_length(T) if isinstance(T, str) else float(T)
+    T_m = 0.0 if T is None else parse_length(T) if isinstance(T, str) else float(cast(float | int, T))
     # HJ requires T > 0; use a very thin value if not specified.
     if T_m <= 0:
         T_m = 1e-9
-    h_unit = "m"
     g = Microstrip(
-        W=f"{W_m}{h_unit}",
-        T=f"{T_m}{h_unit}",
-        H=f"{h_m}{h_unit}",
+        W=W_m,
+        T=T_m,
+        H=h_m,
         er=eps_eff,
     )
     r = microstrip(g)

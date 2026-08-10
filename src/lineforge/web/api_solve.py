@@ -226,12 +226,12 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=_sanitize_error(exc)) from exc
 
     try:
-        result = analytical_solve(geom, frequency_hz=freq_hz)
+        analytical_result = analytical_solve(geom, frequency_hz=freq_hz)
     except (NotImplementedError, ValueError, ValidationError) as exc:
         raise HTTPException(status_code=400, detail=_sanitize_error(exc)) from exc
 
-    out = result.model_dump()
-    out["_kind"] = type(result).__name__
+    out = analytical_result.model_dump()
+    out["_kind"] = type(analytical_result).__name__
     await update_state(geometry=cleaned, last_result=out)
     return out
 

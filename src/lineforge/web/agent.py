@@ -340,9 +340,11 @@ async def _translate_message(msg: Any) -> AsyncIterator[dict[str, Any]]:
 
     if isinstance(msg, UserMessage):
         # Tool results show up as UserMessage(content=[ToolResultBlock(...)]).
-        for block in msg.content:
-            if isinstance(block, ToolResultBlock):
-                output: Any = block.content
+        for content_item in msg.content:
+            if isinstance(content_item, str):
+                continue
+            if isinstance(content_item, ToolResultBlock):
+                output: Any = content_item.content
                 if isinstance(output, list) and output and isinstance(output[0], dict):
                     text = output[0].get("text", "")
                     try:
@@ -354,7 +356,6 @@ async def _translate_message(msg: Any) -> AsyncIterator[dict[str, Any]]:
                     "name": "(tool)",
                     "output": output,
                 }
-        return
 
     if isinstance(msg, ResultMessage):
         yield {
