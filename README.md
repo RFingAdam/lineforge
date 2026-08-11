@@ -488,6 +488,15 @@ shapes — just rename your `import atlc3` to `import lineforge`.
 lineage is preserved and the GPL → AGPL move is explicitly permitted
 by GPL-3.0 section 13.
 
+## Commercial licensing
+
+This project is licensed under AGPL-3.0-or-later. A commercial license —
+for embedding in a closed-source product, hosting as a paid service
+without AGPL's share-back obligations, or proprietary redistribution —
+is available on a case-by-case basis. See [eng-mcp-suite's licensing
+policy](https://github.com/RFingAdam/eng-mcp-suite/blob/main/LICENSE_SUMMARY.md#commercial-licensing)
+or open an issue and tag `@RFingAdam`.
+
 ## Acknowledgments
 
 - **Dr. David Kirkby (G8WRB)** — original [atlc](http://atlc.sourceforge.net/) (2002, GPL).
