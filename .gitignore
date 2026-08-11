@@ -72,3 +72,13 @@ src/atlc3/_kernel.pyi.bak
 
 # Claude Code session artifacts
 .claude/
+
+# CAD / design files
+*.kicad_pcb
+*.brd
+*.step
+*.stp
+*.zip
+
+# security
+.ip-denylist
