@@ -158,7 +158,7 @@ def cf_z0(W_mil):
 
 
 print("=" * 88)
-print("L3 SIG1 ETCH TOLERANCE SWEEP — W = 2.92 ± 0.5 mil with realistic losses")
+print("L3 SIG1 ETCH TOLERANCE SWEEP: W = 2.92 ± 0.5 mil with realistic losses")
 print("=" * 88)
 print(f"{'Case':>20} {'W (mil)':>9} {'EM Z₀':>9} {'Wadell Z₀':>11} {'Δ %':>7}")
 print("-" * 60)
@@ -180,7 +180,7 @@ for label_text, W_mil in cases:
 
 print()
 print("=" * 88)
-print("SUMMARY — what fab will actually deliver across ±0.5 mil etch")
+print("SUMMARY: what fab will actually deliver across ±0.5 mil etch")
 print("=" * 88)
 em_min = min(r[2] for r in results)
 em_max = max(r[2] for r in results)

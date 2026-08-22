@@ -139,7 +139,7 @@ if __name__ == "__main__":
 
     widths_um = [80.0, 100.0, 125.34, 150.0, 175.0, 200.0]  # 3.15 to 7.87 mil
     print("=" * 88)
-    print("MICROSTRIP Z₀ SWEEP — openEMS MSLPort vs Wadell closed-form (T → 0)")
+    print("MICROSTRIP Z₀ SWEEP: openEMS MSLPort vs Wadell closed-form (T → 0)")
     print(f"  H = {sub_h_um:.2f} μm ({H_mil:.3f} mil), εr = {sub_er}")
     print("=" * 88)
     print(

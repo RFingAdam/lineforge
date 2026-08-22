@@ -316,7 +316,7 @@ def summary_print(results: list[dict]) -> None:
 
     print()
     print("=" * 78)
-    print("PAD RELIEF EM VALIDATION — 0.4 mm RF pad, 50 Ω feed, all four ports")
+    print("PAD RELIEF EM VALIDATION: 0.4 mm RF pad, 50 Ω feed, all four ports")
     print("=" * 78)
     print()
     print(f"{'Option':<10} {'C_em (fF)':>10} {'C_cf (fF)':>10} {'Δ%':>7}")

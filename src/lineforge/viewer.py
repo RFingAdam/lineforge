@@ -87,7 +87,7 @@ def run_viewer(bmp_path: Path, *, pixel_width: str) -> None:
             if last_image_path:
                 console.print(f"  last saved at {last_image_path}")
             else:
-                console.print("  (nothing rendered yet — press V/E/D/T first)")
+                console.print("  (nothing rendered yet; press V/E/D/T first)")
 
         else:
             console.print(f"  unknown command {cmd!r}")

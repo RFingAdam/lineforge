@@ -992,7 +992,7 @@ def gui(
     if prod:
         next_dir = frontend_dir / ".next"
         if not next_dir.exists():
-            console.print(f"[dim]no prebuilt {next_dir} — running {pkg_mgr} build…[/dim]")
+            console.print(f"[dim]no prebuilt {next_dir}; running {pkg_mgr} build...[/dim]")
             subprocess.run([pkg_mgr, "build"], cwd=frontend_dir, env=env, check=True)
         frontend_cmd = [pkg_mgr, "start"]
     else:

@@ -186,10 +186,10 @@ g_T = StriplineAsymmetric(
 r_T = stripline_asymmetric(g_T)
 
 print("=" * 88)
-print("L3 SIG1 ASYMMETRIC STRIPLINE — DEFINITIVE VALIDATION")
+print("L3 SIG1 ASYMMETRIC STRIPLINE: DEFINITIVE VALIDATION")
 print("=" * 88)
 print("  W = 2.92 mil (74.2 μm)")
-print("  T = 0.689 mil (17.5 μm) — ½ oz Cu")
+print("  T = 0.689 mil (17.5 μm), ½ oz Cu")
 print("  H1 = 3.5 mil core (εr=4.2, above to L2 GND)")
 print("  H2 = 5.3 mil prepreg (εr=3.7, below to L4 PWR1)")
 print()

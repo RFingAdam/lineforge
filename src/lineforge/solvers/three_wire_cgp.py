@@ -85,7 +85,7 @@ def _solve_pair_z0_and_charges(
     c_vacuum = EPS0 / (v_drive * v_drive) * integral_vac
 
     if c_vacuum <= 0 or c_filled <= 0:
-        raise RuntimeError("3-wire pair solve: non-positive capacitance — bitmap is degenerate")
+        raise RuntimeError("3-wire pair solve: non-positive capacitance; bitmap is degenerate")
 
     l_per_m = MU0 * EPS0 / c_vacuum
     z0 = float(np.sqrt(l_per_m / c_filled))
