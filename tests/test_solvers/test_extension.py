@@ -62,9 +62,7 @@ class TestExtend:
         exactly at) target_size due to integer division."""
         um = _tiny_usermap(h=11, w=11)
         # Raise max_factor so the input-size cap doesn't kick in for this test.
-        extended = extension.extend(
-            um, target_size=200, inner_pad=10, max_factor=100
-        )
+        extended = extension.extend(um, target_size=200, inner_pad=10, max_factor=100)
         eh, ew = extended.shape
         # 11 + 2*10 = 31; pad = (200-31)//2 = 84; final = 31 + 2*84 = 199 (off by 1)
         assert eh >= 199
