@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * ChatPanel — the agent console.
+ * ChatPanel. The agent console.
  *
  * Talks to the backend over /ws/chat via {@link ChatClient}, mirrors every
  * message into the Zustand store, and renders the chat log + composer.
@@ -79,7 +79,7 @@ export function ChatPanel() {
     return () => client.close();
   }, []);
 
-  // Auto-scroll to bottom when the log grows — but only if the user was
+  // Auto-scroll to bottom when the log grows, but only if the user was
   // already near the bottom. If they've scrolled up to read history, don't
   // yank them back when a new message arrives.
   useEffect(() => {
@@ -131,7 +131,7 @@ export function ChatPanel() {
 
   return (
     <div className="flex h-full flex-col">
-      {/* Panel header — kept slim to match the rest of the layout. */}
+      {/* Panel header: kept slim to match the rest of the layout. */}
       <div className="px-4 py-2 border-b border-border-subtle flex items-center justify-between bg-surface/60">
         <span className="text-xs uppercase tracking-wider text-slate-500">Chat</span>
         {chatAvailable === false && (
@@ -139,7 +139,7 @@ export function ChatPanel() {
             className="text-[10px] text-warn bg-warn/10 border border-warn/40 rounded-xs px-1.5 py-0.5"
             title="Set ANTHROPIC_API_KEY in atlc3-gui/backend/.env, or run `claude /login` once."
           >
-            agent disabled — see setup
+            agent disabled. See setup
           </span>
         )}
       </div>

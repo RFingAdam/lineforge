@@ -86,7 +86,7 @@ def _thickness_correction_w(W: float, T: float, H: float, er: float) -> float:
 def _conductor_loss_db_per_in(z0: float, W_eff: float, T: float, rho: float) -> float:
     """Approximate conductor loss using surface-resistance Wheeler model.
 
-    Phase 1 estimate only — Phase 3 will replace with the full Faraday-based Rs.
+    Phase 1 estimate only: Phase 3 will replace with the full Faraday-based Rs.
     """
     if T <= 0 or W_eff <= 0:
         return 0.0

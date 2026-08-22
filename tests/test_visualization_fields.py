@@ -1,4 +1,4 @@
-"""Tests for lineforge.visualization.fields — covers every FieldKind + edge cases."""
+"""Tests for lineforge.visualization.fields: covers every FieldKind + edge cases."""
 
 from __future__ import annotations
 

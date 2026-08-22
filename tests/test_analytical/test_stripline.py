@@ -44,7 +44,7 @@ class TestStriplineSymmetric:
         )
 
     def test_eps_eff_equals_er(self) -> None:
-        """Stripline is fully embedded — εeff should equal εr exactly."""
+        """Stripline is fully embedded: εeff should equal εr exactly."""
         geom = StriplineSymmetric(W="5mil", T="1.4mil", B="14mil", er=4.4)
         result = stripline_symmetric(geom)
         assert result.eps_eff == pytest.approx(4.4, rel=1e-9)
@@ -89,7 +89,7 @@ class TestStriplineAsymmetric:
 
 
 class TestStriplineAsymmetricSplitEr:
-    """Split-εr (Core above ≠ Prepreg below) — capacitance-weighted εr_eff."""
+    """Split-εr (Core above ≠ Prepreg below): capacitance-weighted εr_eff."""
 
     def test_split_er_collapses_to_bulk_when_equal(self) -> None:
         """er_above == er_below == er must reproduce the bulk-only result exactly."""
@@ -154,7 +154,7 @@ class TestStriplineAsymmetricSplitEr:
         Same 50Ω inner-layer Core/Prepreg geometry as the previous test;
         Core is the lossy side (td=0.020), Prepreg is low-loss (td=0.005).
         Because Core is farther from the strip (H1>H2), its loss contribution
-        gets weighted DOWN — total dielectric loss is below the unweighted average.
+        gets weighted DOWN: total dielectric loss is below the unweighted average.
         """
         H1_mil, H2_mil = 8.0, 4.0
         er_above, er_below = 4.2, 3.7

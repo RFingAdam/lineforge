@@ -16,12 +16,12 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://github.com/RFingAdam/lineforge"),
-  title: "lineforge — Transmission Line Calculator",
+  title: "lineforge: Transmission Line Calculator",
   description:
     "Open-source MCP-enabled transmission-line calculator with closed-form, bitmap, and Faraday solvers.",
   openGraph: {
     siteName: "lineforge",
-    title: "lineforge — Transmission Line Calculator",
+    title: "lineforge: Transmission Line Calculator",
     description:
       "Open-source MCP-enabled transmission-line calculator with closed-form, bitmap, and Faraday solvers.",
     type: "website",

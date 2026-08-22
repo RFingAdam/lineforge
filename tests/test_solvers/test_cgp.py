@@ -1,6 +1,6 @@
 """Phase 2.10 AC: C/Gp orchestrator reproduces analytical microstrip Z0 within ~5%.
 
-This is a coarse test — single-grid Laplace without progressive coarse-pixel
+This is a coarse test: single-grid Laplace without progressive coarse-pixel
 extension is approximate for unshielded geometries. Phase 4 polish tightens
 the tolerance via progressive grid extension.
 """
@@ -22,7 +22,7 @@ class TestCGPMicrostrip:
     field-energy integrals for unshielded lines (the L_vacuum derivation
     assumes the field decays at infinity). So this test runs with the default
     extend_grid=True and only sanity-checks that the result is finite and
-    positive — quantitative cross-checks belong in the integration suite.
+    positive: quantitative cross-checks belong in the integration suite.
     """
 
     def test_microstrip_smoke(self) -> None:

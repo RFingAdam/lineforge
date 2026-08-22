@@ -1,16 +1,16 @@
-"""lineforge — open-source MCP-enabled transmission line calculator.
+"""lineforge: open-source MCP-enabled transmission line calculator.
 
 Top-level convenience entry points for the most common workflows. Full API
 is organized into submodules:
 
-    lineforge.geometry      — Pydantic geometry models, rasterizer, Usermap
-    lineforge.materials     — material database, MoreColors.txt loader, JSON packs
-    lineforge.analytical    — closed-form solvers (Hammerstad-Jensen, Wadell)
-    lineforge.solvers       — numerical kernels (Phase 2: C/Gp; Phase 3: L/Rs)
-    lineforge.visualization — V/E/D/J/loss field rendering
-    lineforge.scripting     — atlc2 .txt script-file interpreter
-    lineforge.cli           — Typer CLI (entry point: ``lineforge``)
-    lineforge.mcp_server    — MCP server (entry point: ``lineforge mcp-serve``)
+    lineforge.geometry: Pydantic geometry models, rasterizer, Usermap
+    lineforge.materials: material database, MoreColors.txt loader, JSON packs
+    lineforge.analytical: closed-form solvers (Hammerstad-Jensen, Wadell)
+    lineforge.solvers: numerical kernels (Phase 2: C/Gp; Phase 3: L/Rs)
+    lineforge.visualization: V/E/D/J/loss field rendering
+    lineforge.scripting: atlc2 .txt script-file interpreter
+    lineforge.cli: Typer CLI (entry point: ``lineforge``)
+    lineforge.mcp_server: MCP server (entry point: ``lineforge mcp-serve``)
 
 The native Rust kernels are accessed via :mod:`lineforge._kernel`.
 

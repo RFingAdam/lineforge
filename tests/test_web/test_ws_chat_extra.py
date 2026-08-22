@@ -1,4 +1,4 @@
-"""Extra coverage for `web/ws_chat.py` — `_run_agent` happy path with the
+"""Extra coverage for `web/ws_chat.py`: `_run_agent` happy path with the
 agent events mocked, plus the `_handle_user_message` flow when the real
 agent is enabled.
 

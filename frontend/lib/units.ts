@@ -44,7 +44,7 @@ export type ParsedLength = {
 
 /**
  * Try to parse a user-typed string into (numeric value, unit). Returns null
- * if unparseable. Doesn't convert to meters — that's the backend's job; we
+ * if unparseable. Doesn't convert to meters. That's the backend's job; we
  * just want the display-side decomposition.
  */
 export function parseLengthStr(input: string): ParsedLength | null {

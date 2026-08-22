@@ -14,7 +14,7 @@ import { useEffect, useState } from "react";
  *  - **version**: small monospace badge reading
  *    `process.env.NEXT_PUBLIC_LINEFORGE_VERSION` at build time.
  *
- * The pills are presentational only — they never block interaction and
+ * The pills are presentational only. They never block interaction and
  * they degrade gracefully when the backend is down.
  */
 
@@ -94,12 +94,12 @@ function BackendPill() {
 }
 
 function McpPill() {
-  // Placeholder — see file-level comment. Renders as a neutral idle pill so
+  // Placeholder: see file-level comment. Renders as a neutral idle pill so
   // the topbar layout is stable until a real WS connection selector lands.
   return (
     <span
       className={PILL_BASE}
-      title="MCP chat status — wiring pending"
+      title="MCP chat status: wiring pending"
       aria-label="MCP idle"
     >
       <Dot tone="muted" />

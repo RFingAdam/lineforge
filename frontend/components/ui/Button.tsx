@@ -77,7 +77,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(function Button
   },
   ref,
 ) {
-  // .btn-primary / .btn-secondary already include px/py defaults — we only
+  // .btn-primary / .btn-secondary already include px/py defaults. We only
   // apply a sizing override for the ghost variant, and for explicit `sm`
   // sizing where the caller wants a tighter footprint.
   const needsSize = variant === "ghost" || size === "sm";

@@ -45,7 +45,7 @@ def sweep(
         The name of a field on the geometry model (e.g. ``"W"``, ``"S"``, ``"er"``)
         or the literal string ``"frequency"`` to sweep frequency instead.
     values
-        Iterable of values to sweep through (in their native type — meters for
+        Iterable of values to sweep through (in their native type: meters for
         length fields, Hz for frequency, dimensionless for εr).
     method
         Solver dispatch: ``"analytical"``, ``"cgp"``, ``"full"`` (Phase 3 RLGC),
@@ -82,7 +82,7 @@ def sweep(
             geom = geometry
         else:
             if isinstance(geometry, Usermap):
-                # No way to mutate a usermap parameter — caller should pre-build one per value
+                # No way to mutate a usermap parameter: caller should pre-build one per value
                 raise ValueError(
                     "sweep() cannot mutate a Usermap parameter; sweep over a parameterized geometry "
                     "or sweep frequency only with a fixed Usermap"

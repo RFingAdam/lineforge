@@ -1,8 +1,8 @@
 "use client";
 
-/** atlc3 logo — a stylized transmission-line cross-section icon.
+/** atlc3 logo. A stylized transmission-line cross-section icon.
  *
- * Wave-line strip on top of a labeled εr dielectric over a green ground —
+ * Wave-line strip on top of a labeled εr dielectric over a green ground:
  * effectively a tiny microstrip schematic. Sized to inline next to the
  * "atlc3" wordmark in the header.
  */

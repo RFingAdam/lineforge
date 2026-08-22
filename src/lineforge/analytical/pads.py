@@ -4,10 +4,10 @@ For an electrically small (W << λ) RF pad on a PCB layer over a reference
 plane, capacitance is dominated by the parallel-plate term plus a fringing
 correction. Three methods supported, in order of conservatism:
 
-- ``"pp"``   — pure parallel-plate, no fringing. Lower bound.
-- ``"ya"``   — Yamashita-Atsuki square-pad correction. Best estimate for
+- ``"pp"``  : pure parallel-plate, no fringing. Lower bound.
+- ``"ya"``  : Yamashita-Atsuki square-pad correction. Best estimate for
               finite square or near-square pads. **Default.**
-- ``"hj"``   — Hammerstad-Jensen wide-microstrip C-per-length times the
+- ``"hj"``  : Hammerstad-Jensen wide-microstrip C-per-length times the
               pad length. Upper bound (double-counts end fringing).
 
 The ``pad_relief_advisor`` function ranks multiple stackup options
@@ -149,7 +149,7 @@ def pad_capacitance(
         Series-reduced via the parallel-plate formula.
     method
         ``"pp"`` (parallel plate, no fringing), ``"ya"`` (Yamashita-Atsuki
-        square-pad with end fringing — default), or ``"hj"`` (Hammerstad-
+        square-pad with end fringing: default), or ``"hj"`` (Hammerstad-
         Jensen wide-microstrip times pad length, upper bound).
     T
         Optional trace thickness for the HJ method (ignored otherwise).

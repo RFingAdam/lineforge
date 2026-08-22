@@ -18,7 +18,7 @@ const STEPS: Array<{ title: string; body: string }> = [
   {
     title: "3. Pick a material",
     body:
-      "The Material dropdown auto-fills εr and tan_δ from the 18-vendor laminate catalog. For multi-layer stackups (e.g. Prepreg + voided plane + Core on the L3 SIG1 case), open the “Edit multi-layer stack…” modal — there’s a one-click L3 SIG1 preset.",
+      "The Material dropdown auto-fills εr and tan_δ from the 18-vendor laminate catalog. For multi-layer stackups (e.g. Prepreg + voided plane + Core on the L3 SIG1 case), open the “Edit multi-layer stack…” modal. There’s a one-click L3 SIG1 preset.",
   },
   {
     title: "4. Calculate Z₀",
@@ -28,7 +28,7 @@ const STEPS: Array<{ title: string; body: string }> = [
   {
     title: "5. See the field",
     body:
-      "V / E / D / T tabs in the Results panel render the actual field plot via the bitmap solver. atlc2 keystrokes work — press V or E with the page focused. Press the small ↓ next to the tabs to download the PNG.",
+      "V / E / D / T tabs in the Results panel render the actual field plot via the bitmap solver. atlc2 keystrokes work: press V or E with the page focused. Press the small ↓ next to the tabs to download the PNG.",
   },
   {
     title: "6. Sweep & export",

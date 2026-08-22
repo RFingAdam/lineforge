@@ -55,7 +55,7 @@ def test_bmp_loads_and_solves_within_tolerance(
     assert usermap.rgb.shape[2] == 3
     assert usermap.meta.pixel_width_m == pytest.approx(pixel_width, rel=1e-9)
 
-    # extend_grid=False because the fixtures are coax — fully shielded by the
+    # extend_grid=False because the fixtures are coax: fully shielded by the
     # outer ground; the field is already contained within the bitmap.
     cgp = solve_cgp(usermap, method="sor", tol=1e-5, max_iter=5000, extend_grid=False)
     assert cgp.z0 == pytest.approx(expected_z0, rel=tolerance), (
@@ -66,16 +66,16 @@ def test_bmp_loads_and_solves_within_tolerance(
 
 def test_bmp_palette_recognized() -> None:
     """The standard atlc2 palette (red signal, green ground, black vacuum)
-    must be recognized by the default material lookup — i.e. no pixel is
+    must be recognized by the default material lookup. I.e. no pixel is
     rejected as 'unknown color'."""
     bmp_path = FIXTURES / "air_coax_50ohm.bmp"
     usermap = Usermap.from_bmp(bmp_path, pixel_width=12.5e-6)
     # Sample a few pixels and verify each maps to a MaterialRecord.
     h, w = usermap.rgb.shape[:2]
     sampled_pixels = [
-        (0, 0),  # corner — likely ground
-        (h // 2, w // 2),  # center — likely signal
-        (h // 4, w // 4),  # off-center — likely vacuum
+        (0, 0),  # corner: likely ground
+        (h // 2, w // 2),  # center: likely signal
+        (h // 4, w // 4),  # off-center: likely vacuum
     ]
     for y, x in sampled_pixels:
         color = tuple(int(c) for c in usermap.rgb[y, x])

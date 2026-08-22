@@ -1,6 +1,6 @@
-"""atlc2 default material database — 45 colors with their physical properties.
+"""atlc2 default material database: 45 colors with their physical properties.
 
-Source: atlc2 manual, http://www.hdtvprimer.com/kq6qv/atlc2.html — table of
+Source: atlc2 manual, http://www.hdtvprimer.com/kq6qv/atlc2.html: table of
 "standard (internally defined) colors". Phase 2 extends this with the
 ``MoreColors.txt`` parser (:mod:`lineforge.materials.morecolors`) for user-defined
 materials.
@@ -95,7 +95,7 @@ class MaterialRecord(BaseModel):
 
 # fmt: off
 ATLC2_DEFAULTS: tuple[MaterialRecord, ...] = (
-    # Conductors — copper variants
+    # Conductors: copper variants
     MaterialRecord(rgb=(255, 0, 0),   use="+1",    resistivity_ohm_cm=1.7241, er=1, tan_delta=0, mu_r=1, name="copper"),
     MaterialRecord(rgb=(0, 255, 0),   use="0",     resistivity_ohm_cm=1.7241, er=1, tan_delta=0, mu_r=1, name="copper"),
     MaterialRecord(rgb=(0, 0, 255),   use="-1",    resistivity_ohm_cm=1.7241, er=1, tan_delta=0, mu_r=1, name="copper"),
@@ -119,7 +119,7 @@ ATLC2_DEFAULTS: tuple[MaterialRecord, ...] = (
     MaterialRecord(rgb=(0, 31, 224),   use="-1",    resistivity_ohm_cm=2.44, er=1, tan_delta=0, mu_r=1, name="gold"),
     MaterialRecord(rgb=(0, 224, 224),  use="float", resistivity_ohm_cm=2.44, er=1, tan_delta=0, mu_r=1, name="gold"),
 
-    # Steel variants (atlc2 cannot model ferromagnetic μr properly — kept for completeness)
+    # Steel variants (atlc2 cannot model ferromagnetic μr properly: kept for completeness)
     MaterialRecord(rgb=(224, 63, 63),  use="+1",    resistivity_ohm_cm=9.71, er=1, tan_delta=0, mu_r=1, name="steel"),
     MaterialRecord(rgb=(63, 224, 63),  use="0",     resistivity_ohm_cm=9.71, er=1, tan_delta=0, mu_r=1, name="steel"),
     MaterialRecord(rgb=(63, 63, 224),  use="-1",    resistivity_ohm_cm=9.71, er=1, tan_delta=0, mu_r=1, name="steel"),

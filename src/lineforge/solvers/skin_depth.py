@@ -9,13 +9,13 @@ where ρ is resistivity and μ = μ₀·μr.
 
 For thick conductors at high frequency, the interior carries negligible
 current. atlc2 introduces a "Restrict to skin depth" checkbox that blackens
-out conductor pixels deeper than ``factor·δ`` (factor = 3 by default —
+out conductor pixels deeper than ``factor·δ`` (factor = 3 by default:
 e^-3 ≈ 5% remaining current). This dramatically cuts the equation count for
 the Faraday L/Rs solver.
 
 This module provides:
-    - :func:`compute_delta` — δ from material + frequency.
-    - :func:`mask_skin_depth` — distance-transform-based pixel masking.
+    - :func:`compute_delta`: δ from material + frequency.
+    - :func:`mask_skin_depth`: distance-transform-based pixel masking.
 """
 
 from __future__ import annotations
@@ -64,7 +64,7 @@ def mask_skin_depth(
 
     Pixels in conductor regions further than ``factor·δ`` from the surface are
     replaced with ``blacken_color`` (default vacuum). Different conductor
-    regions can have different δ if they're different materials — we compute
+    regions can have different δ if they're different materials. We compute
     each material's δ separately.
 
     Parameters
@@ -98,7 +98,7 @@ def mask_skin_depth(
         delta = compute_delta(mat, frequency_hz)
         depth_pixels = factor * delta / px
         if depth_pixels < 1.0:
-            continue  # skin depth shallower than one pixel — nothing to mask
+            continue  # skin depth shallower than one pixel. Nothing to mask
         material_mask = usermap.codes == idx
         if not material_mask.any():
             continue

@@ -33,7 +33,7 @@ _Coord = Annotated[float, BeforeValidator(_normalize_length)]  # may be negative
 class WirePosition(BaseModel):
     """Center coordinate of a single round conductor.
 
-    The (x, y) origin is arbitrary — only relative positions matter. When
+    The (x, y) origin is arbitrary: only relative positions matter. When
     a ground plane is present (``ThreeWireGeometry.ground_plane = True``),
     the plane sits at y = 0; conductor y-coordinates must therefore be
     > radius (so the conductor doesn't touch or intersect the ground).
@@ -50,9 +50,9 @@ class ThreeWireGeometry(BaseModel):
 
     The conductors are labeled by their atlc2 voltage roles:
 
-    * ``red`` — the signal trace at V = +1
-    * ``blue`` — the signal trace at V = −1
-    * ``green`` — the third conductor (ground bridge, return wire, etc.)
+    * ``red``. The signal trace at V = +1
+    * ``blue``. The signal trace at V = −1
+    * ``green``. The third conductor (ground bridge, return wire, etc.)
 
     All three conductors share a common radius ``a``. The medium is uniform
     dielectric with relative permittivity ``er`` and loss tangent

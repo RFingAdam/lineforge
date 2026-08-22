@@ -81,7 +81,7 @@ def _main(
         help="Show version and exit.",
     ),
 ) -> None:
-    """lineforge — open-source transmission line calculator."""
+    """lineforge: open-source transmission line calculator."""
 
 
 # ---------------------------------------------------------------------------
@@ -109,7 +109,7 @@ def clear_cache_cmd() -> None:
     """Clear all cached solver results.
 
     The cache key includes the package version, so it is also auto-invalidated
-    on upgrades — this is for manual cleanup or to force a re-solve.
+    on upgrades. This is for manual cleanup or to force a re-solve.
     """
     from lineforge.cache import clear_cache, get_cache
 
@@ -744,7 +744,7 @@ def _pick_port(preferred: int, name: str) -> int:
     """Return the preferred port if free, otherwise the next free port within
     a 20-port window. Raises typer.Exit on exhaustion.
 
-    Uses a transient bind on 127.0.0.1 to test availability — the same
+    Uses a transient bind on 127.0.0.1 to test availability. The same
     semantics uvicorn/Next will use a moment later.
     """
     import socket
@@ -806,7 +806,7 @@ def _check_node_toolchain() -> tuple[str, str]:
 def _wait_for_backend(host: str, port: int, timeout_s: float = 15.0) -> bool:
     """Poll http://host:port/api/health until it returns 200 or timeout.
 
-    Returns True on success, False on timeout. Uses stdlib only — no httpx
+    Returns True on success, False on timeout. Uses stdlib only. No httpx
     dependency for headless installs.
     """
     import time
@@ -1021,7 +1021,7 @@ def gui(
     healthy = _wait_for_backend(host, backend_port, timeout_s=15.0)
     if not healthy:
         console.print(
-            "[yellow]backend did not respond to /api/health within 15s — "
+            "[yellow]backend did not respond to /api/health within 15s: "
             "the GUI may still come up, but check `[api]` logs above.[/yellow]"
         )
 

@@ -1,4 +1,4 @@
-"""C and Gp orchestrator — capacitance and dielectric conductance from the bitmap.
+"""C and Gp orchestrator: capacitance and dielectric conductance from the bitmap.
 
 After the Laplace solve produces V(x,y), we extract:
 
@@ -257,7 +257,7 @@ def solve_cgp(
     # Capacitance: C = ε₀/V² · ∫ εr |E|² dA
     #
     # The pixel-unit gradients (V_diff between adjacent pixels) and pixel-unit
-    # areas (1 per pixel) cancel out the dx factors automatically — verify
+    # areas (1 per pixel) cancel out the dx factors automatically: verify
     # with a parallel-plate problem: discrete sum εr·(V/h_px)²·W_px·h_px
     # = εr·V²·W_px/h_px = εr·V²·W_phys/h_phys = ∫ εr|E_phys|² dA.
     integral_with_er = _energy_integral(ws.v_field, er_field)

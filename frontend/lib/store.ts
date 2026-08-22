@@ -17,7 +17,7 @@ export type ChatTurn = {
   toolOutput?: unknown;
 };
 
-/** One point of a parameter sweep — params dict + result dict. Mirrors
+/** One point of a parameter sweep: params dict + result dict. Mirrors
  * the backend's SweepPoint shape in the /api/solve/sweep response. */
 export type SweepPoint = {
   params: Record<string, number>;
@@ -34,7 +34,7 @@ export type GuiState = {
   unit: LengthUnit;
   isSolving: boolean;
   /** User-typed frequency string ('1GHz', '5e9', etc.). Persisted across
-   * reloads via localStorage. Empty/null means "no frequency — analytical
+   * reloads via localStorage. Empty/null means "no frequency: analytical
    * only" so loss/dispersion fields stay null. */
   frequency: string;
 };
@@ -86,7 +86,7 @@ export const useGuiStore = create<GuiState & GuiActions>((set) => ({
       try {
         window.localStorage.setItem(FREQ_STORAGE_KEY, frequency);
       } catch {
-        /* storage may be disabled — silently no-op */
+        /* storage may be disabled: silently no-op */
       }
     }
     set({ frequency });

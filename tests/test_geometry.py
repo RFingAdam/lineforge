@@ -126,7 +126,7 @@ class TestRasterizeStriplineAsymmetricSplitEr:
         # Find rows with non-ground, non-vacuum content (the dielectric halves).
         # We just need two distinct dielectric colors to appear somewhere in the column.
         unique = {tuple(row) for row in col}
-        # Drop ground (green) and vacuum (white) — what remains is dielectric color(s).
+        # Drop ground (green) and vacuum (white): what remains is dielectric color(s).
         unique.discard((0, 255, 0))
         unique.discard((255, 255, 255))
         assert len(unique) >= 2, (

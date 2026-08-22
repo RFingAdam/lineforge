@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenEMS microstrip Z0 extraction — proper sweep using MSLPort native Z_ref.
+"""OpenEMS microstrip Z0 extraction: proper sweep using MSLPort native Z_ref.
 
 Sweeps trace width to validate Wadell closed-form across the design space.
 For each width:
@@ -95,7 +95,7 @@ def run_msl_z0(
     FDTD.Run(sim_path, cleanup=True)
 
     freq = np.linspace(f_min, f_max, 401)
-    # Don't pass ref_impedance — let MSLPort compute Z_ref natively
+    # Don't pass ref_impedance: let MSLPort compute Z_ref natively
     port1.CalcPort(sim_path, freq)
     port2.CalcPort(sim_path, freq)
 

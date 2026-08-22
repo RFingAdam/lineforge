@@ -52,7 +52,7 @@ export function SweepChart() {
       }
       const values: number[] = [];
       if (parameter === "frequency") {
-        // Log-spaced for frequency — preserves decade structure across
+        // Log-spaced for frequency: preserves decade structure across
         // the standard 100 MHz – 20 GHz RF window.
         const lLo = Math.log10(lo);
         const lHi = Math.log10(hi);
@@ -355,7 +355,7 @@ function ChartSVG({
         </g>
       )}
 
-      {/* invisible capture rect — top of stack so hover works anywhere in plot area */}
+      {/* invisible capture rect: top of stack so hover works anywhere in plot area */}
       <rect
         x={PAD_L} y={PAD_T} width={W - PAD_L - PAD_R} height={H - PAD_T - PAD_B}
         fill="transparent" pointerEvents="all"

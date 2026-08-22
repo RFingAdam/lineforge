@@ -26,7 +26,7 @@ is required before the workflow can publish.
    - **Environment name**: `testpypi`
 4. Submit.
 
-The publisher is now "pending" until the first publish succeeds — after
+The publisher is now "pending" until the first publish succeeds. After
 that it auto-promotes to a real publisher.
 
 ## PyPI (production) setup
@@ -70,7 +70,7 @@ The fallback is a long-lived API token. Steps:
    And remove the `permissions: id-token: write` block and the
    `environment:` section.
 
-We recommend trusted publishers — they're more secure and ergonomic.
+We recommend trusted publishers. They're more secure and ergonomic.
 
 ## Troubleshooting
 
@@ -89,7 +89,7 @@ If you're publishing during the GitHub repo rename transition:
 - Pre-register publishers under BOTH `RFingAdam/atlc3` AND `RFingAdam/lineforge`
   if you want a smooth handover (or just delete the atlc3 one once renamed)
 
-**Error: `403 Forbidden — The user 'X' isn't allowed to upload to project Y`**
+**Error: `403 Forbidden. The user 'X' isn't allowed to upload to project Y`**
 
 Usually means the project already exists on PyPI under a different owner,
 or you need to claim the name first by uploading a stub package via API
@@ -107,5 +107,5 @@ As of v2.0.0 (2026-05-11):
 - ✓ Wheels build successfully on Linux x86_64/aarch64 + macOS + Windows
 - ✓ sdist builds successfully
 
-Once you register both publishers, no code changes needed — just re-run
+Once you register both publishers, no code changes needed: just re-run
 the release workflow (or push a new tag).

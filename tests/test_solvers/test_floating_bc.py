@@ -103,7 +103,7 @@ class TestAsymmetricEr:
         err_bw = abs(v_bw - v_ref)
         assert err_bw < err_avg, (
             f"boundary_weighted ({v_bw:.4f}) should be closer to reference "
-            f"({v_ref:.4f}) than average ({v_avg:.4f}) — got errs avg={err_avg:.4f}, "
+            f"({v_ref:.4f}) than average ({v_avg:.4f}): got errs avg={err_avg:.4f}, "
             f"bw={err_bw:.4f}"
         )
 

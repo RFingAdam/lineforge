@@ -1,4 +1,4 @@
-"""Extra coverage for `web/agent.py` — `run_chat_turn` driver and
+"""Extra coverage for `web/agent.py`: `run_chat_turn` driver and
 `_translate_message` helper.
 
 We can't actually call Claude in CI, but we can:
@@ -27,7 +27,7 @@ async def _reset() -> None:
 
 
 # ---------------------------------------------------------------------------
-# run_chat_turn — no credentials path
+# run_chat_turn: no credentials path
 # ---------------------------------------------------------------------------
 
 
@@ -109,7 +109,7 @@ async def test_run_chat_turn_claude_cli_timeout(
 
 
 # ---------------------------------------------------------------------------
-# _translate_message — every Claude SDK message type
+# _translate_message: every Claude SDK message type
 # ---------------------------------------------------------------------------
 
 
@@ -220,14 +220,14 @@ async def test_translate_result_message() -> None:
     events = [e async for e in agent._translate_message(msg)]
     assert len(events) == 1
     assert events[0]["role"] == "done"
-    # stop_reason / usage come from attribute access — may be None on this
+    # stop_reason / usage come from attribute access: may be None on this
     # synthetic message, but the role + key set must be present.
     assert "stop_reason" in events[0]
     assert "usage" in events[0]
 
 
 # ---------------------------------------------------------------------------
-# _list_allowed_tools — sanity
+# _list_allowed_tools: sanity
 # ---------------------------------------------------------------------------
 
 

@@ -53,7 +53,7 @@ export function ThreeWireResultCard({ result }: { result: Record<string, unknown
             role="alert"
             className="border-danger/60 bg-danger/10 mt-2 text-[11px] text-danger"
           >
-            ⚠ Net ground current &gt; 4% — geometry is radiating; reported Z₀ values are
+            ⚠ Net ground current &gt; 4%: geometry is radiating; reported Z₀ values are
             approximate.
           </Card>
         )}

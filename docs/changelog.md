@@ -6,17 +6,17 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
-### Phase 4 — Polish + 1.0.0 prep
-- Added geometry optimizer (`lineforge.optimize_for`) — wrap scipy.optimize for
+### Phase 4: Polish + 1.0.0 prep
+- Added geometry optimizer (`lineforge.optimize_for`): wrap scipy.optimize for
   finding dimensions that hit Z0 / Zdiff / εeff targets.
-- Added disk-cached solves (`lineforge.cache`) — repeated runs are instant.
+- Added disk-cached solves (`lineforge.cache`): repeated runs are instant.
   Disable with `ATLC3_NO_CACHE=1`.
 - Theory documentation: Laplace solver, Faraday solver, skin effect, 3-wire
   decomposition.
 - Added `OptimizeResult` to top-level public API.
 - Added `lineforge lrs` and `lineforge sweep` CLI subcommands.
 
-### Phase 3 — Faraday solver, full RLGC, sweeps
+### Phase 3: Faraday solver, full RLGC, sweeps
 - Added Faraday/PEEC sparse-system solver for L and Rs
   (`lineforge.solvers.solve_lrs`).
 - Added skin-depth prediction and pixel masking
@@ -28,7 +28,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - MCP tools: `solve_lrs`, `solve_full`, `sweep` (long-running ones return
   `taskId`s; poll via `tasks_get`).
 
-### Phase 2 — C/Gp bitmap solver + atlc2 file compat
+### Phase 2: C/Gp bitmap solver + atlc2 file compat
 - Added `Usermap` class with BMP/PNG/TIFF/JSON I/O (atlc/atlc2 compatible).
 - Added per-geometry rasterizers (microstrip, stripline, CPWG, diff pairs).
 - Added `MoreColors.txt` parser; JSON material packs.
@@ -49,7 +49,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - MCP resources: `atlc://geometries/{id}`, `atlc://results/{id}`,
   `atlc://results/{id}/field/{V|E|D|T}`.
 
-### Phase 1 — Closed-form analytical solvers + UX
+### Phase 1: Closed-form analytical solvers + UX
 - All 8 standard PCB geometries supported via IPC-2141A formulas
   (Hammerstad-Jensen, Wadell, Cohn, Wen).
 - Differential-pair coupling correction (edge-coupled microstrip + stripline,
@@ -67,7 +67,7 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Documentation site (mkdocs-material) with quickstart, three tutorials,
   geometry reference, analytical theory.
 
-### Phase 0 — Bootstrap
+### Phase 0: Bootstrap
 - Initial Python + Rust monorepo with maturin build, PyO3 module skeleton.
 - GitHub Actions CI matrix (Linux/macOS/Windows × Python 3.11/3.12/3.13;
   ruff, black, mypy, pytest, cargo test, cargo clippy).

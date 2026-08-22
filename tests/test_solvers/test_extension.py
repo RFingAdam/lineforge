@@ -38,7 +38,7 @@ class TestExtend:
         """When inner_pad lifts us above target_size, the outer-pad branch is
         a no-op (pad_h==pad_w==0) and we return after the inner pad."""
         um = _tiny_usermap(h=11, w=11)
-        # target_size = 21 — inner_pad of 6 produces 23×23 (already ≥ 21)
+        # target_size = 21: inner_pad of 6 produces 23×23 (already ≥ 21)
         extended = extension.extend(um, target_size=21, inner_pad=6)
         eh, ew = extended.shape
         assert eh == 11 + 2 * 6
@@ -122,7 +122,7 @@ class TestExtendToShape:
 
 
 class TestExtendPreservesEdgePixels:
-    """Edge replication keeps the outer pixel color around — important so the
+    """Edge replication keeps the outer pixel color around: important so the
     open-boundary BC is a plausible material, not raw black/whatever."""
 
     def test_edge_replication_extends_ground(self) -> None:

@@ -5,7 +5,7 @@ This is the manual verification procedure that closes AUDIT.md item #6
 
 ## What's already automated
 
-`tests/test_mcp_server.py` exercises the server programmatically — it builds
+`tests/test_mcp_server.py` exercises the server programmatically. It builds
 the FastMCP instance and calls `server.call_tool(...)` directly. That covers:
 
 - All 14 tools register correctly
@@ -78,7 +78,7 @@ servers" (gear icon → MCP).
 
 Run these three queries verbatim and confirm the response shape:
 
-#### Test 3a — synchronous analytical solve
+#### Test 3a: synchronous analytical solve
 
 > Calculate the characteristic impedance of a 6 mil wide microstrip on
 > 4 mil FR4 with 1.4 mil copper, εr=4.4. Use the calculate_impedance tool.
@@ -91,7 +91,7 @@ gets back ``Z0 ≈ 51.93Ω`` and ``εeff ≈ 3.31``, and explains the answer.
 - Response JSON has `z0` between 40 and 60.
 - Response includes `_kind: "TLineResult"`.
 
-#### Test 3b — geometry introspection
+#### Test 3b: geometry introspection
 
 > What geometries does lineforge support? Show me their required dimensional fields.
 
@@ -100,7 +100,7 @@ table or list. Should show all 8: microstrip, embedded_microstrip,
 stripline_symmetric, stripline_asymmetric, cpwg, edge_coupled_diff_microstrip,
 edge_coupled_diff_stripline, broadside_coupled_diff_stripline.
 
-#### Test 3c — async bitmap solve
+#### Test 3c: async bitmap solve
 
 This exercises the SEP-1686 Tasks pattern.
 
@@ -137,7 +137,7 @@ Expected sequence:
 **`lineforge mcp-serve` exits immediately:**
 
 - Run from a terminal: `lineforge mcp-serve` should hang waiting for stdio
-  input. If it exits, the package import is broken — usually a missing
+  input. If it exits, the package import is broken: usually a missing
   native kernel (`maturin develop` not run).
 
 **`solve_cgp` returns `{"error": ...}`:**

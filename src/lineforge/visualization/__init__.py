@@ -1,4 +1,4 @@
-"""Field visualization — render V/E/D/J/loss fields as PNGs.
+"""Field visualization: render V/E/D/J/loss fields as PNGs.
 
 Phase 2 ships :func:`render_field` matching atlc2's U/V/E/D/T keyboard modes.
 """

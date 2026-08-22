@@ -3,11 +3,11 @@
 The geometry is three round conductors of equal radius, optionally above an
 infinite ground plane, embedded in a uniform dielectric. The math:
 
-* Build the 3×3 inductance matrix L_ij (per unit length, geometry only —
+* Build the 3×3 inductance matrix L_ij (per unit length, geometry only:
   multi-conductor TL theory: ``L_ii = (μ₀/2π) ln(2yi/a)`` above a ground
   plane via image charges, ``L_ij = (μ₀/2π) ln(D'_ij/D_ij)`` where D is the
   conductor-to-conductor distance and D' is conductor-i to image-of-j).
-  Without a ground plane, L_ii is unbounded — we handle the ungrounded
+  Without a ground plane, L_ii is unbounded. We handle the ungrounded
   case with the alternative dipole-pair formulation.
 * TEM identity: ``L · C_vacuum = μ₀ε₀ I``, so ``C_vacuum = ε₀/L⁻¹`` and the
   filled-dielectric ``C = εr · C_vacuum``.
@@ -36,7 +36,7 @@ def y_decomposition(z_rcz: float, z_gcz: float, z_bcz: float) -> tuple[float, fl
     Given pair impedances with each conductor in turn at current-zero
     (floating), recover the three Y-leg impedances.
 
-    The naming is atlc2-style — ``z_rcz`` is "Z₀ when red is at current-zero",
+    The naming is atlc2-style: ``z_rcz`` is "Z₀ when red is at current-zero",
     i.e. the pair (green, blue) is active. Then
     ``z_rcz = zo_g + zo_b`` and analogous for the other two; solve the 3×3
     linear system::
@@ -58,7 +58,7 @@ def _build_L_matrix(geom: ThreeWireGeometry) -> np.ndarray:
 
     With a ground plane: L_ii = (μ₀/2π) ln(2 yi / a), L_ij = (μ₀/2π) ln(D'_ij/D_ij).
     Without a ground plane: there's no unique reference, so we set the
-    reference at "wire 0" by gauge — fix L_11 large but the relevant
+    reference at "wire 0" by gauge: fix L_11 large but the relevant
     invariants (loop inductances Lij_loop = L_ii + L_jj − 2 L_ij) are
     well-defined. We use a finite reference radius (the largest
     conductor-to-conductor distance × 100) to anchor the gauge.
@@ -106,7 +106,7 @@ def _pair_impedance(L: np.ndarray, er: float, active: tuple[int, int]) -> float:
         V_loop = (L_ii + L_jj − 2 L_ij) · I_diff
 
     so ``L_loop = L_ii + L_jj − 2 L_ij`` (independent of the floating
-    conductor's L matrix entries — they only set the voltage *on* the
+    conductor's L matrix entries. They only set the voltage *on* the
     floating conductor, which doesn't affect the active pair's loop V).
 
     For uniform dielectric, the TEM identity ``Z₀ = vp · L_loop`` and
@@ -142,7 +142,7 @@ def solve_three_wire(geom: ThreeWireGeometry) -> ThreeWireResult:
 
     zo_r, zo_g, zo_b = y_decomposition(z_rcz, z_gcz, z_bcz)
 
-    # Coupler odd/even — standard for the (red, blue) pair with green as ref:
+    # Coupler odd/even: standard for the (red, blue) pair with green as ref:
     z_odd = 2.0 * abs(zo_r) if zo_r > 0 else float("nan")
     z_even = abs(zo_r) / 2.0 + abs(zo_b) if zo_r > 0 and zo_b > 0 else float("nan")
 
@@ -206,7 +206,7 @@ def _estimate_ignd_ratio(L: np.ndarray, C: np.ndarray) -> float:
     V_green = -(C_fa @ V_active) / C_ff
     Q_green = C_af @ V_active + C_ff * V_green  # should be ~0 by construction
 
-    I_signal = abs(Q_active).max()  # proxy — currents and charges are proportional in TEM
+    I_signal = abs(Q_active).max()  # proxy: currents and charges are proportional in TEM
     # Imbalance in the active charges shows up as net "radiating" current that
     # would flow in the ground conductor if it were grounded. Use the absolute
     # difference between Q_red and -Q_blue as the imbalance proxy.

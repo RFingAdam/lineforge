@@ -8,7 +8,7 @@ Naming convention: physics-style single-letter symbols (W, H, T, S, εr) are
 used despite PEP 8, because that's what every PCB designer's mental model
 expects. The ruff config ignores N803/N806/N802 in this package.
 
-Distance fields (W, H, T, S, etc.) are ``Length`` — a Pydantic field type that
+Distance fields (W, H, T, S, etc.) are ``Length``. A Pydantic field type that
 accepts a float (meters) or a unit-suffix string (``"6mil"``, ``"4mm"``,
 ``"30AWG"``). Strings are normalized to meters at validation time, so internal
 storage is always SI base.
@@ -124,7 +124,7 @@ class StriplineAsymmetric(_BaseGeometry):
     is at the boundary between H1 and H2; total cavity = H1 + T + H2.
 
     For real PCB stackups where the dielectric above and below the strip differ
-    (e.g. Core above, Prepreg below — common when routing on an inner signal
+    (e.g. Core above, Prepreg below: common when routing on an inner signal
     layer between a plane and a power layer), pass ``er_above`` / ``er_below``
     (and optionally ``tan_delta_above`` / ``tan_delta_below``). When supplied,
     these override the single ``er`` / ``tan_delta`` values: the closed-form
@@ -136,7 +136,7 @@ class StriplineAsymmetric(_BaseGeometry):
     ``stack_above`` / ``stack_below`` as a list of :class:`DielectricLayer`.
     The stack is series-reduced via the parallel-plate (C-series) formula
     ``εr_eq = h_total / Σ(hᵢ/εᵢ)`` to derive H1/H2/εr_above/εr_below
-    automatically — the explicit per-side fields are then unused.
+    automatically: the explicit per-side fields are then unused.
     """
 
     type: Literal["stripline_asymmetric"] = "stripline_asymmetric"
@@ -325,7 +325,7 @@ class BroadsideCoupledDiffStripline(_BaseGeometry):
 
 # --- discriminated union --------------------------------------------------------
 
-GeometryUnion = Union[  # noqa: UP007 — Pydantic discriminated union needs Union[]
+GeometryUnion = Union[  # noqa: UP007: Pydantic discriminated union needs Union[]
     Microstrip,
     EmbeddedMicrostrip,
     StriplineSymmetric,

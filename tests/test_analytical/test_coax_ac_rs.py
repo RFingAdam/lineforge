@@ -1,4 +1,4 @@
-"""Phase 3 AC Rs parity — Faraday/PEEC solver vs analytical skin-effect formula for coax.
+"""Phase 3 AC Rs parity: Faraday/PEEC solver vs analytical skin-effect formula for coax.
 
 Closes the AC Rs parity gap flagged in ``AUDIT.md`` (Workstream C-#9). The DC L
 side of the coax fixture is already validated in
@@ -14,7 +14,7 @@ References
 ----------
 * Pozar, *Microwave Engineering* 4th ed., §2.4 "Loss in a Coaxial Line".
 * Ramo/Whinnery/Van Duzer, *Fields and Waves in Communication Electronics*
-  3rd ed., §4.4 — surface resistance of a good conductor.
+  3rd ed., §4.4: surface resistance of a good conductor.
 
 Test budget
 -----------
@@ -22,7 +22,7 @@ The Faraday solver is dense (``O(N²)`` memory) so the test grid cannot use the
 audit's "δ ≥ 30·px" target while keeping conductor counts inside a reasonable
 dense-solve budget. We use two tolerance tiers:
 
-* **Fast** (no marker): small grid (a/δ ≈ 3, b/a = 2, δ/px = 3) — ~1000
+* **Fast** (no marker): small grid (a/δ ≈ 3, b/a = 2, δ/px = 3): ~1000
   conductor pixels post skin-mask, ~1 s solve. Asserts ±15%.
 * **Slow** (``@pytest.mark.slow``): larger grid (a/δ ≈ 4, b/a = 3, δ/px = 4),
   ~1500 conductor pixels, ~2 s solve. Asserts ±10%.
@@ -66,8 +66,8 @@ def _coax_rs_analytic(
 
     R_s = (1/(σ·δ)) · (1/(2π·a) + 1/(2π·b))
 
-    a — inner conductor radius
-    b — outer shield inner radius
+    a: inner conductor radius
+    b: outer shield inner radius
     """
     sigma = 1.0 / rho
     return (1.0 / (sigma * delta)) * (1.0 / (2.0 * math.pi * a) + 1.0 / (2.0 * math.pi * b))
@@ -119,7 +119,7 @@ class TestCoaxAcRsFast:
         f = 1.0e9
         delta = _skin_depth(f)
 
-        # δ/px = 3 — well under the 30-px target → should flag.
+        # δ/px = 3: well under the 30-px target → should flag.
         px = delta / 3.0
         a = 3.0 * delta
         b = 2.0 * a

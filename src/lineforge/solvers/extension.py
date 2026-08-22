@@ -38,13 +38,13 @@ def extend(
         atlc2's hard-coded simulation extent. The *effective* target is
         ``min(target_size, max_factor * max(h, w))`` so a tiny synthetic
         rasterization (e.g. 44×90 px) doesn't get padded to 3200×3200 (10 M
-        pixels) — boundary effects of an open Dirichlet box fall off as
+        pixels): boundary effects of an open Dirichlet box fall off as
         1/r², so ~16× the input characteristic length is plenty.
     inner_pad
         Number of edge-replicated pixels to insert before further padding.
     max_factor
         Upper bound on the extension factor relative to the input size.
-        Default 16 — enough open-boundary margin for typical PCB cross-
+        Default 16: enough open-boundary margin for typical PCB cross-
         sections without producing multi-million-pixel grids for small inputs.
 
     Returns

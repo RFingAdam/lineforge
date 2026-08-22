@@ -1,4 +1,4 @@
-# Phase C example — chat-driven web GUI walkthrough
+# Phase C example: chat-driven web GUI walkthrough
 
 The lineforge web GUI lives in a sibling repo, `lineforge-gui`. It bundles a
 FastAPI backend that wraps the lineforge library with a Next.js + React +
@@ -51,7 +51,7 @@ The CLI:
 4. Opens `http://localhost:3000` in your default browser.
 5. Hands you a chat panel with the lineforge tool surface bound.
 
-## Walkthrough — the L3 SIG1 case from the planning session
+## Walkthrough: the L3 SIG1 case from the planning session
 
 Type into the chat:
 
@@ -61,11 +61,11 @@ Type into the chat:
 
 Watch the agent:
 
-1. Call `set_geometry_type("stripline_asymmetric")` — the geometry form's
+1. Call `set_geometry_type("stripline_asymmetric")`. The geometry form's
    type dropdown switches.
 2. Call `set_geometry_field` for each of W / T / H1 / H2 / er_above / er_below
-   one by one — each input field populates live.
-3. Call `target_z0` with the populated template — the right-hand Results
+   one by one. Each input field populates live.
+3. Call `target_z0` with the populated template. The right-hand Results
    panel displays Z₀ ≈ 48.000 Ω, εr_eff ≈ 4.001, the converged W ≈ 3.182 mil.
 
 The chat shows every tool call (with input/output expanders) so the math
@@ -74,12 +74,12 @@ messages; the Zustand store applies them and React re-renders.
 
 ## Stopping
 
-`Ctrl-C` in the terminal where `lineforge gui` runs — both child processes
+`Ctrl-C` in the terminal where `lineforge gui` runs. Both child processes
 shut down cleanly.
 
 ## Without the chat
 
-The GUI is fully usable without the agent — switch types and edit fields
+The GUI is fully usable without the agent: switch types and edit fields
 in the geometry form, hit the **Calculate Z₀** button, and the result
 shows up. The chat is the productivity layer; the form is the
 deterministic baseline.

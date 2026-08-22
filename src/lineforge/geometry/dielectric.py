@@ -5,8 +5,8 @@ often a stack of multiple layers (Prepreg + voided plane + Core, for example,
 when an intermediate plane is voided to push the reference down to the next
 layer). This module provides:
 
-- :class:`DielectricLayer` — a single layer (thickness, εr, loss tangent).
-- :func:`series_reduce` — collapse a stack into a single equivalent
+- :class:`DielectricLayer`. A single layer (thickness, εr, loss tangent).
+- :func:`series_reduce`: collapse a stack into a single equivalent
   ``(h_total, εr_eq, tan_δ_eq)`` using the parallel-plate (series-capacitance)
   reduction. The result plugs directly into single-εr solver paths.
 

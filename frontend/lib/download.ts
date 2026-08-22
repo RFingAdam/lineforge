@@ -28,7 +28,7 @@ export function downloadJSON(data: unknown, filename: string): void {
  * download it as an .svg file. Pass the actual <svg> DOM node. */
 export function downloadSVG(svg: SVGElement, filename: string): void {
   const xml = new XMLSerializer().serializeToString(svg);
-  // Ensure the doctype + xmlns survive the round-trip — some browsers
+  // Ensure the doctype + xmlns survive the round-trip. Some browsers
   // strip them when constructing via React.
   const blob = new Blob(
     [`<?xml version="1.0" standalone="no"?>\n${xml.includes("xmlns") ? xml : xml.replace("<svg", '<svg xmlns="http://www.w3.org/2000/svg"')}`],

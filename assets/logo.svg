@@ -1,5 +1,5 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" role="img" aria-label="atlc3 logo">
-  <title>atlc3 — open-source transmission line calculator</title>
+  <title>atlc3: open-source transmission line calculator</title>
   <desc>Stylized microstrip cross-section: an amber signal trace above a translucent FR4 dielectric over a ground plane, with cyan electric field lines arcing from the strip to ground.</desc>
 
   <defs>

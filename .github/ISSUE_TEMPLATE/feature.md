@@ -10,7 +10,7 @@ labels: enhancement
 
 ## Proposed solution
 
-<!-- Sketch the API you'd like — Python signature, CLI flags, MCP tool name. -->
+<!-- Sketch the API you'd like: Python signature, CLI flags, MCP tool name. -->
 
 ## Alternatives considered
 

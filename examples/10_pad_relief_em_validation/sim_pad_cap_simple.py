@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Simplified pad-cap measurement via direct lumped-port drive.
 
-No feed line — just the pad, the dielectric stack, and a lumped voltage
+No feed line: just the pad, the dielectric stack, and a lumped voltage
 source connecting the pad to the deepest GND of each option. Z_in at low
 frequency gives the pad capacitance directly: C ≈ 1/(jω·Z_in).
 
@@ -63,7 +63,7 @@ def run_option(option: str) -> dict:
     h_total = abs(z_ref)  # depth from pad to its deepest reference
 
     f_min = 0.01e9
-    f_max = 2e9  # low f — pad acts purely capacitive
+    f_max = 2e9  # low f: pad acts purely capacitive
 
     side = 4000.0
 
@@ -76,7 +76,7 @@ def run_option(option: str) -> dict:
     mesh = CSX.GetGrid()
     mesh.SetDeltaUnit(unit)
 
-    # Mesh sizing — sub-pad resolution
+    # Mesh sizing: sub-pad resolution
     res = 50  # 50 μm bulk mesh
     fine = 15  # 15 μm fine mesh near pad
 
@@ -132,7 +132,7 @@ def run_option(option: str) -> dict:
     pec.AddBox([-W_pad_h, -W_pad_h, z_pad], [W_pad_h, W_pad_h, z_pad], priority=10)
 
     # Reference plane: solid sheet at z=z_ref, with rectangular hole
-    # only if the relief is needed at the reference level (it isn't —
+    # only if the relief is needed at the reference level (it isn't:
     # by construction, the reference is the FIRST solid plane the pad
     # sees, with all relief above it removed)
     plane_side = side - 12 * res

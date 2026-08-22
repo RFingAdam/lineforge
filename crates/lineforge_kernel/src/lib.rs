@@ -1,4 +1,4 @@
-//! lineforge_kernel — native numerical kernels for lineforge.
+//! lineforge_kernel: native numerical kernels for lineforge.
 //!
 //! Exposes a PyO3 module `lineforge._kernel` consumed by the Python package.
 //! Phase 0 ships only a `version()` smoke-test function. Phase 2 adds the Laplace
@@ -19,7 +19,7 @@ fn version() -> &'static str {
 }
 
 /// Returns true if the kernel was built with rayon parallel features.
-/// Useful for debugging install issues — a user can confirm the optimized
+/// Useful for debugging install issues. A user can confirm the optimized
 /// path is available.
 #[pyfunction]
 fn has_parallel() -> bool {

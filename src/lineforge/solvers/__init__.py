@@ -1,9 +1,9 @@
-"""Numerical solvers — bitmap Laplace (C/Gp) and Faraday (L/Rs).
+"""Numerical solvers: bitmap Laplace (C/Gp) and Faraday (L/Rs).
 
-- :func:`solve_cgp`        — Phase 2: C and Gp via Laplace FD.
-- :func:`solve_lrs`        — Phase 3: L and Rs via Faraday PEEC.
-- :func:`solve_full`       — Phase 3: full RLGC characterization at one frequency.
-- :func:`solve_modes`      — Phase B3: 3-wire Y-decomposition via three Laplace
+- :func:`solve_cgp`       : Phase 2: C and Gp via Laplace FD.
+- :func:`solve_lrs`       : Phase 3: L and Rs via Faraday PEEC.
+- :func:`solve_full`      : Phase 3: full RLGC characterization at one frequency.
+- :func:`solve_modes`     : Phase B3: 3-wire Y-decomposition via three Laplace
   solves with each conductor in turn floating.
 """
 

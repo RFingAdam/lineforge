@@ -172,7 +172,7 @@ def laminate_lookup(
             matched_by = "fuzzy"
         elif len(candidates) > 1:
             raise KeyError(
-                f"Ambiguous laminate name {name!r} — matches: {sorted(candidates)}. "
+                f"Ambiguous laminate name {name!r}: matches: {sorted(candidates)}. "
                 "Use a more specific name."
             )
 

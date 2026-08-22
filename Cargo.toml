@@ -12,7 +12,7 @@ repository = "https://github.com/RFingAdam/lineforge"
 homepage = "https://github.com/RFingAdam/lineforge"
 
 [workspace.dependencies]
-# pyo3 'extension-module' feature must NOT be enabled unconditionally — it
+# pyo3 'extension-module' feature must NOT be enabled unconditionally. It
 # tells the linker to leave Python symbols undefined (because the host
 # Python provides them at runtime). When `cargo test` builds a test binary,
 # there's no host Python, so the link fails on macOS. Each crate that uses

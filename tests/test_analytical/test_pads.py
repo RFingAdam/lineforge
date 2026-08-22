@@ -13,7 +13,7 @@ from lineforge.geometry.dielectric import DielectricLayer
 
 
 class TestPadCapacitance:
-    """pad_capacitance — three methods, multiple geometries."""
+    """pad_capacitance: three methods, multiple geometries."""
 
     def test_parallel_plate_basic(self):
         """0.4mm × 0.4mm pad over 2.73 mil prepreg εr=3.7 → ~76 fF."""
@@ -117,7 +117,7 @@ class TestPadCapacitance:
 
 
 class TestPadReliefAdvisor:
-    """pad_relief_advisor — ranks options against an RL target."""
+    """pad_relief_advisor: ranks options against an RL target."""
 
     @pytest.fixture
     def triplexer_options(self) -> list[ReliefOption]:

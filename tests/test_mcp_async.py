@@ -75,7 +75,7 @@ async def test_solve_cgp_async_lifecycle() -> None:
     )
     uri = rasterize_out["uri"]
 
-    # Step 2 — keep solve fast: skip prediction, skip the 3200x3200 padding.
+    # Step 2. Keep solve fast: skip prediction, skip the 3200x3200 padding.
     # This is the right setting for shielded geometries (or for tests).
     solve_out = _structured(
         await server.call_tool(

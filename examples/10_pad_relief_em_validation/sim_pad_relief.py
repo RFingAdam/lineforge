@@ -4,9 +4,9 @@ triplexer port pads (same stackup as the L3 SIG1 case study).
 
 Options simulated (all share the same L1 microstrip feed + 0.4 mm pad):
 
-  A. Solid L2 GND under the pad           — baseline (no relief)
-  B. Void L2 + GND island on L3           — relieve to L3
-  C. Void L2 + L3 area, L4 GND continues  — relieve to L4
+  A. Solid L2 GND under the pad          : baseline (no relief)
+  B. Void L2 + GND island on L3          : relieve to L3
+  C. Void L2 + L3 area, L4 GND continues : relieve to L4
 
 Extracts S₁₁ vs frequency at a 50 Ω port at the far end of the feed
 line. The pad terminates open (no component model). The pad cap then
@@ -31,7 +31,7 @@ from CSXCAD import ContinuousStructure
 from openEMS import openEMS
 from openEMS.physical_constants import C0
 
-MIL = 25.4  # micron per mil — we work in μm with unit=1e-6
+MIL = 25.4  # micron per mil. We work in μm with unit=1e-6
 
 
 @dataclass
@@ -100,7 +100,7 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
     FDTD.SetGaussExcite((f_max + f_min) / 2, (f_max - f_min) / 2)
     # MUR all around (same as the working L3 SIG1 sim). The bottom of the
     # sim domain has L4 GND drawn as an explicit metal box so MUR there
-    # is fine — it's effectively shorted by the GND plane.
+    # is fine. It's effectively shorted by the GND plane.
     FDTD.SetBoundaryCond(["MUR"] * 6)
 
     CSX = ContinuousStructure()
@@ -163,7 +163,7 @@ def run_option(option: str, run_dir: str | None = None) -> dict:
         [-side - 1000, -side - 1000, s.D4_top],
         [side + 1000, side + 1000, s.L2_top],
     )
-    # D2 (between L3 and L4) — exists for options B and C; harmless for A
+    # D2 (between L3 and L4): exists for options B and C; harmless for A
     prepreg.AddBox(
         [-side - 1000, -side - 1000, s.L4_top],
         [side + 1000, side + 1000, s.D2_top],

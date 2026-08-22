@@ -9,7 +9,7 @@ import type { Config } from "tailwindcss";
  *   - Flat **semantic tokens** (surface, border-subtle, accent, success, ...)
  *     so new components speak intent instead of raw hex. Tailwind v3 JIT
  *     doesn't support nested arbitrary keys in `extend.colors`, so semantic
- *     tokens are declared as flat top-level entries — e.g. `bg-surface`,
+ *     tokens are declared as flat top-level entries: e.g. `bg-surface`,
  *     `border-border-subtle`, `text-accent`.
  */
 const config: Config = {

@@ -78,7 +78,7 @@ def parse_morecolors_text(text: str) -> list[MaterialRecord]:
 
     Notes
     -----
-    Duplicate RGB values are *kept* in this output list — duplicate handling
+    Duplicate RGB values are *kept* in this output list: duplicate handling
     (last-wins) happens at lookup time in :func:`lookup_by_rgb`. If you want
     deduplication, run the result through :func:`dedupe_keep_last`.
     """

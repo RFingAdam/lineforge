@@ -1,4 +1,4 @@
-"""Geometry optimizer — find dimensions that hit a target electrical metric.
+"""Geometry optimizer: find dimensions that hit a target electrical metric.
 
 Wraps :mod:`scipy.optimize` with the lineforge analytical and numerical solvers.
 Common workflows:
@@ -137,7 +137,7 @@ def optimize_for(
 
     if len(fields) == 1:
         lo, hi = bounds[0]
-        # xatol scaled to the bound-range — the optimizer should converge to a
+        # xatol scaled to the bound-range. The optimizer should converge to a
         # tiny fraction of the search interval, not the default 1e-5 in absolute
         # SI units which is huge when bounds are in meters (0.1 mil = 2.5 µm).
         xatol = max((hi - lo) * 1e-9, 1e-15)
@@ -214,8 +214,8 @@ def target_z0(
     template
         Geometry dict with all the fixed fields (type + everything not varying).
     vary
-        Either a field name (e.g. ``"W"``) — bounds default to ``("0.1mil", "100mil")``
-        or are taken from the optional ``bounds`` argument — or a full ``vary``
+        Either a field name (e.g. ``"W"``): bounds default to ``("0.1mil", "100mil")``
+        or are taken from the optional ``bounds`` argument, or a full ``vary``
         dict like :func:`optimize_for` accepts.
     target_ohms
         Target Z₀ in ohms (e.g. ``50.0``, ``48.0``, ``100.0``).

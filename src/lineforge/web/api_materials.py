@@ -1,4 +1,4 @@
-"""Materials catalog endpoint — surface the atlc3 laminate library to the GUI.
+"""Materials catalog endpoint: surface the atlc3 laminate library to the GUI.
 
 Reads ``atlc3.materials.packs.pcb_extended.json`` plus any frequency-aware
 records, converts them to a flat JSON the frontend's MaterialPicker can

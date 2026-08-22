@@ -51,12 +51,12 @@ class TestSymmetricGeometry:
         assert r.z_rcz == pytest.approx(r.z_bcz, rel=1e-9)
         # Pure-symmetric drive → no radiation
         assert r.ignd_ratio == pytest.approx(0.0, abs=1e-9)
-        # Pair impedances are 50–500 Ω class — not 0, not negative
+        # Pair impedances are 50–500 Ω class. Not 0, not negative
         assert 50 < r.z_rcz < 1000
         assert 50 < r.z_gcz < 1000
 
     def test_collinear_three_wire_above_ground(self) -> None:
-        """Three colinear wires (R—G—B at the same height) should have ZoR=ZoB
+        """Three colinear wires (R-G-B at the same height) should have ZoR=ZoB
         by reflection symmetry."""
         h = 5e-3
         geom = ThreeWireGeometry(

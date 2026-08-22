@@ -28,12 +28,12 @@ class Issue:
 
 
 _MILESTONE_TITLES = {
-    1: "Phase 0 — Bootstrap",
-    2: "Phase 1 — Analytical solvers + UX",
-    3: "Phase 2 — Bitmap C/Gp solver",
-    4: "Phase 3 — Faraday L/Rs solver",
-    5: "Phase 4 — Polish + 1.0.0 release",
-    6: "Phase 5 — Rust kernel acceleration",
+    1: "Phase 0: Bootstrap",
+    2: "Phase 1: Analytical solvers + UX",
+    3: "Phase 2: Bitmap C/Gp solver",
+    4: "Phase 3: Faraday L/Rs solver",
+    5: "Phase 4: Polish + 1.0.0 release",
+    6: "Phase 5: Rust kernel acceleration",
 }
 
 
@@ -117,7 +117,7 @@ Audit gap: digitize the IPC-2141A Appendix A table for ±0.5% golden tests.
 - [x] `stripline_symmetric` and `stripline_asymmetric` (IPC-2141A formulas)
 - [x] `cpwg` via scipy.special.ellipk (Wen 1969)
 - [ ] All within ±0.5% of IPC-2141A reference values on 10+ test cases
-      *(CPWG closed-form is ±15-20% accurate vs Polar SI9000 — formula limitation, not a bug)*
+      *(CPWG closed-form is ±15-20% accurate vs Polar SI9000: formula limitation, not a bug)*
 - [x] Conductor and dielectric loss estimates included
 
 ## Status: ⚠️ Done but accuracy ceiling lower than plan target
@@ -135,13 +135,13 @@ CPWG analytical accuracy is genuinely limited. For ±0.5%, use the bitmap solver
 - [x] `edge_coupled_diff_stripline`, `broadside_coupled_diff_stripline`
 - [x] Zdiff = 2·Zodd, Zcommon = Zeven/2 correctness checked
 - [ ] Validated against published reference values within ±1%
-      *(current tolerance is ±15% — IPC-2141A coupling is empirical; for ±1% use Phase 4 direct mode solve)*
+      *(current tolerance is ±15%: IPC-2141A coupling is empirical; for ±1% use Phase 4 direct mode solve)*
 
 ## Status: ✅ Done within IPC-2141A's accuracy limits
 """,
     ),
     Issue(
-        title="[1.10] Documentation site (mkdocs-material) — Phase 1 content",
+        title="[1.10] Documentation site (mkdocs-material): Phase 1 content",
         milestone=2,
         label="phase-1",
         body="""## Acceptance criteria
@@ -159,7 +159,7 @@ CPWG analytical accuracy is genuinely limited. For ±0.5%, use the bitmap solver
 
 PHASE_2_ISSUES = [
     Issue(
-        title="[2.4] Usermap class — atlc/atlc2 BMP fixture coverage",
+        title="[2.4] Usermap class: atlc/atlc2 BMP fixture coverage",
         milestone=3,
         label="phase-2",
         body="""## Acceptance criteria
@@ -168,7 +168,7 @@ PHASE_2_ISSUES = [
 - [x] PNG/TIFF support
 - [x] Edge replication via `replicate_edges(pad)`
 - [ ] Tested with 3 atlc v1 example BMPs and 3 atlc2 example BMPs
-      *(currently only synthetic test arrays — fixture work in progress)*
+      *(currently only synthetic test arrays: fixture work in progress)*
 
 ## Status: ⚠️ Implementation complete; external-fixture coverage missing
 
@@ -193,14 +193,14 @@ http://atlc.sourceforge.net/ to tests/fixtures/usermaps/.
 - [ ] 10× faster than NumPy on 1000×1000 microstrip
 - [ ] Multigrid V-cycle ≥5× faster than SOR on 2000×2000
 
-## Status: ❌ Not started — moved to Phase 5
+## Status: ❌ Not started: moved to Phase 5
 
 The Python+NumPy+PyAMG path covers practical PCB cross-sections (a few
 thousand pixels). Rust acceleration is an optimization, not a correctness gap.
 """,
     ),
     Issue(
-        title="[2.10] C/Gp solver — atlc v1 / atlc2 quantitative parity",
+        title="[2.10] C/Gp solver: atlc v1 / atlc2 quantitative parity",
         milestone=3,
         label="phase-2",
         body="""## Acceptance criteria
@@ -402,13 +402,13 @@ AUDIT_GAP_ISSUES = [
 
 ## Lowest-coverage modules
 
-- `visualization/fields.py` — 0%
-- `viewer.py` — 0% (interactive — hard to test)
-- `solvers/diff_modes.py` — 0%
-- `solvers/extension.py` — 19%
-- `mcp_server/server.py` — 29%
-- `scripting/atlc2_script.py` — 46%
-- `mcp_server/tasks.py` — 47%
+- `visualization/fields.py`: 0%
+- `viewer.py`: 0% (interactive: hard to test)
+- `solvers/diff_modes.py`: 0%
+- `solvers/extension.py`: 19%
+- `mcp_server/server.py`: 29%
+- `scripting/atlc2_script.py`: 46%
+- `mcp_server/tasks.py`: 47%
 """,
     ),
     Issue(

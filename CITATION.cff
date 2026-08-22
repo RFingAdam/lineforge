@@ -1,4 +1,4 @@
-# Citation File Format (CFF) — https://citation-file-format.github.io/
+# Citation File Format (CFF): https://citation-file-format.github.io/
 cff-version: 1.2.0
 title: "atlc3.0: Open-Source MCP-Enabled Transmission Line Calculator"
 message: "If you use atlc3 in published research or designs, please cite as below."
@@ -22,7 +22,7 @@ keywords:
   - model-context-protocol
 references:
   - type: software
-    title: "atlc — Arbitrary Transmission Line Calculator"
+    title: "atlc: Arbitrary Transmission Line Calculator"
     authors:
       - family-names: Kirkby
         given-names: David

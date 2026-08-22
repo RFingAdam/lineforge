@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""OpenEMS short L1↔L3 via — actual via geometry from L3 SIG1 transition.
+"""OpenEMS short L1↔L3 via: actual via geometry from L3 SIG1 transition.
 
 The user's L3 SIG1 trace transitions from top (L1) down to L3 via short
 through-vias, NOT all the way to L8. Modeling the actual length:
@@ -35,9 +35,9 @@ drill_d = 203.2  # 8 mil
 pad_d = 406.4  # 16 mil
 antipad_d = 762.0  # 30 mil
 
-# Feed traces — L1 microstrip on top, L3 stripline below
+# Feed traces: L1 microstrip on top, L3 stripline below
 L1_trace_w = 175.0  # ~6.9 mil for ~50 Ω over L2 GND with H = 2.73 mil
-L3_trace_w = 74.2  # 2.92 mil — the recommended narrowed width
+L3_trace_w = 74.2  # 2.92 mil. The recommended narrowed width
 
 feed_l = 3000.0  # 3 mm feed line
 side = 5000.0
@@ -62,24 +62,24 @@ res = C0 / (f_max * np.sqrt(4.0)) / unit / 30
 res_via = drill_d / 4  # ~50 μm in via region
 third = np.array([2 * res / 3, -res / 3]) / 4
 
-# X — fine near via, microstrip feed extends -x from via
+# X: fine near via, microstrip feed extends -x from via
 mesh.AddLine("x", np.linspace(-antipad_d, antipad_d, 30))
 mesh.AddLine("x", [-feed_l - antipad_d / 2, -antipad_d / 2, antipad_d / 2, feed_l + antipad_d / 2])
 mesh.AddLine("x", [-side, side])
 mesh.SmoothMeshLines("x", res)
 
-# Y — fine across feed traces and via region
+# Y: fine across feed traces and via region
 mesh.AddLine("y", np.linspace(-antipad_d, antipad_d, 20))
 mesh.AddLine("y", [-side, -L1_trace_w / 2, 0, L1_trace_w / 2, side])
 mesh.AddLine("y", [-L3_trace_w / 2 - third[0], L3_trace_w / 2 + third[0]])
 mesh.SmoothMeshLines("y", res)
 
-# Z — through stack: L1 to L4 with antipad cuts
+# Z: through stack: L1 to L4 with antipad cuts
 mesh.AddLine("z", [L4_top, L3_top, L2_top, L1_top])
 mesh.AddLine("z", np.linspace(L4_top, L1_top, 20))
 mesh.SmoothMeshLines("z", res / 2)
 
-# Substrate — εr=4 throughout (mid-FR4 average)
+# Substrate: εr=4 throughout (mid-FR4 average)
 substrate = CSX.AddMaterial("FR4", epsilon=4.0)
 substrate.AddBox(
     [-side - 1000, -side - 1000, L4_top - 200],
@@ -146,7 +146,7 @@ pec.AddCylinder(
 )
 
 # Lumped ports
-# Port 1: L1 microstrip end — between L1 trace top and L2 GND
+# Port 1: L1 microstrip end: between L1 trace top and L2 GND
 port1 = FDTD.AddLumpedPort(
     1,
     50,
@@ -156,7 +156,7 @@ port1 = FDTD.AddLumpedPort(
     excite=1,
     priority=5,
 )
-# Port 2: L3 stripline end — between L3 trace and L4 PWR1
+# Port 2: L3 stripline end: between L3 trace and L4 PWR1
 port2 = FDTD.AddLumpedPort(
     2,
     50,

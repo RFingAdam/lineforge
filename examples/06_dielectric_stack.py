@@ -1,4 +1,4 @@
-"""Phase A1 example — multi-layer dielectric stack.
+"""Phase A1 example: multi-layer dielectric stack.
 
 Real PCB stackups often have a stratified dielectric on one side of a stripline:
 think of an inner-layer trace (L3) where the next plane down has been voided

@@ -11,18 +11,18 @@ The tests in ``tests/test_solvers/test_parity.py`` then drive the bitmap
 solvers against these fixtures and assert agreement within a documented
 tolerance.
 
-Coax — `air_coax` and `fr4_coax`:
+Coax: `air_coax` and `fr4_coax`:
     Z₀ = (η₀ / 2π·sqrt(εr)) · ln(b/a)         [Pozar §1.4]
     L  = (μ₀ / 2π) · ln(b/a)                  [DC self-inductance]
     C  = 2π·ε₀·εr / ln(b/a)
     Rs (low-f, DC) = ρ_inner / (π·a²) + ρ_outer / (π·(b² − b'²))
 
-Round wire pair — `wire_pair`:
+Round wire pair: `wire_pair`:
     Z₀ = (η₀ / π·sqrt(εr)) · acosh(D/(2a))   for centre-to-centre D, radius a
     L  = (μ₀ / π) · acosh(D/(2a))
     C  = π·ε₀·εr / acosh(D/(2a))
 
-Parallel plate (sanity check) — `parallel_plate`:
+Parallel plate (sanity check): `parallel_plate`:
     Z₀ = (η₀ · h) / (W · sqrt(εr))   for plate sep h, width W
 
 All references: Pozar, *Microwave Engineering* 4th ed., Chapter 1; Wadell,
@@ -113,10 +113,10 @@ def build_coax_usermap(
 
     # Everything outside the outer radius is ground (green, V=0). This makes
     # the outer conductor "fill" the rest of the cell, equivalent to an
-    # infinitely-thick shield as in a real coax — necessary so the Laplace
+    # infinitely-thick shield as in a real coax: necessary so the Laplace
     # solver can't leak past a thin annulus.
     rgb[r >= outer_radius_m] = (0, 255, 0)
-    # Center conductor (red, V=+1) — drawn last so it overwrites if needed.
+    # Center conductor (red, V=+1): drawn last so it overwrites if needed.
     rgb[r <= inner_radius_m] = (255, 0, 0)
 
     return Usermap(

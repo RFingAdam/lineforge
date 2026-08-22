@@ -2,7 +2,7 @@
 
 When a transmission line has three conductors (e.g. a directional coupler, a
 microstrip with both signal traces and a ground bridge), there is no single
-$Z_0$ — instead there are three pair-wise impedances.
+$Z_0$: instead there are three pair-wise impedances.
 
 ## Y-decomposition
 
@@ -49,7 +49,7 @@ $$
 
 ## Coupler odd/even modes
 
-For a quarter-wave directional coupler (a common 3-wire geometry — two
+For a quarter-wave directional coupler (a common 3-wire geometry. Two
 parallel signal traces over a ground plane), it's standard to characterize
 the **odd mode** (push-pull drive, $V_R = -V_B$) and **even mode** (in-phase
 drive, $V_R = V_B$). atlc2 provides a shortcut: a single run with the green
@@ -77,8 +77,8 @@ If the grounded conductor carries a non-zero net current $I_\text{gnd}$
 (reported as `Ignd` in atlc2 / `result.ignd_pct` in lineforge), the line is
 radiating and the reported $Z_0$ is not a true characteristic impedance.
 
-**Rule of thumb:** if $|I_\text{gnd}/I_R| > 4\%$, reconsider the geometry —
-something is wrong with the assumed boundary conditions, or the line is
+**Rule of thumb:** if $|I_\text{gnd}/I_R| > 4\%$, reconsider the geometry.
+Something is wrong with the assumed boundary conditions, or the line is
 unsuitable as a transmission line as defined.
 
 ## References

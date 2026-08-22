@@ -74,7 +74,7 @@ def _hash_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
     """
 
     def coerce(v: Any) -> Any:
-        # Usermap — we hash the immutable RGB + metadata. Materials are derived
+        # Usermap: we hash the immutable RGB + metadata. Materials are derived
         # from RGB so they're implicitly covered.
         try:
             from lineforge.geometry.usermap import Usermap
@@ -132,7 +132,7 @@ def cached(
     Parameters
     ----------
     prefix
-        Cache key prefix — distinguishes between memoized functions.
+        Cache key prefix: distinguishes between memoized functions.
     skip_when
         Optional predicate ``(*args, **kwargs) -> bool``. If it returns True
         for a given call, the cache is bypassed (call passes through). Used

@@ -4,7 +4,7 @@ Run when adding a new fixture or fixing a corrupted file:
 
     python tests/fixtures/usermaps/_generate.py
 
-The script is idempotent — it overwrites in place — and is checked into the
+The script is idempotent. It overwrites in place, and is checked into the
 repo so anyone can reproduce the fixtures byte-for-byte.
 """
 

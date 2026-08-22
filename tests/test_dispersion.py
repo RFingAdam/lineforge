@@ -113,7 +113,7 @@ class TestMaterialRecordDispersion:
             er_freq={1e9: 4.4, 1e10: 4.2},
             name="frozen test",
         )
-        # Frozen — assignment must fail with Pydantic's ValidationError.
+        # Frozen: assignment must fail with Pydantic's ValidationError.
         with pytest.raises(ValidationError):
             m.er = 5.0  # type: ignore[misc]
 
@@ -159,7 +159,7 @@ class TestPcbExtendedPack:
         assert i370.at_frequency(1e10)[0] == pytest.approx(3.92, abs=1e-3)
 
     def test_legacy_records_no_freq_table_pass_through(self, pack_path: Path) -> None:
-        """Materials without er_freq still work — at_frequency returns the constant."""
+        """Materials without er_freq still work: at_frequency returns the constant."""
         records = load_json_pack(pack_path)
         ro3010 = next(r for r in records if "RO3010" in r.name)
         assert ro3010.er_freq is None

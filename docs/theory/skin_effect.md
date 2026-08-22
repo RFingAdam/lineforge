@@ -22,7 +22,7 @@ atlc2's empirical rule (which lineforge inherits):
 
 > Rs is accurate to ±1% when $\delta \ge 30 \cdot h$.
 
-For coarser grids, accuracy degrades to ±5% — and to **worse than 5%** if
+For coarser grids, accuracy degrades to ±5%, and to **worse than 5%** if
 conductors of different voltage are too close (per atlc2's diagram, < 8
 pixels for flat surfaces, < 16 pixels for corners).
 
@@ -56,7 +56,7 @@ into the conductor interior, increasing the internal inductance contribution.
 At high frequency the current is concentrated at the surface, reducing $L$.
 This is the well-known **low-frequency dispersion** effect.
 
-lineforge's frequency-resolved Faraday solve captures this naturally — running
+lineforge's frequency-resolved Faraday solve captures this naturally: running
 solves at multiple frequencies and plotting $L(f)$ shows the dispersion.
 
 ## References

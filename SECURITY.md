@@ -2,7 +2,7 @@
 
 ## Reporting a vulnerability
 
-lineforge is a numerical-computation library — most security-relevant issues
+lineforge is a numerical-computation library. Most security-relevant issues
 involve untrusted inputs flowing into the solver pipeline. Specifically:
 
 - Maliciously-crafted BMP/PNG/TIFF usermaps (Pillow decoder vulnerabilities,
@@ -56,7 +56,7 @@ In scope:
 Out of scope:
 
 - Vulnerabilities in upstream dependencies (numpy, scipy, pillow, mcp,
-  pyo3, …) — please report those upstream. We'll bump versions promptly
+  pyo3, …): please report those upstream. We'll bump versions promptly
   once upstream fixes ship.
 - Issues that require a malicious local user with filesystem access (this
   is a user-installed tool, not a server).
@@ -72,6 +72,6 @@ If you run the MCP server somewhere it accepts untrusted inputs:
 - The `run_atlc2_script` tool's `open <path>` command can read filesystem
   paths. Run the server in a sandbox (container, restricted user) if the
   client is untrusted.
-- The async `solve_cgp` task uses `asyncio.to_thread` — long solves can
+- The async `solve_cgp` task uses `asyncio.to_thread`: long solves can
   pin a CPU core. Use `tasks_cancel` to bound runtime, or a timeout
   reverse-proxy in front of the server.

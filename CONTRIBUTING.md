@@ -81,7 +81,7 @@ cargo test                       # Rust unit tests
 
 We require **≥ 90% Python coverage** and clean clippy on all PRs.
 
-For numerical work, every solver has **golden-value tests** — IPC-2141A reference
+For numerical work, every solver has **golden-value tests**: IPC-2141A reference
 tables, scikit-rf cross-checks, or atlc/atlc2 published example values. New solvers
 must come with golden tests.
 
@@ -94,7 +94,7 @@ Please target your PRs at open issues so the AC list can be ticked off.
 ### Picking an issue
 
 - **Good first issues** are labeled `good first issue`.
-- **Phase 0/1 work** is the easiest entry point — analytical formulas, Pydantic
+- **Phase 0/1 work** is the easiest entry point: analytical formulas, Pydantic
   models, CLI wiring.
 - **Numerical kernel work** (Phase 2/3) requires familiarity with sparse linear
   algebra and FD methods.

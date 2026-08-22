@@ -120,7 +120,7 @@ export function StackupEditor({
       <div className="bg-navy-950 border border-navy-700 rounded-lg max-w-4xl w-full max-h-[90vh] flex flex-col">
         <div className="flex items-center justify-between px-4 py-3 border-b border-navy-800">
           <span className="text-sm font-semibold text-slate-200">
-            Stackup editor — multi-layer dielectric (asymmetric stripline)
+            Stackup editor: multi-layer dielectric (asymmetric stripline)
           </span>
           <div className="flex items-center gap-2">
             <button

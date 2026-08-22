@@ -1,4 +1,4 @@
-"""Phase 1 example — Python API.
+"""Phase 1 example: Python API.
 
 Solve a 50Ω microstrip on 4 mil FR4 and a 100Ω diff pair on the same stackup.
 

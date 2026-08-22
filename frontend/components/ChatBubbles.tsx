@@ -1,11 +1,11 @@
 'use client';
 
 /**
- * ChatBubbles — presentational helpers for {@link ChatPanel}.
+ * ChatBubbles: presentational helpers for {@link ChatPanel}.
  *
  * Kept in a sibling file so ChatPanel stays focused on wiring (WS client,
  * scroll behavior, composer state). Nothing here touches the Zustand store
- * directly — everything is a pure function of its props.
+ * directly: everything is a pure function of its props.
  */
 
 import { Fragment, useMemo, type ReactNode, type CSSProperties } from 'react';
@@ -28,7 +28,7 @@ const ROLE_LABEL: Record<Role, string> = {
 };
 
 /** Left-border accent color per role. We keep bubbles transparent and lean
- *  on this single border + an avatar to communicate role — the old "three
+ *  on this single border + an avatar to communicate role. The old "three
  *  filled navy boxes" look read as visual noise. */
 const ROLE_BORDER: Record<Role, string> = {
   user: 'border-l-2 border-success',
@@ -38,7 +38,7 @@ const ROLE_BORDER: Record<Role, string> = {
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Avatars — inline SVGs so we don't pull in an icon library.
+// Avatars: inline SVGs so we don't pull in an icon library.
 // ─────────────────────────────────────────────────────────────────────────────
 
 function UserAvatar() {
@@ -113,7 +113,7 @@ function RoleAvatar({ role }: { role: Role }) {
 // Lightweight JSON syntax tinting.
 //
 // Walks a pretty-printed JSON string with `matchAll` and yields
-// {text, className} tokens. We render those as <span> children — all
+// {text, className} tokens. We render those as <span> children. All
 // React-native nodes, no raw HTML injection.
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -194,7 +194,7 @@ function renderInlineContent(content: string): ReactNode[] {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Tool-name badge — used by tool_call (→ prefix), tool_result (✓ / ✗ prefix).
+// Tool-name badge. Used by tool_call (→ prefix), tool_result (✓ / ✗ prefix).
 // ─────────────────────────────────────────────────────────────────────────────
 
 function ToolBadge({
@@ -283,7 +283,7 @@ export function MessageRow({
         </header>
 
         {/* Plain message body. For tool rows we suppress the redundant
-            "→ foo" / "✓ foo" text — that information is in the badge above. */}
+            "→ foo" / "✓ foo" text. That information is in the badge above. */}
         {turn.content && !isTool && (
           <div
             className={`text-sm leading-relaxed mt-0.5 whitespace-pre-wrap break-words ${
@@ -316,7 +316,7 @@ export function MessageRow({
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Thinking indicator — three bouncing dots + the in-flight tool name.
+// Thinking indicator. Three bouncing dots + the in-flight tool name.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function ThinkingIndicator({ toolName }: { toolName?: string }) {
@@ -427,7 +427,7 @@ export function findInFlightTool(history: ChatTurn[]): string | null {
       }
     }
   }
-  // Surface the most recently opened still-pending tool — if it's already
+  // Surface the most recently opened still-pending tool. If it's already
   // resolved, fall back to any other open name; otherwise return null.
   if (lastOpenedName && openByName[lastOpenedName]) return lastOpenedName;
   const remaining = Object.keys(openByName);

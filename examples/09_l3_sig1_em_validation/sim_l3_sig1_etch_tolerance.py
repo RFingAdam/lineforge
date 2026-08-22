@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""L3 SIG1 etch tolerance sweep — validate Z₀ window across realistic etch.
+"""L3 SIG1 etch tolerance sweep: validate Z₀ window across realistic etch.
 
 Closed-form Wadell at the recommended W=2.92 mil predicts the etch
 tolerance window:
@@ -9,7 +9,7 @@ tolerance window:
 
 Run all three in EM with realistic Cu + FR4 to confirm the closed-form
 sensitivity holds. This is the actual fab variability your manufacturer
-will deliver — important for setting the controlled-impedance spec.
+will deliver: important for setting the controlled-impedance spec.
 """
 
 import os

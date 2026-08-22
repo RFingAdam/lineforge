@@ -1,9 +1,9 @@
-"""REST endpoints for solve / sweep / target_z0 — wraps atlc3 library calls.
+"""REST endpoints for solve / sweep / target_z0: wraps atlc3 library calls.
 
 DB1 hardening:
 - ``_clean_geometry`` drops empty-string fields and (when the type is known)
   any keys that aren't part of the target geometry's Pydantic model. atlc3's
-  models are ``extra="forbid"`` — strict for direct library users — but the
+  models are ``extra="forbid"``: strict for direct library users, but the
   GUI's free-form input form often submits unrelated empty fields. Filtering
   here keeps the library strict while giving the GUI a forgiving entry point.
 - ``_sanitize_error`` strips Pydantic's ``https://errors.pydantic.dev/...``
@@ -177,8 +177,8 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
     """Solve the cross-section.
 
     Two input modes:
-    - ``geometry={...}`` — closed-form analytical solve (default).
-    - ``usermap_uri="atlc://geometries/<uid>"`` — bitmap solve against a
+    - ``geometry={...}``: closed-form analytical solve (default).
+    - ``usermap_uri="atlc://geometries/<uid>"``: bitmap solve against a
       previously-uploaded custom usermap. Forces solver="cgp".
     """
     if (req.geometry is None) == (req.usermap_uri is None):

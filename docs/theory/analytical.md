@@ -3,13 +3,13 @@
 lineforge's Phase 1 solvers are closed-form approximations valid over published
 geometric ranges. They run in microseconds and serve two roles:
 
-1. **Fast path for the 7 standard PCB geometries** — most users never need the
+1. **Fast path for the 7 standard PCB geometries**. Most users never need the
    bitmap kernel.
-2. **Cross-validation reference** for the Phase 2/3 numerical kernels — every
+2. **Cross-validation reference** for the Phase 2/3 numerical kernels. Every
    bitmap-rasterized standard geometry must agree with the closed-form answer
    to within 1%.
 
-## Microstrip — Hammerstad-Jensen (1980)
+## Microstrip: Hammerstad-Jensen (1980)
 
 Effective permittivity:
 
@@ -52,7 +52,7 @@ the bitmap kernel (Phase 2).
 **Reference:** E. Hammerstad and Ø. Jensen, *Accurate Models for Microstrip
 Computer-Aided Design*, IEEE MTT-S 1980; IPC-2141A Appendix A.
 
-## Symmetric stripline — Cohn (1954) / Wadell
+## Symmetric stripline: Cohn (1954) / Wadell
 
 Wide-strip closed form:
 
@@ -75,7 +75,7 @@ $$
 **Reference:** S. B. Cohn, *Characteristic Impedance of the Shielded-Strip
 Transmission Line*, IRE Trans. MTT, July 1954; Wadell §3.4.
 
-## CPWG — Wen (1969) / Wadell
+## CPWG: Wen (1969) / Wadell
 
 Elliptic-integral formula:
 
@@ -104,7 +104,7 @@ in lineforge via `scipy.special.ellipk`.
 
 **Reference:** C. P. Wen, IEEE MTT-S 1969; Wadell §3.6.4; IPC-2141A.
 
-## Differential pairs — IPC-2141A coupling correction
+## Differential pairs: IPC-2141A coupling correction
 
 For edge-coupled microstrip and stripline differential pairs, lineforge uses the
 empirical IPC-2141A coupling correction on the single-trace Z₀:

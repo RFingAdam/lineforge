@@ -2,11 +2,11 @@
 
 Combines three reflection sources on a typical RF path:
 
-1. **Source pad** — shunt capacitance to its reference plane (e.g. an
+1. **Source pad**: shunt capacitance to its reference plane (e.g. an
    IC pin pad or RF connector launch pad)
-2. **Trace** — characteristic-impedance mismatch vs the port reference
+2. **Trace**: characteristic-impedance mismatch vs the port reference
    (e.g. a 56 Ω microstrip seen by a 50 Ω port)
-3. **End pad** — shunt capacitance at the far end (e.g. U.FL connector,
+3. **End pad**: shunt capacitance at the far end (e.g. U.FL connector,
    second IC pin)
 
 For each operating frequency, returns the per-element |S11| contributions

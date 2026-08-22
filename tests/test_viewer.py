@@ -5,7 +5,7 @@ patching ``builtins.input`` to feed a scripted sequence of keys. PNG outputs
 land in the current working directory, so we run inside ``tmp_path``.
 
 The full solve_cgp call is mocked because it would extend the grid to
-3200×3200 and take >5 minutes per test — that's tested elsewhere
+3200×3200 and take >5 minutes per test. That's tested elsewhere
 (test_atlc_bmp_parity, test_parity). Here we want to drive the *viewer*
 control flow, not the solver.
 """

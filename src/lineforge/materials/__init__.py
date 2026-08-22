@@ -1,4 +1,4 @@
-"""Material database — atlc2's 45 standard colors plus extensions.
+"""Material database: atlc2's 45 standard colors plus extensions.
 
 Phase 1 ships the static atlc2 default table accessible via :func:`list_atlc2_default`.
 Phase 2 adds:

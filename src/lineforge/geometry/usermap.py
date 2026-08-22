@@ -1,15 +1,15 @@
-"""Usermap — the bitmap representation of a transmission line cross-section.
+"""Usermap: the bitmap representation of a transmission line cross-section.
 
 A usermap is a 2D grid of pixels, each tagged with a material from the
 :mod:`lineforge.materials` database. The numerical solvers consume usermaps and
 produce V/E/J fields back on the same grid.
 
 I/O:
-    - :meth:`Usermap.from_bmp` / :meth:`from_png` / :meth:`from_tiff` — atlc/atlc2
+    - :meth:`Usermap.from_bmp` / :meth:`from_png` / :meth:`from_tiff`: atlc/atlc2
       compatible bitmap inputs (no de-aliasing, exact RGB lookup).
-    - :meth:`Usermap.from_json` / :meth:`to_json` — lineforge-native format that
+    - :meth:`Usermap.from_json` / :meth:`to_json`: lineforge-native format that
       stores the material codes directly (no RGB round-trip needed).
-    - :meth:`Usermap.to_bmp` — write atlc2-readable BMP.
+    - :meth:`Usermap.to_bmp`: write atlc2-readable BMP.
 
 Edge replication:
     atlc2 replicates the edge pixels outward when extending the simulation to
@@ -183,7 +183,7 @@ class Usermap:
         """Per-pixel resistivity in Ω·m.
 
         atlc2's database stores resistivity in **µΩ·cm** despite the column
-        being labeled "Ohms:" — for copper the value is 1.7241, which is
+        being labeled "Ohms:": for copper the value is 1.7241, which is
         1.7241 µΩ·cm = 1.7241e-8 Ω·m (CRC handbook). Conversion factor: 1e-8.
         """
         out = np.full(self.shape, 1e8, dtype=np.float64)  # large for insulators

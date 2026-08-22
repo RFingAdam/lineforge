@@ -1,8 +1,8 @@
 """Closed-form analytical transmission-line solvers.
 
 Implements the IPC-2141A formulas (Hammerstad-Jensen, Wadell) for the seven
-standard PCB geometries. These run in microseconds — about a million times
-faster than the bitmap kernel — and are accurate to ±1% over the published
+standard PCB geometries. These run in microseconds: about a million times
+faster than the bitmap kernel, and are accurate to ±1% over the published
 validity ranges.
 
 Use :func:`solve` to dispatch any :class:`~lineforge.geometry.GeometryUnion` to

@@ -19,10 +19,10 @@ const KIND_LABEL: Record<FieldKind, string> = {
  *  who already speak field-solver language but might be flipping through
  *  the four kinds quickly. */
 const KIND_CAPTION: Record<FieldKind, string> = {
-  V: "V — Electric potential (volts), normalized to the energized conductor.",
-  E: "E — Electric-field magnitude |E| (V/m), log-compressed for visibility.",
-  D: "D — Electric-flux density |D| = ε·|E| (C/m²); highlights dielectric loading.",
-  T: "T — Local dielectric loss density (W/m³); proxy for tan(δ) hot spots.",
+  V: "V: Electric potential (volts), normalized to the energized conductor.",
+  E: "E: Electric-field magnitude |E| (V/m), log-compressed for visibility.",
+  D: "D: Electric-flux density |D| = ε·|E| (C/m²); highlights dielectric loading.",
+  T: "T: Local dielectric loss density (W/m³); proxy for tan(δ) hot spots.",
 };
 
 /** Unit annotation shown at the bottom of the colorbar legend. */
@@ -149,7 +149,7 @@ export function FieldPlotCanvas() {
       </div>
 
       <Card tone="raised" padded={false} className="overflow-hidden">
-        {/* header bar — kind label + download */}
+        {/* header bar: kind label + download */}
         <div className="flex items-center justify-between px-3 py-1.5 border-b border-border-subtle">
           <div className="text-[11px] uppercase tracking-wider text-slate-400 font-mono">
             {kind} · {KIND_LABEL[kind]}
@@ -173,7 +173,7 @@ export function FieldPlotCanvas() {
           </Button>
         </div>
 
-        {/* plot area — image + colorbar legend, with absolute-positioned chrome */}
+        {/* plot area: image + colorbar legend, with absolute-positioned chrome */}
         <div className="relative bg-canvas">
           <div className="min-h-40 flex items-center justify-center p-2">
             {busy && !png && (
@@ -203,7 +203,7 @@ export function FieldPlotCanvas() {
               // because: (a) the source is a data URI, not a URL Next can
               // optimize, and (b) we need `image-rendering: pixelated` for
               // crisp grid-cell edges, which next/image strips. ESLint will
-              // warn — that's a known acceptance, see A3 report.
+              // warn: that's a known acceptance, see A3 report.
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={png}
@@ -231,7 +231,7 @@ export function FieldPlotCanvas() {
 }
 
 /** Field-kind selector pills, styled to match the rest of the design
- *  system. Native <button>s preserve keyboard / a11y for free — Tab
+ *  system. Native <button>s preserve keyboard / a11y for free: Tab
  *  focuses, Enter/Space activates, V/E/D/T hotkeys fire via the global
  *  keydown listener above. */
 function KindTabs({
@@ -276,7 +276,7 @@ function KindTabs({
 /** Vertical colorbar legend to the right of the plot.
  *
  *  Note: the field-plot API returns a baked PNG with no numeric value
- *  range exposed, so this bar is intentionally *qualitative* — it shows
+ *  range exposed, so this bar is intentionally *qualitative*. It shows
  *  colormap direction (low → high) and the units the kind reports, not
  *  a numeric scale. For absolute values, refer to the on-image colorbar
  *  produced by the backend. */

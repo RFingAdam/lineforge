@@ -1,4 +1,4 @@
-"""Parity tests — bitmap solvers vs analytical reference geometries.
+"""Parity tests: bitmap solvers vs analytical reference geometries.
 
 These tests close the gap from AUDIT.md item #1: validate the C/Gp Laplace
 solver and the Faraday L/Rs solver against geometries with known closed-form
@@ -40,7 +40,7 @@ from tests.fixtures.geometries import (
 class TestCGPParity:
     """Phase 2 C/Gp solver should reproduce the analytical Z₀ for shielded geometries.
 
-    Coax is the canonical shielded case — the field is bounded by the outer
+    Coax is the canonical shielded case. The field is bounded by the outer
     conductor, so single-grid Laplace without aggressive boundary extension
     converges quickly and accurately.
     """
@@ -56,7 +56,7 @@ class TestCGPParity:
             extend_grid=False,  # coax is shielded; no extension needed
         )
 
-        # ±10% on Z₀ — generous because the inner conductor is only ~25 px in radius
+        # ±10% on Z₀: generous because the inner conductor is only ~25 px in radius
         assert math.isclose(result.z0, case.z0_ohm, rel_tol=0.10), (
             f"{case.name}: bitmap Z0={result.z0:.2f}Ω, "
             f"analytical={case.z0_ohm:.2f}Ω ({100 * abs(result.z0 - case.z0_ohm) / case.z0_ohm:.1f}% off)"
@@ -104,7 +104,7 @@ class TestFaradayParity:
     """Phase 3 Faraday/PEEC solver should reproduce the analytical DC inductance for coax + wire pair.
 
     These tests run at low frequency (1 MHz) to stay in the DC regime where
-    skin effect doesn't yet redistribute the current — so the solver's L
+    skin effect doesn't yet redistribute the current, so the solver's L
     matches the textbook DC L = (μ₀/2π)·ln(b/a) for coax.
     """
 
@@ -114,7 +114,7 @@ class TestFaradayParity:
         # 1 MHz: skin depth ≫ conductor thickness → solver returns DC L
         result = solve_lrs_faraday(usermap, frequency_hz=1e6, method="dense")
         assert result.L_per_m > 0
-        # ±20% — Faraday PEEC discretization on a small grid is approximate
+        # ±20%: Faraday PEEC discretization on a small grid is approximate
         assert math.isclose(result.L_per_m, case.L_per_m, rel_tol=0.20), (
             f"50Ω coax DC L: got {result.L_per_m * 1e9:.1f} nH/m, "
             f"analytical {case.L_per_m * 1e9:.1f} nH/m "

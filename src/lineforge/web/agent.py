@@ -1,15 +1,15 @@
-"""Claude Agent SDK integration — atlc3 tools + chat session driver.
+"""Claude Agent SDK integration: atlc3 tools + chat session driver.
 
 Defines a set of MCP tools the agent can call to drive the GUI:
 
-  Solver tools (read-only — exercise atlc3's library):
+  Solver tools (read-only: exercise atlc3's library):
     - calculate_impedance(geometry, frequency?)
     - target_z0(template, target_ohms, vary?, bounds?)
     - sweep(geometry, parameter, values, solver?)
     - solve_modes(geometry)               # 3-wire Y-decomposition
     - list_geometry_types()
 
-  GUI-state tools (write — mutate the shared GuiState so the frontend
+  GUI-state tools (write: mutate the shared GuiState so the frontend
   re-renders as the agent works):
     - set_geometry_field(field, value)
     - set_geometry_type(type)
@@ -208,7 +208,7 @@ async def _t_set_geometry_type(args: dict[str, Any]) -> dict[str, Any]:
 
 @tool(
     "reset_chat",
-    "Reset the GUI session — clear chat history, geometry, and last result.",
+    "Reset the GUI session: clear chat history, geometry, and last result.",
     {},
 )
 async def _t_reset_chat(args: dict[str, Any]) -> dict[str, Any]:
@@ -248,7 +248,7 @@ Workflow:
 4. Run calculate_impedance OR target_z0 OR sweep depending on what
    the user asked for. Report the result clearly with units.
 
-Be concise. Quote Z₀ to 3 decimals. Always show your work — when you
+Be concise. Quote Z₀ to 3 decimals. Always show your work. When you
 call a tool, the user sees the call + result in the chat.
 """
 

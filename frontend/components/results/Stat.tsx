@@ -9,14 +9,14 @@ import { SkeletonRow } from "../Skeleton";
  * Visual hierarchy is controlled by two orthogonal props:
  *   - `hero` flips to the larger "headline" variant (2× height, accent left
  *     border, oversized mono numerals). Use this for the dominant value of a
- *     result group — Z₀, Z_diff, etc.
+ *     result group: Z₀, Z_diff, etc.
  *   - `tone` tints the card to convey semantic meaning. `default` stays neutral
  *     `surface-raised`; status tones layer a faint colored fill and border.
  *
  * `label` accepts plain strings (which run through {@link MathLabel} so common
  * notations like `Z₀`, `Z_diff`, `ε_eff`, `α_c` render with proper subscripts
- * and Greek letters), but callers that need a richer label — e.g. a label with
- * an inline help icon — can pass `labelNode` instead.
+ * and Greek letters), but callers that need a richer label: e.g. a label with
+ * an inline help icon: can pass `labelNode` instead.
  *
  * `delta` renders a small inline pill below the value; `sparkline` slots a
  * caller-provided ReactNode (usually a tiny inline SVG) to the right of the

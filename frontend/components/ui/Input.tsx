@@ -54,7 +54,7 @@ export interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   suffix?: ReactNode;
   /** Long-form description surfaced via the help icon's tooltip. */
   description?: string;
-  /** Error message — shown red under the input. Also drives border colour. */
+  /** Error message: shown red under the input. Also drives border colour. */
   error?: string;
   /** Marks the label with a red asterisk and sets the underlying input. */
   required?: boolean;

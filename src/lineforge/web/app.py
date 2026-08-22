@@ -1,4 +1,4 @@
-"""FastAPI app entry point — wires up REST, WebSockets, and CORS."""
+"""FastAPI app entry point: wires up REST, WebSockets, and CORS."""
 
 from __future__ import annotations
 

@@ -1,4 +1,4 @@
-# C and Gp — the Laplace solver
+# C and Gp. The Laplace solver
 
 lineforge's bitmap C/Gp pipeline solves the 2D electrostatic Laplace equation
 on a Cartesian pixel grid:
@@ -22,7 +22,7 @@ V_{i,j}\,(\alpha_E + \alpha_W + \alpha_N + \alpha_S)
 $$
 
 where each $\alpha_X$ is the εr at the cell-edge between (i,j) and the named
-neighbor — lineforge uses the **arithmetic mean** of the two adjacent pixels
+neighbor: lineforge uses the **arithmetic mean** of the two adjacent pixels
 (matching atlc v1):
 
 $$
@@ -61,7 +61,7 @@ $\omega = 1.9$ is close to optimal.
 
 For grids ≳ $1000 \times 1000$, SOR's iteration count grows as $\mathcal{O}(N^2)$,
 which becomes prohibitive. lineforge falls back to PyAMG's smoothed-aggregation
-multigrid, which converges in $\mathcal{O}(N)$ work — typically a 5–10× speedup
+multigrid, which converges in $\mathcal{O}(N)$ work: typically a 5–10× speedup
 on big grids.
 
 ## Capacitance from the field

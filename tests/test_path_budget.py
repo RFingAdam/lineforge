@@ -8,7 +8,7 @@ from lineforge.path_budget import TraceSpec, rf_path_budget
 
 class TestRfPathBudget:
     def test_pad_only_no_trace(self):
-        """No trace, just two pads — RL is sum of two shunt contributions."""
+        """No trace, just two pads: RL is sum of two shunt contributions."""
         src = pad_capacitance("0.4mm", "0.4mm", h="2.73mil", er=3.7)
         end = pad_capacitance("0.6mm", "0.5mm", h="2.73mil", er=3.7)
         b = rf_path_budget(freq_ghz=[1.0, 6.0], source_pad=src, end_pad=end)

@@ -1,13 +1,13 @@
-# L3 SIG1 — openEMS validation of lineforge closed-form Wadell
+# L3 SIG1: openEMS validation of lineforge closed-form Wadell
 
 This case study cross-validates lineforge's analytical (Wadell / IPC-2141)
 transmission-line solvers against openEMS FDTD for a real RF design point:
 the L3 SIG1 trace that carries the common port of an 800 MHz – 6 GHz
 triplexer in an 8-layer PCB.
 
-The motivating design question — **is narrowing the L3 trace from 3.4 mil
+The motivating design question: **is narrowing the L3 trace from 3.4 mil
 to 2.92 mil the right way to hit 50 Ω strict, or should we void L4 to
-push the reference down to L5?** — turned into an end-to-end validation
+push the reference down to L5?**: turned into an end-to-end validation
 of lineforge's accuracy against direct 3D EM.
 
 ## Headline numbers
@@ -33,7 +33,7 @@ term that closes the gap. The **slope** of Z₀ vs W matches exactly.
 | [`sim_microstrip_z0_sweep.py`](sim_microstrip_z0_sweep.py) | Generalized methodology validation. Six widths from 3.15 – 7.87 mil; lineforge microstrip vs MSLPort agrees to ±1.6 % across the design space. **Start here if you want to verify lineforge against your own openEMS install.** |
 | [`sim_l3_sig1_definitive.py`](sim_l3_sig1_definitive.py) | The design point. W = 2.92 mil asymmetric stripline (L2 GND, L3 trace, L4 PWR1 split εr stackup), realistic ½ oz Cu σ + FR4 Df = 0.02, V/I-probe Z₀ extraction, IL/inch at LTE B5 / B3 / Wi-Fi 2.4 / Wi-Fi 5. |
 | [`sim_l3_sig1_etch_tolerance.py`](sim_l3_sig1_etch_tolerance.py) | Etch tolerance window. W = 2.92 ± 0.5 mil at the design point. Confirms the EM Z₀ sensitivity matches lineforge closed-form slope exactly. |
-| [`sim_via_short.py`](sim_via_short.py) | The return-path discontinuity demo. An 8/16/30 mil L1→L3 via with **no** GND stitching gives S₂₁ = −151 dB — empirical proof that GND stitching at λ/20 is mandatory at every via transition. |
+| [`sim_via_short.py`](sim_via_short.py) | The return-path discontinuity demo. An 8/16/30 mil L1→L3 via with **no** GND stitching gives S₂₁ = −151 dB: empirical proof that GND stitching at λ/20 is mandatory at every via transition. |
 
 ## Running the sims
 
@@ -50,8 +50,8 @@ python examples/09_l3_sig1_em_validation/sim_l3_sig1_etch_tolerance.py
 python examples/09_l3_sig1_em_validation/sim_via_short.py
 ```
 
-If you only have lineforge (no openEMS), the closed-form parts still work —
-each script imports `lineforge.analytical` for the reference numbers.
+If you only have lineforge (no openEMS), the closed-form parts still work.
+Each script imports `lineforge.analytical` for the reference numbers.
 
 ## Design specification
 
@@ -73,7 +73,7 @@ lineforge is built on the Wadell / IPC-2141 closed-form formulas. Those
 formulas have been an industry standard for decades, but it's still nice
 to be able to point at a head-to-head FDTD comparison on a non-trivial
 geometry. This case study is that comparison: same problem, same numbers,
-different solver — within 2 %.
+different solver: within 2 %.
 
 The scripts are also a working template for anyone who wants to do similar
 validations on their own designs: openEMS setup with MSLPort, V/I field

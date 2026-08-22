@@ -51,7 +51,7 @@ class TestLaminateLookup:
             laminate_lookup("Bogus Material XYZ")
 
     def test_frequency_interpolation(self):
-        """Rogers RO4350B has er_freq table — verify interpolation."""
+        """Rogers RO4350B has er_freq table: verify interpolation."""
         laminate_lookup("Rogers RO4350B")
         r_at_10g = laminate_lookup("Rogers RO4350B", frequency_ghz=10)
         # er_freq table has 10 GHz point at εr=3.66 (or close)

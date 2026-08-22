@@ -196,7 +196,7 @@ class TestSolveDryRun:
     def test_solve_dry_run_does_not_invoke_solver(self, tmp_path: Path) -> None:
         i = ScriptInterpreter(dry_run=True)
         i.state.folder = tmp_path
-        # Run a dry-run solve — should not require a usermap or hit the solver
+        # Run a dry-run solve: should not require a usermap or hit the solver
         i.run("solve\n")
         # No output files written in dry_run mode
         assert i.outputs == {}

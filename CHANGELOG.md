@@ -6,14 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
-## [2.2.0] — 2026-05-13
+## [2.2.0]: 2026-05-13
 
 ### Changed
 
 **License: GPL-3.0-or-later → AGPL-3.0-or-later.** The AGPL closes the
 "wrap as a paid SaaS without contributing back" gap that GPL leaves
 open (GPL's copyleft only triggers on distribution; AGPL's also triggers
-on network use). The atlc / atlc2 lineage is preserved — GPL-3.0 →
+on network use). The atlc / atlc2 lineage is preserved: GPL-3.0 →
 AGPL-3.0 is explicitly permitted by GPL-3.0 §13. Existing GPL-3.0 forks
 remain valid under their original terms; future commits and the v2.2.0
 release are AGPL-3.0-or-later.
@@ -29,7 +29,7 @@ No API changes.
   at 1 GHz. The frequency-resolved `er_freq` tables were already
   correct; only the no-frequency-specified fallback was wrong.
 
-## [2.1.0] — 2026-05-12
+## [2.1.0]: 2026-05-12
 
 RF pad analytics, design-rule decision logic, and an end-to-end RF path
 return-loss budget. Adds five new public APIs plus matching MCP tools.
@@ -38,12 +38,12 @@ case-study work in `examples/09_*` and `examples/10_*`.
 
 ### Added
 
-#### RF pad capacitance analytics — `lineforge.analytical.pads`
-- `pad_capacitance(W, L, h, er, method)` — finite-pad C with three
+#### RF pad capacitance analytics: `lineforge.analytical.pads`
+- `pad_capacitance(W, L, h, er, method)`: finite-pad C with three
   methods: parallel-plate ("pp", lower bound), Yamashita-Atsuki square-
   pad with fringing ("ya", **default**, best for finite pads), and
   Hammerstad-Jensen wide-microstrip ("hj", upper bound).
-- `pad_relief_advisor(W, L, options, band_max_ghz, rl_target_dB)` —
+- `pad_relief_advisor(W, L, options, band_max_ghz, rl_target_dB)`:
   ranks multiple stackup options (no relief / relieve one plane /
   relieve two planes) against an RL target at the band edge and returns
   the first option that qualifies plus full per-option comparison data.
@@ -52,26 +52,26 @@ case-study work in `examples/09_*` and `examples/10_*`.
 - Multi-layer dielectric input via `DielectricLayer` stacks (matches the
   existing asymmetric-stripline machinery from v1.0.0).
 
-#### Design-rule decision logic — `lineforge.design_rules`
+#### Design-rule decision logic: `lineforge.design_rules`
 - `classify_pad(component_type, has_modular_grant, is_user_designed_rf,
   operating_freq_ghz)` returns one of three categories:
-  - **Category 1 — Follow reference design** (Wi-Fi/LTE modules with FCC
+  - **Category 1: Follow reference design** (Wi-Fi/LTE modules with FCC
     modular grants, U.FL/SMA/MMCX connectors, RF ICs)
-  - **Category 2 — Optimize freely** (your own triplexers/diplexers/
+  - **Category 2: Optimize freely** (your own triplexers/diplexers/
     matching networks/antennas)
-  - **Category 3 — Standard practice** (DC, low-speed, power)
+  - **Category 3: Standard practice** (DC, low-speed, power)
 - Plus guidance text, risks-if-deviating, and references suitable for
   design review notes or agent reports.
 
-#### Path-budget calculator — `lineforge.path_budget`
+#### Path-budget calculator: `lineforge.path_budget`
 - `rf_path_budget(freq_ghz, source_pad, trace, end_pad, Z0_port)`
   combines source-pad shunt cap + trace impedance mismatch + end-pad
   shunt cap into a worst-case end-to-end RL across a frequency sweep.
 - Per-frequency rows include the dominant contributor so you know which
   element to optimize first.
 
-#### Laminate lookup — `lineforge.materials.laminates`
-- `laminate_lookup(name, frequency_ghz)` — fuzzy-name match against the
+#### Laminate lookup: `lineforge.materials.laminates`
+- `laminate_lookup(name, frequency_ghz)`: fuzzy-name match against the
   18 entries in `pcb_extended.json`. Handles aliases like "FR4 prepreg",
   "FR4 core", "RO4350B", "M6", "Megtron 6", "Isola 370HR", etc.
 - `list_laminates()` returns the sorted canonical names.
@@ -103,14 +103,14 @@ Total MCP tools now: 21.
   values that don't match the canonical published datasheet numbers.
   Lookup tool works correctly; data correction tracked separately.
 
-## [Unreleased — pre-2.1.0]
+## [Unreleased: pre-2.1.0]
 
 ### Added
 - **Web GUI consolidated into the main package.** The former standalone
   `atlc3-gui` sibling repo is now `lineforge.web` (importable Python
   subpackage at `src/lineforge/web/`) plus `frontend/` (Next.js dev tree)
   at the repo root. Install with `pip install 'lineforge[gui]'`; launch
-  with `lineforge gui` — same chat-driven design studio, one install path.
+  with `lineforge gui`: same chat-driven design studio, one install path.
 - `[project.optional-dependencies]` group `gui`: fastapi, uvicorn[standard],
   websockets, python-dotenv, claude-agent-sdk, scikit-rf.
 
@@ -131,7 +131,7 @@ Total MCP tools now: 21.
   is preserved as the archive of granular C1–E10 commit history. Future
   development happens in this repo.
 
-## [2.0.0] — 2026-05-11
+## [2.0.0]: 2026-05-11
 
 **Project renamed: atlc3 → lineforge.** The codebase has grown past the
 "successor to atlc/atlc2" framing into a programmable, agent-friendly
@@ -164,25 +164,25 @@ API surface (function names, geometry models, result fields) is unchanged.
 - All v1.1.0 features (multi-layer stacks, Touchstone export, optimizer,
   GUI launcher, three-conductor solver, L3 SIG1 EM validation case study)
 
-## [1.1.0] — 2026-05-11
+## [1.1.0]: 2026-05-11
 
 Three-conductor analytical solver, GUI launcher polish, and the L3 SIG1
 openEMS validation case study.
 
 ### Added
 
-#### Three-conductor lines — Y-decomposition (B1 / B2 / B3)
-- `atlc3.analytical.three_wire` — closed-form Y-matrix decomposition for
+#### Three-conductor lines: Y-decomposition (B1 / B2 / B3)
+- `atlc3.analytical.three_wire`: closed-form Y-matrix decomposition for
   three-conductor systems (e.g. a signal trace flanked by two coplanar
   ground rails). Returns even/odd mode impedances and the full 3×3 Y
   matrix from the wire geometry. Method tag
   `analytical-three-wire-y-decomposition`.
-- `atlc3.geometry.three_wire` — `WirePosition` Pydantic model and
+- `atlc3.geometry.three_wire`: `WirePosition` Pydantic model and
   `ThreeConductor` geometry; supports arbitrary 2D positions per wire.
-- `Laplace.solve_modes` (bitmap solver) — extends 2-conductor mode
+- `Laplace.solve_modes` (bitmap solver): extends 2-conductor mode
   decomposition to the 3-conductor case via Y-matrix factorisation,
   matching the analytical formula on simple geometries within ~1 %.
-- Boundary-weighted floating-conductor BC (B2) — when one of the wires
+- Boundary-weighted floating-conductor BC (B2). When one of the wires
   is floating (Q-conserving rather than V-fixed), the Laplace solver
   now uses a boundary-weighted constraint that converges much faster
   than the previous Lagrange-multiplier approach and gives lower
@@ -192,13 +192,13 @@ openEMS validation case study.
 - Theory doc: `docs/theory/three_wire.md`.
 
 #### GUI ergonomics (C-final, E9)
-- `atlc3 gui` CLI launcher — starts the FastAPI backend + opens the web
+- `atlc3 gui` CLI launcher: starts the FastAPI backend + opens the web
   UI in your default browser with one command. No more two-terminal
   startup dance.
-- `atlc3 gui --reload` — runs the backend under uvicorn with auto-reload
+- `atlc3 gui --reload`: runs the backend under uvicorn with auto-reload
   on source changes, for development of GUI features against a live
   atlc3 kernel. Closes #28.
-- `examples/08_gui_walkthrough.md` — end-to-end walkthrough using the
+- `examples/08_gui_walkthrough.md`: end-to-end walkthrough using the
   GUI for a microstrip + diff-pair + sweep workflow.
 
 #### Case study: L3 SIG1 openEMS validation
@@ -214,7 +214,7 @@ openEMS validation case study.
 ### Changed
 - Nothing breaking; all 1.0.0 APIs continue to work unchanged.
 
-## [1.0.0] — 2026-05-08
+## [1.0.0]: 2026-05-08
 
 First stable release. atlc3 is now feature-complete vs the Phase 0-4 plan
 plus the post-1.0 Phase A work (multi-layer stacks, Touchstone export,
@@ -248,8 +248,8 @@ materials, atlc-format BMP parity fixtures, broader test coverage).
   returns the file path under `result.touchstone`.
 
 #### `target_z0` ergonomic wrapper (A3)
-- `atlc3.optimize.target_z0(template, *, vary, target_ohms, ...)` —
-  one-liner for "what trace width gives me 50 Ω on this stackup?"
+- `atlc3.optimize.target_z0(template, *, vary, target_ohms, ...)`.
+  One-liner for "what trace width gives me 50 Ω on this stackup?"
 - Bundled convergence fix: `optimize_for`'s 1D scalar minimizer now uses
   `xatol` scaled to 1e-9 of the search interval (was scipy's default 1e-5
   in absolute SI, which is huge when bounds are in meters). The L3 SIG1
@@ -283,8 +283,8 @@ materials, atlc-format BMP parity fixtures, broader test coverage).
   close.
 
 #### Examples
-- `examples/06_dielectric_stack.py` — L3 SIG1 void-L4 stackup walkthrough.
-- `examples/07_touchstone_export.py` — sweep + .s2p export + skrf reload.
+- `examples/06_dielectric_stack.py`: L3 SIG1 void-L4 stackup walkthrough.
+- `examples/07_touchstone_export.py`: sweep + .s2p export + skrf reload.
 
 ### Changed
 - `optimize_for` 1D scalar minimization tolerance is now scaled to the
@@ -294,17 +294,17 @@ materials, atlc-format BMP parity fixtures, broader test coverage).
   while remaining backward-compatible: existing constant-only records still
   return the same numbers from `at_frequency()` as their bulk fields.
 
-### Phase 4 — Polish + 1.0.0 prep
-- Added geometry optimizer (`atlc3.optimize_for`) — wrap scipy.optimize for
+### Phase 4: Polish + 1.0.0 prep
+- Added geometry optimizer (`atlc3.optimize_for`): wrap scipy.optimize for
   finding dimensions that hit Z0 / Zdiff / εeff targets.
-- Added disk-cached solves (`atlc3.cache`) — repeated runs are instant.
+- Added disk-cached solves (`atlc3.cache`): repeated runs are instant.
   Disable with `ATLC3_NO_CACHE=1`.
 - Theory documentation: Laplace solver, Faraday solver, skin effect, 3-wire
   decomposition.
 - Added `OptimizeResult` to top-level public API.
 - Added `atlc3 lrs` and `atlc3 sweep` CLI subcommands.
 
-### Phase 3 — Faraday solver, full RLGC, sweeps
+### Phase 3: Faraday solver, full RLGC, sweeps
 - Added Faraday/PEEC sparse-system solver for L and Rs
   (`atlc3.solvers.solve_lrs`).
 - Added skin-depth prediction and pixel masking
@@ -316,7 +316,7 @@ materials, atlc-format BMP parity fixtures, broader test coverage).
 - MCP tools: `solve_lrs`, `solve_full`, `sweep` (long-running ones return
   `taskId`s; poll via `tasks_get`).
 
-### Phase 2 — C/Gp bitmap solver + atlc2 file compat
+### Phase 2: C/Gp bitmap solver + atlc2 file compat
 - Added `Usermap` class with BMP/PNG/TIFF/JSON I/O (atlc/atlc2 compatible).
 - Added per-geometry rasterizers (microstrip, stripline, CPWG, diff pairs).
 - Added `MoreColors.txt` parser; JSON material packs.
@@ -337,7 +337,7 @@ materials, atlc-format BMP parity fixtures, broader test coverage).
 - MCP resources: `atlc://geometries/{id}`, `atlc://results/{id}`,
   `atlc://results/{id}/field/{V|E|D|T}`.
 
-### Phase 1 — Closed-form analytical solvers + UX
+### Phase 1: Closed-form analytical solvers + UX
 - All 8 standard PCB geometries supported via IPC-2141A formulas
   (Hammerstad-Jensen, Wadell, Cohn, Wen).
 - Differential-pair coupling correction (edge-coupled microstrip + stripline,
@@ -355,7 +355,7 @@ materials, atlc-format BMP parity fixtures, broader test coverage).
 - Documentation site (mkdocs-material) with quickstart, three tutorials,
   geometry reference, analytical theory.
 
-### Phase 0 — Bootstrap
+### Phase 0: Bootstrap
 - Initial Python + Rust monorepo with maturin build, PyO3 module skeleton.
 - GitHub Actions CI matrix (Linux/macOS/Windows × Python 3.11/3.12/3.13;
   ruff, black, mypy, pytest, cargo test, cargo clippy).

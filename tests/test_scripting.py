@@ -26,7 +26,7 @@ class TestParser:
             interp.run("flarble 1 2 3\n")
 
     def test_three_letter_prefix_match(self) -> None:
-        # atlc2 examines first 3 chars only — "twi" should match "twinlead"
+        # atlc2 examines first 3 chars only: "twi" should match "twinlead"
         interp = ScriptInterpreter(dry_run=True)
         interp.run("twi\n")
         assert interp.state.geometry_kind == "twinlead"

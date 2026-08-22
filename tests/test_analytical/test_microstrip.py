@@ -35,7 +35,7 @@ class TestMicrostripGolden:
     @pytest.mark.parametrize(
         ("W_mil", "H_mil", "T_mil", "er", "z0_expected", "tol"),
         [
-            # Classic 50Ω microstrip on 4 mil FR4 (er=4.4) — Hammerstad-Jensen
+            # Classic 50Ω microstrip on 4 mil FR4 (er=4.4): Hammerstad-Jensen
             # gives ~46Ω here; the "50Ω rule of thumb" is a designer
             # approximation, so we use a 10% tolerance.
             (7.5, 4.0, 1.4, 4.4, 50.0, 0.10),
@@ -43,7 +43,7 @@ class TestMicrostripGolden:
             (20.0, 4.0, 1.4, 4.4, 25.0, 0.10),
             # Narrow trace, higher impedance
             (3.0, 4.0, 1.4, 4.4, 75.0, 0.10),
-            # Same trace on thicker FR4 — higher Z0
+            # Same trace on thicker FR4: higher Z0
             (7.5, 8.0, 1.4, 4.4, 70.0, 0.10),
             # Thicker copper, slightly lower Z0
             (7.5, 4.0, 2.8, 4.4, 47.0, 0.10),

@@ -1,13 +1,13 @@
 # Migrating from atlc3 to lineforge
 
 lineforge is the renamed, recontextualized continuation of atlc3. The
-codebase, solvers, results, and behavior are unchanged — just the
+codebase, solvers, results, and behavior are unchanged: just the
 project name and entry points moved. v2.0.0 is the first lineforge release.
 
 This guide walks through the three things you need to change in your
 project, in roughly the order they'll bite you.
 
-## TL;DR — three find/replaces
+## TL;DR. Three find/replaces
 
 1. `import atlc3` → `import lineforge`
 2. `from atlc3` → `from lineforge`
@@ -80,7 +80,7 @@ If you have downstream Cargo workspaces depending on the kernel:
 | Was | Now |
 |---|---|
 | `.atlc3.json` | `.lineforge.json` |
-| `examples/04_geometry_json.json` | (still works — same schema) |
+| `examples/04_geometry_json.json` | (still works: same schema) |
 
 The `.atlc3.json` file format is unchanged; just the conventional
 extension is `.lineforge.json` now. Either loads correctly via
@@ -98,7 +98,7 @@ hardcoded URLs in your scripts, CI config, or documentation.
 - atlc2-format BMP usermap drop-in compatibility (`*.bmp` + `MoreColors.txt`)
 - atlc2 `.txt` script-file execution (`lineforge run-script ...`)
 - The Wadell / IPC-2141A / Hammerstad-Jensen lineage and references
-- Test suite — all 364 tests pass identically on v1.1.0 and v2.0.0
+- Test suite. All 364 tests pass identically on v1.1.0 and v2.0.0
 - Touchstone .s2p export format
 - All v1.1.0 features: multi-layer dielectric stacks, three-conductor
   solver, GUI launcher, frequency-dependent materials, expanded laminate
@@ -152,8 +152,8 @@ to_touchstone(results, "trace.s2p", line_length="1in", z_ref=50)
 ```
 
 The only differences are the `atlc3 → lineforge` replacements at the import
-line. Everything else — function names, parameter names, return types,
-behavior — is identical.
+line. Everything else: function names, parameter names, return types,
+behavior: is identical.
 
 ## Mechanical migration script
 
@@ -169,13 +169,13 @@ grep -rln 'atlc3' your_project/ | xargs sed -i 's/\batlc3\b/lineforge/g'
 ```
 
 The `\b` word-boundary in the second command prevents accidental matches
-inside `atlc2` (the historical reference, which we keep) — `\batlc3\b`
+inside `atlc2` (the historical reference, which we keep): `\batlc3\b`
 only matches the standalone token `atlc3`.
 
 ## Questions or surprises?
 
 If you hit something that's behaving differently between atlc3 1.1.0 and
-lineforge 2.0.0, that's almost certainly a bug — please open an issue at
+lineforge 2.0.0, that's almost certainly a bug: please open an issue at
 https://github.com/RFingAdam/lineforge/issues with:
 
 - the geometry you're solving (or a 5-line repro)

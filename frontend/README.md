@@ -30,11 +30,11 @@ backend bounces during dev are resilient.
 
 ## Components (C2 baseline)
 
-- `ChatPanel` — chat history + send box. Handles user/assistant/tool/system
+- `ChatPanel`: chat history + send box. Handles user/assistant/tool/system
   bubbles, auto-scrolls, supports Enter-to-send.
-- `GeometryPanel` — type dropdown + common-field inputs (W/H/T/S/B/H1/H2/er),
+- `GeometryPanel`: type dropdown + common-field inputs (W/H/T/S/B/H1/H2/er),
   Calculate Z₀ button.
-- `ResultsPanel` — formatted result card (Z₀ big, then εr_eff/vp/td/L/C/α_d
+- `ResultsPanel`: formatted result card (Z₀ big, then εr_eff/vp/td/L/C/α_d
   in a 2-column grid) + raw JSON in a `<details>` toggle.
 
 C3 will add: live state-delta application from agent tool calls,

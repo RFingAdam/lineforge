@@ -5,25 +5,25 @@ Reference: http://www.hdtvprimer.com/kq6qv/atlc2.html §"Scripting Facility".
 Supported commands (atlc2 inspects only the first 3 letters of the command,
 so ``CGP``/``cgp``/``CGProcess`` all match, etc.):
 
-    twinlead, square, coaxial         — internal-geometry generators
-    pixel, total, frequency           — set numeric edit boxes
-    separation, diameter, insulation  — internal-geometry params
-    top, bottom, side, skew           — internal-geometry params
-    width, height                     — square-twinlead width/height
-    center, inner, outer              — coaxial dims
-    box <n> <T|F>                     — set GUI checkbox
-    name <s>                          — set the Name field (used as ZZZ)
-    folder <s>                        — set the execution folder
-    open <s>                          — load a Usermap from <s>.bmp
-    solve, LRS, CGP                   — run solvers; append to <name>* output files
-    sweep <param> <runs> [per_decade] — parametric L/Rs sweep
-    threads <n|+|->                   — set thread count
-    terminate                         — end the script
-    erase                             — erase the script file (atlc2 quirk; we no-op)
-    keyboard <s>                      — feed keystrokes (Phase 4 GUI only; we no-op)
-    save                              — save displayed bitmap (Phase 2 saves last solve PNG)
-    beep                              — terminal bell
-    window <n>, launch <n> <s>        — Phase 4 / GUI commands; we log+no-op
+    twinlead, square, coaxial        : internal-geometry generators
+    pixel, total, frequency          . Set numeric edit boxes
+    separation, diameter, insulation : internal-geometry params
+    top, bottom, side, skew          : internal-geometry params
+    width, height                    : square-twinlead width/height
+    center, inner, outer             : coaxial dims
+    box <n> <T|F>                    . Set GUI checkbox
+    name <s>                         . Set the Name field (used as ZZZ)
+    folder <s>                       . Set the execution folder
+    open <s>                         : load a Usermap from <s>.bmp
+    solve, LRS, CGP                  . Run solvers; append to <name>* output files
+    sweep <param> <runs> [per_decade]: parametric L/Rs sweep
+    threads <n|+|->                  . Set thread count
+    terminate: end the script
+    erase: erase the script file (atlc2 quirk; we no-op)
+    keyboard <s>                     : feed keystrokes (Phase 4 GUI only; we no-op)
+    save: save displayed bitmap (Phase 2 saves last solve PNG)
+    beep: terminal bell
+    window <n>, launch <n> <s>       : Phase 4 / GUI commands; we log+no-op
 
 Phase 2 supports the geometry-generator + solve/CGP/sweep subset; Phase 3 fills
 in LRS/full-RLGC; Phase 4 fills in the GUI-related no-ops.
@@ -325,9 +325,9 @@ class ScriptInterpreter:
             return rasterize_microstrip(geom)
 
         if kind == "coaxial":
-            # We don't have a Coax geometry yet — Phase 4 adds it. For now, fail clearly.
+            # We don't have a Coax geometry yet: Phase 4 adds it. For now, fail clearly.
             raise ScriptError(
-                "coaxial scripts not yet implemented in lineforge Phase 2 — "
+                "coaxial scripts not yet implemented in lineforge Phase 2: "
                 "use `open <bmp>` with a coax usermap instead"
             )
 

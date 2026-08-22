@@ -111,7 +111,7 @@ def to_touchstone(
         Output file path. Should end in ``.s2p``; scikit-rf adds it if absent.
     line_length
         Physical length of the modeled line section. Accepts a float in meters
-        or a unit string (``"1in"``, ``"50mm"``, etc.). Default 1 inch — long
+        or a unit string (``"1in"``, ``"50mm"``, etc.). Default 1 inch: long
         enough for the loss to register, short enough that 0–10 GHz fits in
         a few wavelengths.
     z_ref
@@ -130,7 +130,7 @@ def to_touchstone(
     if not sweep_results:
         raise ValueError("to_touchstone: empty sweep_results")
 
-    # Validate it really is a frequency sweep — peek at the first point.
+    # Validate it really is a frequency sweep: peek at the first point.
     first_params = sweep_results[0].params
     if "frequency" not in first_params:
         raise ValueError(

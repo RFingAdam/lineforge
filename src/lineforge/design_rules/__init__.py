@@ -1,4 +1,4 @@
-"""Design-rules layer — decision frameworks for PCB RF design.
+"""Design-rules layer: decision frameworks for PCB RF design.
 
 These are not analytical solvers but structured decision logic that
 encodes engineering practice: when to follow a reference design vs when

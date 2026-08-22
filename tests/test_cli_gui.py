@@ -2,7 +2,7 @@
 
 These tests exercise the small, unit-testable building blocks added to
 ``lineforge.cli`` (port selection, Node toolchain detection, backend health
-polling). They intentionally do **not** spawn uvicorn or Next.js — those are
+polling). They intentionally do **not** spawn uvicorn or Next.js. Those are
 integration concerns. Subprocess and network calls are mocked.
 """
 
@@ -145,7 +145,7 @@ def test_wait_for_backend_returns_false_on_timeout() -> None:
         "urllib.request.urlopen",
         side_effect=ConnectionError("nope"),
     ):
-        # Use a tight timeout to keep the test fast — the poll loop sleeps in
+        # Use a tight timeout to keep the test fast. The poll loop sleeps in
         # 0.25s increments so 0.4s is enough to give up.
         assert _wait_for_backend("127.0.0.1", 8000, timeout_s=0.4) is False
 

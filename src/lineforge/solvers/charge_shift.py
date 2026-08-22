@@ -82,7 +82,7 @@ def predict_v_field(
     surface_mask = plus_surface | minus_surface | ground_surface
 
     if not surface_mask.any():
-        # No conductors — return zero field
+        # No conductors: return zero field
         return np.zeros((h, w), dtype=np.float64)
 
     # Get coordinates of every surface pixel
@@ -118,10 +118,10 @@ def predict_v_field(
     try:
         sigma, *_ = np.linalg.lstsq(G, target_v, rcond=None)
     except np.linalg.LinAlgError:
-        # Diverged — return zeros and let relaxation do all the work
+        # Diverged: return zeros and let relaxation do all the work
         return np.zeros((h, w), dtype=np.float64)
 
-    # Loop-invariant scaling factor — hoisted out of the refinement loop so
+    # Loop-invariant scaling factor: hoisted out of the refinement loop so
     # we don't recompute (G @ G.T) on every iteration.
     refine_denom = max(1.0, float(np.diag(G @ G.T).max()))
 
@@ -134,7 +134,7 @@ def predict_v_field(
 
     # Compute V at every grid pixel from the σ distribution. The naïve form is
     # ``G_full = -0.5 * log(r2)`` with shape ``(h*w, n_surface)``, but that
-    # tries to allocate ~ 8 · h · w · n_surface bytes — 256+ GiB for extended-
+    # tries to allocate ~ 8 · h · w · n_surface bytes: 256+ GiB for extended-
     # boundary grids (issue #32). Stream the same computation in pixel-chunks
     # so the working-set stays bounded regardless of grid size.
     yy, xx = np.meshgrid(np.arange(h), np.arange(w), indexing="ij")

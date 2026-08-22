@@ -1,7 +1,7 @@
 """Frequency-dependent dielectric properties (Dk(f), Df(f) interpolation).
 
 Modern high-speed laminate vendors publish εr (Dk) and tan_δ (Df) at multiple
-frequencies — Megtron 4/6/7 datasheets give 1/2.5/5/10 GHz points; Rogers
+frequencies: Megtron 4/6/7 datasheets give 1/2.5/5/10 GHz points; Rogers
 RO4350B publishes 100 MHz, 1 GHz, 10 GHz, etc. This module interpolates
 between those tabulated points so a solver run at, say, 6.5 GHz gets a
 realistic Dk(f) value rather than the single nominal εr.
@@ -9,7 +9,7 @@ realistic Dk(f) value rather than the single nominal εr.
 Interpolation is **linear in log(f)**, which is the reasonable default for
 the gentle Debye-like dispersion of PCB resins over the 0.1–40 GHz range
 where most signal-integrity work lives. Extrapolation past the published
-range clamps to the endpoint value (no Lorentz-style modeling here — that
+range clamps to the endpoint value (no Lorentz-style modeling here. That
 would need datasheet-fit parameters we don't have).
 """
 

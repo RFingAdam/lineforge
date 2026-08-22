@@ -124,7 +124,7 @@ class TestStriplineAsymmetricStackValidation:
 
     def test_rejects_inconsistent_er_above_with_stack(self) -> None:
         """A stack and an explicit er_above that disagrees must error.
-        (Consistent redundancy — same value — is allowed for JSON round-tripping.)"""
+        (Consistent redundancy: same value: is allowed for JSON round-tripping.)"""
         with pytest.raises(ValueError, match="cannot pass both stack_above and er_above"):
             StriplineAsymmetric(
                 W="3.4mil",

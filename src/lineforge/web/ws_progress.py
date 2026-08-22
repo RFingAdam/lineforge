@@ -1,4 +1,4 @@
-"""WebSocket /ws/progress — push progress updates from long-running solves.
+"""WebSocket /ws/progress: push progress updates from long-running solves.
 
 The HTTP solve endpoints in :mod:`app.api_solve` are synchronous (analytical
 solves are microseconds). For ``solver='cgp'`` or ``solver='full'`` runs that
@@ -30,7 +30,7 @@ from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 router = APIRouter()
 
 
-# Per-task subscriber queues — enables fan-out if multiple tabs subscribe to
+# Per-task subscriber queues: enables fan-out if multiple tabs subscribe to
 # the same task id.
 _subscribers: dict[str, list[asyncio.Queue[dict[str, Any]]]] = defaultdict(list)
 _lock = asyncio.Lock()
@@ -57,7 +57,7 @@ async def progress_websocket(ws: WebSocket, task_id: str) -> None:
             msg = await queue.get()
             await ws.send_json(msg)
             if msg.get("type") in ("result", "error"):
-                # Terminal — close the WebSocket cleanly.
+                # Terminal: close the WebSocket cleanly.
                 await ws.close()
                 return
     except WebSocketDisconnect:

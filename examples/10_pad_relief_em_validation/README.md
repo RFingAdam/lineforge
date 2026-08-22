@@ -1,4 +1,4 @@
-# 0.4 mm RF Pad Relief — analytical bracket + cavity check
+# 0.4 mm RF Pad Relief: analytical bracket + cavity check
 
 Companion case study to [`09_l3_sig1_em_validation/`](../09_l3_sig1_em_validation/).
 Same 8-layer stackup, same triplexer common port at 800 MHz – 6 GHz.
@@ -26,7 +26,7 @@ to 0.86 (Option C), the fringing contribution grows substantially.
 
 | Method | Description | A: solid L2 | B: ref → L3 | C: ref → L4 |
 |---|---|---:|---:|---:|
-| **PP** | Parallel-plate ε₀·εr·A/h (no fringing — lower bound) | 75.6 fF | 28.6 fF | 15.6 fF |
+| **PP** | Parallel-plate ε₀·εr·A/h (no fringing: lower bound) | 75.6 fF | 28.6 fF | 15.6 fF |
 | **YA** | Yamashita-Atsuki square-pad correction (best for finite pad) | **104.6 fF** | **48.9 fF** | **31.6 fF** |
 | **HJ** | Hammerstad-Jensen infinite-microstrip (upper bound) | 98.9 fF | 48.9 fF | 33.8 fF |
 | h/W | h (mil) | 0.17 | 0.48 | 0.86 |
@@ -60,7 +60,7 @@ isn't the limiting factor in the triplexer's passband return-loss budget:
 | B: ref → L3 | 48.9 fF | 26.7 dB | ✗ Below 30 dB |
 | **C: ref → L4** | **31.6 fF** | **30.5 dB** | **✓ Meets target** |
 
-**Recommendation: Option C — void L2 + L3 under the pad, reference to
+**Recommendation: Option C: void L2 + L3 under the pad, reference to
 L4 GND, stitch vias around the relief perimeter.**
 
 This applies to all four ports (common + 3 radio) since the same IC pad
@@ -81,20 +81,20 @@ TM11 at 2120 MHz, ..., TM33 at 6360 MHz) with peak impedances of 3-11 Ω
 and Q-factors of 37-43.
 
 **These modes exist regardless of the pad relief.** The relief is 0.5 mm
-× 0.5 mm — much smaller than λ/4 at 6 GHz (~6 mm in this dielectric), so
+× 0.5 mm: much smaller than λ/4 at 6 GHz (~6 mm in this dielectric), so
 the relief acts as an electrically small aperture. It does NOT
 significantly perturb the cavity modes or couple energy through them.
 
 If your design has clock sources or DC-DC converter noise that could
 excite these cavity modes, address that with **bulk + plane-pair
-decoupling caps on L2/L4** — not by changing the pad relief design.
+decoupling caps on L2/L4**. Not by changing the pad relief design.
 The pcb-emcopilot tool's suggested caps (2-12 pF for the lowest modes)
 are the right intervention there.
 
 ## Why openEMS isn't in this report
 
 We attempted three openEMS configurations of the pad + multi-layer
-stack — all three diverged numerically. The combination of thin metal
+stack: all three diverged numerically. The combination of thin metal
 layers (1.4 mil Cu = 36 μm) in close proximity to a finite-width
 microstrip launching into a wider pad creates a geometry where the
 lumped-port topology and PML/MUR boundary conditions interact
@@ -122,7 +122,7 @@ For all four ports, apply Option C consistently:
 5. **L1 trace approach**: Keep the microstrip feed approaching the pad
    over **solid L2** (i.e., the relief should not extend back along the
    trace direction). The pad cap is the only intentional discontinuity.
-6. **Check IC datasheet** for any specified pad geometry — if the IC's
+6. **Check IC datasheet** for any specified pad geometry. If the IC's
    reference layout assumes a particular pad capacitance, follow that
    instead of relieving.
 

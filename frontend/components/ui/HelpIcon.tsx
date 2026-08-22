@@ -3,7 +3,7 @@
 /**
  * Tiny info badge that surfaces a field's description on hover/focus via the
  * native `title` attribute. We deliberately keep `tabIndex={-1}` so the help
- * marker doesn't add an extra tab stop to every labelled control — keyboard
+ * marker doesn't add an extra tab stop to every labelled control: keyboard
  * users still get the description from the underlying input's `aria-describedby`
  * (when the caller wires one up).
  */

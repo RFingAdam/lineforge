@@ -1,4 +1,4 @@
-"""Phase 3.8 — atlc2 parity benchmark suite.
+"""Phase 3.8: atlc2 parity benchmark suite.
 
 Reproduces atlc2's published example values to within the documented tolerances:
     - Z0 within 2%

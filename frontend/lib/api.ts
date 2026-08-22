@@ -20,7 +20,7 @@ export async function listGeometries(): Promise<GeometryListItem[]> {
 }
 
 /**
- * The Pydantic JSON Schema for one geometry type — drives the form's
+ * The Pydantic JSON Schema for one geometry type: drives the form's
  * field rendering. Properties values include type / description / gt /
  * default / etc. Required fields are listed under the top-level "required".
  *

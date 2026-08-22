@@ -1,4 +1,4 @@
-"""Field-plot endpoint — render V/E/D/T as PNG via atlc3.visualization.fields.
+"""Field-plot endpoint: render V/E/D/T as PNG via atlc3.visualization.fields.
 
 The frontend's FieldPlotCanvas posts a geometry + field_kind, the backend
 rasterizes it, runs the bitmap Laplace solve to populate v_field/er_field,
@@ -128,8 +128,8 @@ async def field_plot_async(req: FieldPlotRequest) -> dict[str, Any]:
 
     Stage events sent by the worker:
       1. ``rasterizing``  (frac 0.05)
-      2. ``solving``      (frac 0.15) — Laplace iteration starts here
-      3. ``rendering``    (frac 0.85) — solver converged, painting PNG
+      2. ``solving``      (frac 0.15): Laplace iteration starts here
+      3. ``rendering``    (frac 0.85): solver converged, painting PNG
       4. ``result``       (terminal)
     """
     import asyncio

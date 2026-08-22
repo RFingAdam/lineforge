@@ -5,7 +5,7 @@
  * Exposes three layers, additive over time:
  *   - {@link ResultSkeleton}: legacy "one big block + 6-cell grid" placeholder,
  *     kept verbatim for backwards compatibility.
- *   - {@link SkeletonRow}: low-level utility — a single shimmering line.
+ *   - {@link SkeletonRow}: low-level utility. A single shimmering line.
  *   - {@link SkeletonStat} + {@link SkeletonSection}: structured placeholders
  *     that mirror the real result layout (hero Stat + grouped Sections).
  *

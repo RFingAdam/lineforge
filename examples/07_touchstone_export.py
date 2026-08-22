@@ -1,4 +1,4 @@
-"""Phase A2 example — frequency sweep + Touchstone (.s2p) export.
+"""Phase A2 example: frequency sweep + Touchstone (.s2p) export.
 
 Sweep a 50Ω microstrip from 0.1–20 GHz and write the result as a 2-port
 Touchstone file that can be loaded into HyperLynx, ADS, scikit-rf, or any

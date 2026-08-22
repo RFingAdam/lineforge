@@ -142,7 +142,7 @@ class TestSolveModesAsymmetric:
 
 
 class TestSolveModesNoGround:
-    """Differential pair with no explicit +0 conductor — the replicated-edge
+    """Differential pair with no explicit +0 conductor. The replicated-edge
     boundary acts as the implicit V=0 reference."""
 
     def test_no_ground_runs_without_error(self) -> None:

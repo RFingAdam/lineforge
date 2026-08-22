@@ -35,7 +35,7 @@ export function ThreeWireSVG({
     { ...green, color: PALETTE.ground, label: "0" },
   ];
 
-  // Compute viewBox bounds — find the extents of all conductors + radius + a margin.
+  // Compute viewBox bounds: find the extents of all conductors + radius + a margin.
   const xs = conductors.map((c) => c.x);
   const ys = conductors.map((c) => c.y);
   const minX = Math.min(...xs) - a * 4;

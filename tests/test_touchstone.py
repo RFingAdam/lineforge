@@ -43,8 +43,8 @@ class TestTouchstoneRoundTrip:
 
     def test_energy_balance_matches_alpha(self, tmp_path: Path) -> None:
         """Verify |S11|² + |S21|² + dissipated = 1, where dissipated is computed
-        from the α the solver reported. This is the physically rigorous test —
-        we don't assume the analytical solver is exactly lossless (it reports
+        from the α the solver reported. This is the physically rigorous test.
+        We don't assume the analytical solver is exactly lossless (it reports
         a Phase-1 conductor-loss estimate even at tan_δ=0), but we assert the
         network's energy budget matches the α it claims.
         """
@@ -153,5 +153,5 @@ class TestTouchstoneZ0Recovery:
         import skrf
 
         net = skrf.Network(str(out))
-        # |S11| should be tiny — this is the matching test.
+        # |S11| should be tiny. This is the matching test.
         assert abs(net.s[0, 0, 0]) < 1e-6

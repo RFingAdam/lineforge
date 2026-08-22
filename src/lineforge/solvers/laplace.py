@@ -1,4 +1,4 @@
-"""Laplace solver — finite-difference relaxation for ∇·(εr ∇V) = 0.
+"""Laplace solver: finite-difference relaxation for ∇·(εr ∇V) = 0.
 
 The 5-point FD scheme on a uniform Cartesian grid with εr varying per cell:
 
@@ -6,13 +6,13 @@ The 5-point FD scheme on a uniform Cartesian grid with εr varying per cell:
                               + αN·V[i-1,j] + αS·V[i+1,j]
 
 where αX = arithmetic mean of εr at the cell-edge between (i,j) and the
-neighbor — accurate enough for piecewise-constant material maps and matches
+neighbor: accurate enough for piecewise-constant material maps and matches
 atlc v1's choice.
 
 Two solvers:
-    - :func:`solve_sor` — Successive over-relaxation, default ω = 1.9. Pure
+    - :func:`solve_sor`: Successive over-relaxation, default ω = 1.9. Pure
       NumPy. Best for grids ≲ 1000² in Phase 2.
-    - :func:`solve_amg` — Algebraic multigrid via PyAMG. ~5–10× faster on
+    - :func:`solve_amg`: Algebraic multigrid via PyAMG. ~5–10× faster on
       grids ≳ 1000². Falls back to SOR if PyAMG isn't installed.
 
 Boundary conditions:
@@ -21,19 +21,19 @@ Boundary conditions:
       group is forced to a single equipotential value at every iteration via
       the ``floating_mode`` parameter:
 
-      * ``"average"`` (default) — V_group = arithmetic mean of the group's
+      * ``"average"`` (default): V_group = arithmetic mean of the group's
         post-relaxation values. Fast and correct for symmetric problems
         (where the linear-V centroid coincides with the zero-net-charge V).
         For asymmetric εr around the group it's an approximation; use the
         radiation indicator (Σ E·n on the group boundary) to flag cases
         where it matters.
-      * ``"boundary_weighted"`` — V_group = εr-weighted average of the
+      * ``"boundary_weighted"``: V_group = εr-weighted average of the
         outward-neighbor potentials. More accurate when εr is asymmetric
         around the group. Stable for the cases tested (3-wire above ground,
         coupled-stripline coupler); see ``tests/test_solvers/test_floating_bc.py``.
 
       A rigorous Schur-complement formulation enforcing exactly zero net
-      charge on each floating group is tracked as a follow-up — for the
+      charge on each floating group is tracked as a follow-up: for the
       3-wire Y-decomposition use case the existing modes are sufficient
       modulo the 4 % radiation indicator.
     - **Outer boundary**: zero-Dirichlet (V=0). Combined with
@@ -66,7 +66,7 @@ class LaplaceResult:
     """True if residual fell below tolerance."""
 
     method: str
-    """``"sor"`` or ``"amg"`` — which solver produced the result."""
+    """``"sor"`` or ``"amg"``, which solver produced the result."""
 
 
 def _edge_coefficients(er: np.ndarray) -> tuple[np.ndarray, np.ndarray, np.ndarray, np.ndarray]:
@@ -117,7 +117,7 @@ def _equipotential_boundary_weighted(
     # Boundary masks: True for F-cells whose <dir>-neighbor is outside F.
     out_E = group.copy()
     out_E[:, :-1] = group[:, :-1] & ~group[:, 1:]  # E-neighbor outside
-    # The rightmost column has no E-neighbor (off-grid is "outside") — keep True.
+    # The rightmost column has no E-neighbor (off-grid is "outside"). Keep True.
 
     out_W = group.copy()
     out_W[:, 1:] = group[:, 1:] & ~group[:, :-1]
@@ -299,7 +299,7 @@ def _apply_dirichlet(
     The earlier implementation slammed into a scipy quirk: ``A[:, masked]`` for
     a CSR matrix builds a dense ``(n, len(masked))`` int64 indexing
     intermediate, which OOMs on extended-boundary grids (issue #32). We now
-    project via a sparse boundary vector instead — O(nnz(A)) regardless of
+    project via a sparse boundary vector instead: O(nnz(A)) regardless of
     mask size.
     """
     n = A.shape[0]
@@ -396,7 +396,7 @@ def solve_laplace(
         ``"sor"``, ``"amg"``, or ``"auto"``. Auto picks AMG for grids
         with ≥ 250_000 free pixels, SOR otherwise.
     floating_mode
-        ``"average"`` or ``"charge_balanced"`` — see module docstring.
+        ``"average"`` or ``"charge_balanced"``. See module docstring.
     """
     n_free = int((~v_mask).sum())
     chosen = method

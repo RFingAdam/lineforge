@@ -16,7 +16,7 @@ Both modes share the ground BC. Run two separate Laplace solves; extract
 $Z_\text{odd/even} = \\sqrt{L_\\text{vac}/C_\\text{odd/even}}$.
 
 This produces $Z_\\text{diff} = 2 Z_\\text{odd}$ exactly (not the IPC-2141A
-approximation) — typically within 1% of measured for tight pairs.
+approximation): typically within 1% of measured for tight pairs.
 """
 
 from __future__ import annotations
@@ -54,7 +54,7 @@ def _solve_with_strip_voltages(
 
     Strip 1 gets ``v_strip_1``, strip 2 gets ``v_strip_2``. Atlc3 identifies
     "strip 1" as the V=+1 conductor and "strip 2" as the V=-1 conductor in
-    the *original* usermap — the function temporarily reassigns voltage masks.
+    the *original* usermap. The function temporarily reassigns voltage masks.
     """
     extended = extension.extend(usermap)
     er = extended.er_field()

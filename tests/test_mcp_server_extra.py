@@ -1,10 +1,10 @@
-"""Extra MCP server coverage — tools that the existing test_mcp_server.py and
+"""Extra MCP server coverage: tools that the existing test_mcp_server.py and
 test_mcp_async.py don't exercise.
 
 The goal here is breadth, not depth: smoke-test + error-path each tool so the
 registration boilerplate, request validation, and error-mapping branches all
 get covered. Long-running async tools (solve_cgp / solve_lrs / solve_full /
-sweep numerical) are kept off the critical path — the existing
+sweep numerical) are kept off the critical path. The existing
 test_mcp_async.py already covers the async lifecycle.
 """
 
@@ -85,7 +85,7 @@ async def test_import_usermap_pixel_width_as_float() -> None:
 
 
 # ---------------------------------------------------------------------------
-# rasterize tool — unknown geometry → error
+# rasterize tool: unknown geometry → error
 # ---------------------------------------------------------------------------
 
 
@@ -97,7 +97,7 @@ async def test_rasterize_unknown_type_returns_error() -> None:
 
 
 # ---------------------------------------------------------------------------
-# solve_cgp / solve_lrs / solve_full / sweep — error paths only
+# solve_cgp / solve_lrs / solve_full / sweep: error paths only
 # ---------------------------------------------------------------------------
 
 
@@ -212,12 +212,12 @@ async def test_sweep_bad_geometry_returns_error() -> None:
 
 # NOTE: the MCP sweep tool delegates parameter validation to lineforge.sweep,
 # which currently treats unknown parameter names as no-op overrides rather
-# than errors. That behavior is exercised by tests/test_sweep.py — we don't
+# than errors. That behavior is exercised by tests/test_sweep.py. We don't
 # repeat it here.
 
 
 # ---------------------------------------------------------------------------
-# solve_modes (3-wire) — error paths
+# solve_modes (3-wire): error paths
 # ---------------------------------------------------------------------------
 
 
@@ -337,7 +337,7 @@ async def test_run_atlc2_script_invalid_returns_error() -> None:
 
 # ---------------------------------------------------------------------------
 # pad_capacitance / pad_relief_advisor / laminate_lookup / rf_path_budget /
-# classify_pad — all the new v2.1 tools
+# classify_pad: all the new v2.1 tools
 # ---------------------------------------------------------------------------
 
 
@@ -516,7 +516,7 @@ async def test_material_by_name_resource_unknown() -> None:
     server = build_server()
     # Reading the resource via its URI
     contents = await server.read_resource("atlc://materials/Unobtainium-X9000")
-    # `read_resource` returns an iterable of ReadResourceContents — extract text
+    # `read_resource` returns an iterable of ReadResourceContents: extract text
     text_parts = []
     for c in contents:
         text = getattr(c, "content", None) or getattr(c, "text", None)

@@ -1,4 +1,4 @@
-# Phase 1 example — MCP server in Claude Desktop
+# Phase 1 example: MCP server in Claude Desktop
 
 This example connects lineforge to Claude Desktop (or any MCP-aware client) via
 the stdio transport and demonstrates the analytical-solver tools.

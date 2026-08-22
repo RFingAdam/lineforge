@@ -1,11 +1,11 @@
-"""Pad classification — when to follow reference design vs when to optimize.
+"""Pad classification. When to follow reference design vs when to optimize.
 
 For any RF pad on a PCB, the design decision (relieve GND under it?
 shrink it? leave it alone?) depends on **whose RF certification or
 matching network is in play**, not on the pad's electrical numbers
 alone. This module formalizes that decision into three categories.
 
-Category 1 — Follow the reference design
+Category 1: Follow the reference design
     The pad is part of a certified RF subsystem (FCC modular grant) or
     a manufacturer-spec'd connector whose 50 Ω behavior depends on the
     reference land pattern. Deviating risks:
@@ -15,14 +15,14 @@ Category 1 — Follow the reference design
       - Connector launch mistune (the connector itself is the 50 Ω
         structure, tuned for the reference pad)
 
-Category 2 — Optimize freely
+Category 2: Optimize freely
     The pad is in your own RF circuit (passive filter, your matching
     network, antenna feed). You define the impedance environment. No
     upstream cert or matching network in play. Use
     :func:`lineforge.analytical.pads.pad_relief_advisor` to pick the
     minimum-invasive relief that meets your RL target.
 
-Category 3 — Standard practice
+Category 3: Standard practice
     The pad is non-RF or low-RF (DC, power, low-speed signal). No RF
     performance constraint. Use solid GND for thermal balance and EMC
     containment.
@@ -41,15 +41,15 @@ from enum import StrEnum
 class PadCategory(StrEnum):
     """Three categories of RF pad design treatment."""
 
-    FOLLOW_REFERENCE = "Category 1 — Follow reference design"
+    FOLLOW_REFERENCE = "Category 1: Follow reference design"
     """Pad is in a certified module or spec'd connector path. Don't
     deviate from the manufacturer's documented land pattern."""
 
-    OPTIMIZE = "Category 2 — Optimize freely"
+    OPTIMIZE = "Category 2: Optimize freely"
     """Pad is in your own RF circuit. Apply relief / sizing optimization
     per your RL budget."""
 
-    STANDARD = "Category 3 — Standard practice"
+    STANDARD = "Category 3: Standard practice"
     """Pad is non-RF / low-RF. Use standard solid-GND layout for
     thermal and EMC reasons."""
 
@@ -96,7 +96,7 @@ def classify_pad(
         and cellular modules).
     is_user_designed_rf
         True if this is a passive component you specified (no
-        manufacturer-tuned matching network internally — just a part
+        manufacturer-tuned matching network internally: just a part
         with documented characteristic impedance).
     operating_freq_ghz
         Highest operating frequency on this pad. Used to flag low-speed
@@ -111,11 +111,11 @@ def classify_pad(
     --------
     >>> r = classify_pad(component_type="wifi_module", has_modular_grant=True)
     >>> r.category
-    <PadCategory.FOLLOW_REFERENCE: 'Category 1 — Follow reference design'>
+    <PadCategory.FOLLOW_REFERENCE: 'Category 1: Follow reference design'>
 
     >>> r = classify_pad(component_type="triplexer", is_user_designed_rf=True)
     >>> r.category
-    <PadCategory.OPTIMIZE: 'Category 2 — Optimize freely'>
+    <PadCategory.OPTIMIZE: 'Category 2: Optimize freely'>
     """
     ct = component_type.lower().strip()
 
@@ -161,20 +161,20 @@ def classify_pad(
                 "Follow the module manufacturer's reference layout exactly.",
                 "Match pad geometry, GND configuration, and stitching via "
                 "pattern in the integration guide.",
-                "Do NOT add ground relief unilaterally — module's internal "
+                "Do NOT add ground relief unilaterally: module's internal "
                 "matching network assumes the reference pad capacitance.",
                 "If you observe high VSWR at the antenna port, contact the "
                 "FAE before deviating; alternative reference layouts may exist.",
             ],
             risks_if_deviating=[
-                "Modular FCC grant may not transfer to your host — full "
+                "Modular FCC grant may not transfer to your host: full "
                 "intentional-radiator testing becomes required.",
                 "Module's internal LC match detunes; TX power and RX " "sensitivity degrade.",
                 "Vendor support / warranty claims may be voided.",
             ],
             references=[
-                "Module datasheet — 'Integration Guide' or 'PCB Layout' section",
-                "FCC Part 15.247(c)(3) — Limited Modular Approval transfer rules",
+                "Module datasheet: 'Integration Guide' or 'PCB Layout' section",
+                "FCC Part 15.247(c)(3): Limited Modular Approval transfer rules",
                 "Module manufacturer FAE for layout deviations",
             ],
         )
@@ -206,7 +206,7 @@ def classify_pad(
             guidance=[
                 "Follow the connector manufacturer's recommended land pattern.",
                 "The connector + reference pad together form the 50 Ω "
-                "transition — don't relieve the signal pad.",
+                "transition. Don't relieve the signal pad.",
                 "If high-frequency performance is critical, consider a "
                 "higher-band connector variant rather than modifying the pad.",
                 "Verify mechanical fitment: GND pads support the connector "
@@ -214,12 +214,12 @@ def classify_pad(
             ],
             risks_if_deviating=[
                 "Connector's 50 Ω characterization no longer applies.",
-                "Mechanical retention compromised — connector can crack or "
+                "Mechanical retention compromised: connector can crack or "
                 "lift after mating cycles.",
                 "VSWR mismatch with the connector that no amount of trace " "tuning can recover.",
             ],
             references=[
-                "Connector datasheet — 'Recommended PCB Land Pattern' section",
+                "Connector datasheet: 'Recommended PCB Land Pattern' section",
                 "Manufacturer application note on host-board integration",
             ],
         )
@@ -245,7 +245,7 @@ def classify_pad(
         return PadClassification(
             category=PadCategory.OPTIMIZE,
             guidance=[
-                "Optimize freely — no external matching/grant constraints.",
+                "Optimize freely. No external matching/grant constraints.",
                 "Run pad_relief_advisor() against your RL budget and the "
                 "highest operating frequency.",
                 "Pick the minimum-invasive relief that meets the target "
@@ -260,7 +260,7 @@ def classify_pad(
             ],
         )
 
-    # Other RF ICs (LNA, mixer, PA) — check datasheet, usually Category 1
+    # Other RF ICs (LNA, mixer, PA). Check datasheet, usually Category 1
     other_rf_ic_kinds = {"lna", "mixer", "pa", "vco", "synthesizer", "rf_ic", "rfic", "transceiver"}
     if ct in other_rf_ic_kinds:
         return PadClassification(
@@ -268,7 +268,7 @@ def classify_pad(
             guidance=[
                 "Check the IC datasheet's recommended PCB layout.",
                 "Most RF ICs assume a specific pad geometry for their "
-                "internal matching network — follow it.",
+                "internal matching network: follow it.",
                 "If the datasheet is silent on layout, treat as Category 2 "
                 "and optimize per the application.",
             ],
@@ -277,7 +277,7 @@ def classify_pad(
                 "Manufacturer support may not apply to non-reference layouts.",
             ],
             references=[
-                "IC datasheet — 'Application Information' or 'Layout' section",
+                "IC datasheet: 'Application Information' or 'Layout' section",
                 "Manufacturer application note for the part family",
             ],
         )
@@ -286,13 +286,13 @@ def classify_pad(
     return PadClassification(
         category=PadCategory.FOLLOW_REFERENCE,
         guidance=[
-            f"Component type {component_type!r} is ambiguous — defaulting to "
+            f"Component type {component_type!r} is ambiguous: defaulting to "
             "Category 1 (follow reference design) as the safe choice.",
             "If this is your own RF circuit with no upstream matching/cert "
             "constraints, pass is_user_designed_rf=True to get Category 2.",
         ],
         risks_if_deviating=[
-            "Unknown — depends on the actual component.",
+            "Unknown: depends on the actual component.",
         ],
         references=[
             "Check component datasheet for layout guidance.",

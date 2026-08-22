@@ -1,4 +1,4 @@
-"""Rasterizers — convert parameterized geometry models into Usermaps.
+"""Rasterizers: convert parameterized geometry models into Usermaps.
 
 These functions build a usermap from a Pydantic geometry, picking pixel size to
 satisfy the atlc2 best-practice rule: gap between conductors must be ≥ 5 px.
@@ -294,7 +294,7 @@ def _stack_to_bands(
     Returns
     -------
     bands
-        Ordered ``(thickness_px, rgb)`` tuples — one per layer. Caller paints
+        Ordered ``(thickness_px, rgb)`` tuples. One per layer. Caller paints
         them top-to-bottom (above-side) or bottom-to-top (below-side) starting
         from the strip.
     records
@@ -331,12 +331,12 @@ def rasterize_stripline_asymmetric(
 
     Three painting modes:
 
-    1. **Bulk (single εr)** — entire cavity gets one dielectric color.
-    2. **Split εr** (``er_above``/``er_below`` set) — H1 and H2 halves get
+    1. **Bulk (single εr)**: entire cavity gets one dielectric color.
+    2. **Split εr** (``er_above``/``er_below`` set): H1 and H2 halves get
        distinct synthesized colors carrying the exact εr/tan_δ the user
        specified.
-    3. **Multi-layer stack** (``stack_above`` and/or ``stack_below`` set) —
-       each layer of the stack is painted as its own band with its own
+    3. **Multi-layer stack** (``stack_above`` and/or ``stack_below`` set).
+       Each layer of the stack is painted as its own band with its own
        synthesized color and material record. The bitmap solver then sees
        the actual stratified dielectric, not the C-equivalent flattening
        (mathematically the C-equivalent is correct, but the per-layer

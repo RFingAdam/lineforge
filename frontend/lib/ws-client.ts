@@ -92,7 +92,7 @@ export class ChatClient {
         break;
       case 'state_delta':
         // Apply known fields. C3 will broadcast richer deltas (geometry,
-        // last_result, etc.) — for C2 we just handle reset.
+        // last_result, etc.): for C2 we just handle reset.
         if (msg.patch.reset) {
           store.reset();
         }

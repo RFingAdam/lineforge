@@ -1,6 +1,6 @@
 """Single-user in-memory GUI state.
 
-The GUI is intentionally local-only — one user, one session, no auth. State
+The GUI is intentionally local-only. One user, one session, no auth. State
 lives in this module's globals; restarting the server resets it.
 
 Both the human user (via REST + WebSocket events from the frontend) and the
@@ -45,7 +45,7 @@ class GuiState(BaseModel):
     last_result: dict[str, Any] | None = Field(
         None,
         description="Most recent solve result (TLineResult / DiffResult / "
-        "ThreeWireResult / RLGCResult — Pydantic .model_dump() output).",
+        "ThreeWireResult / RLGCResult: Pydantic .model_dump() output).",
     )
     last_field_plot_uri: str | None = Field(
         None,
@@ -77,7 +77,7 @@ async def update_state(**fields: Any) -> GuiState:
 
 
 async def reset_state() -> None:
-    """Reset to a fresh GuiState — used by tests + the GUI's 'New design' button."""
+    """Reset to a fresh GuiState. Used by tests + the GUI's 'New design' button."""
     global _state
     async with _state_lock:
         _state = GuiState()

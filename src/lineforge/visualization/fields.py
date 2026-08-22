@@ -1,13 +1,13 @@
-"""Field renderers — V, E, D, J, loss → PIL Image.
+"""Field renderers: V, E, D, J, loss → PIL Image.
 
 These mirror atlc2's keyboard-driven view modes:
 
-    U — Usermap (no field)            atlc2 keystroke: U
-    V — voltage field                  atlc2 keystroke: V
-    E — electric field magnitude       atlc2 keystroke: E
-    D — D-field magnitude (εE)         atlc2 keystroke: D
-    T — dielectric loss density        atlc2 keystroke: T
-    J — current density (Phase 3)      atlc2 keystroke: J
+    U: Usermap (no field)            atlc2 keystroke: U
+    V: voltage field                  atlc2 keystroke: V
+    E: electric field magnitude       atlc2 keystroke: E
+    D: D-field magnitude (εE)         atlc2 keystroke: D
+    T: dielectric loss density        atlc2 keystroke: T
+    J: current density (Phase 3)      atlc2 keystroke: J
 
 Plus contour line plots for V (atlc2's L key) and E (N key).
 """
@@ -165,7 +165,7 @@ def render_field(
         return Image.fromarray(_VIRIDIS[idx], mode="RGB")
 
     if kind == "U":
-        # No field — caller should fall back to the usermap RGB itself
+        # No field: caller should fall back to the usermap RGB itself
         h, w = (v_field if v_field is not None else np.zeros((1, 1))).shape
         return Image.new("RGB", (w, h), (0, 0, 0))
 

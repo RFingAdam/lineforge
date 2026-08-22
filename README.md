@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="assets/logo-banner.svg" alt="lineforge — open-source MCP-enabled transmission line calculator" width="100%"/>
+<img src="assets/logo-banner.svg" alt="lineforge: open-source MCP-enabled transmission line calculator" width="100%"/>
 
 <br/>
 
@@ -31,10 +31,10 @@
 ## What is lineforge?
 
 lineforge is a programmable transmission-line calculator built for the
-agent era. It computes the full RLGC characterization — characteristic
+agent era. It computes the full RLGC characterization: characteristic
 impedance Z₀, effective permittivity εₑff, phase velocity v_p, distributed
 inductance L, capacitance C, skin-effect resistance Rs, and dielectric
-conductance Gp — for any 2D transmission line cross-section.
+conductance Gp: for any 2D transmission line cross-section.
 
 Drive it from Python, the terminal, any LLM agent over Model Context
 Protocol, or the chat-driven web GUI (`lineforge gui`). Closed-form analytical solvers for the common geometries
@@ -73,7 +73,7 @@ pip install lineforge
 ```
 
 You'll need a [Rust toolchain](https://rustup.rs/) only if installing from
-source — the wheels on PyPI are pre-built for `cp311`/`cp312`/`cp313` ×
+source: the wheels on PyPI are pre-built for `cp311`/`cp312`/`cp313` ×
 {Linux x86_64/aarch64, macOS universal2, Windows amd64}.
 
 > Pre-alpha: not yet on PyPI. Install from the repo:
@@ -168,7 +168,7 @@ end-to-end verification procedure.
 ### Web GUI (`lineforge gui`)
 
 A chat-driven design studio that wraps the same library. FastAPI + Next.js
-backed by `claude-agent-sdk` — the agent fills in your geometry form, runs
+backed by `claude-agent-sdk`. The agent fills in your geometry form, runs
 the solver, and renders V/E/D/T field plots live as you converse with it.
 
 <p align="center">
@@ -176,10 +176,10 @@ the solver, and renders V/E/D/T field plots live as you converse with it.
 </p>
 
 ```bash
-pip install 'lineforge[gui]'   # one-time install — fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
+pip install 'lineforge[gui]'   # one-time install: fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
 lineforge gui                  # launch the local web GUI (dev mode, hot reload)
 lineforge gui --prod           # production-local mode (no hot reload, prebuilt frontend)
-lineforge gui --no-browser     # headless / SSH boxes — print the URL instead of opening it
+lineforge gui --no-browser     # headless / SSH boxes: print the URL instead of opening it
 ```
 
 `lineforge gui` auto-bumps the backend (8000) and frontend (3000) ports if either
@@ -189,7 +189,7 @@ prefixes; Ctrl-C sends `SIGTERM` to both and `SIGKILL` after a 3-second grace.
 
 Type the geometry into the chat, watch the form fill in, results update, and
 field plots stream in. Agent credentials come from `ANTHROPIC_API_KEY` (or
-`CLAUDE_API_KEY`), or from a local `claude /login` session — no env vars
+`CLAUDE_API_KEY`), or from a local `claude /login` session. No env vars
 needed in the second case. Set `ATLC3_GUI_CHAT_STUB=1` to use the echo
 handler for offline / CI testing.
 
@@ -216,9 +216,9 @@ runs automatically the first time you launch.
 
 ### Arbitrary cross-sections (bitmap solver)
 
-For anything that doesn't fit a standard parameterization — irregular
-shapes, multi-conductor, custom dielectrics, designer-drawn cross-sections —
-use the bitmap solver:
+For anything that doesn't fit a standard parameterization: irregular
+shapes, multi-conductor, custom dielectrics, designer-drawn cross-sections.
+Use the bitmap solver:
 
 ```python
 um = lineforge.from_bmp("my_geometry.bmp", pixel_width="0.1mm")
@@ -226,7 +226,7 @@ result = lineforge.solve_cgp(um, frequency="1GHz")           # C and Gp
 rlgc   = lineforge.solve_full(um, frequency="1GHz")          # full RLGC
 ```
 
-The solver accepts atlc/atlc2-format BMPs unchanged — same color encoding,
+The solver accepts atlc/atlc2-format BMPs unchanged: same color encoding,
 same `MoreColors.txt` material file format. atlc2's `.txt` script files
 also run via `lineforge run-script script.txt`.
 
@@ -263,7 +263,7 @@ tightly-coupled pairs (S/H < 0.5). For exact, use Phase 4's
 | Air coax          | DC L (Faraday)   | (μ₀/2π)·ln(b/a)                            | ±20%      |
 | Wire pair (300Ω)  | DC L (Faraday)   | (μ₀/π)·acosh(D/2a)                         | ±25%      |
 
-The "live" test against atlc/atlc2 BMP fixtures is tracked in [#10](https://github.com/RFingAdam/lineforge/issues/10) — once added, that closes the last gap to 10/10.
+The "live" test against atlc/atlc2 BMP fixtures is tracked in [#10](https://github.com/RFingAdam/lineforge/issues/10). Once added, that closes the last gap to 10/10.
 
 ### Numerical pipeline
 
@@ -354,12 +354,12 @@ with `ATLC3_NO_CACHE=1`; clear with `lineforge clear-cache`.
 
 | Phase                      | Status         | Headline                                  |
 | -------------------------- | -------------- | ----------------------------------------- |
-| **0 — Bootstrap**          | ✅ Closed      | Repo, build, CI matrix, release pipeline  |
-| **1 — Analytical solvers** | ✅ Closed      | All 8 standard PCB geometries, 3 surfaces |
-| **2 — Bitmap C/Gp**        | ✅ Implemented | Laplace FD, atlc2 file compat, async MCP  |
-| **3 — Faraday L/Rs**       | ✅ Implemented | PEEC sparse solver, skin depth, sweeps    |
-| **4 — Polish + 1.0**       | 🚧 Closing     | Optimizer, cache, viewer, CHANGELOG, docs |
-| **5 — Rust acceleration**  | 🟦 Pending     | Native SOR/multigrid/PEEC via PyO3        |
+| **0: Bootstrap**          | ✅ Closed      | Repo, build, CI matrix, release pipeline  |
+| **1: Analytical solvers** | ✅ Closed      | All 8 standard PCB geometries, 3 surfaces |
+| **2: Bitmap C/Gp**        | ✅ Implemented | Laplace FD, atlc2 file compat, async MCP  |
+| **3: Faraday L/Rs**       | ✅ Implemented | PEEC sparse solver, skin depth, sweeps    |
+| **4: Polish + 1.0**       | 🚧 Closing     | Optimizer, cache, viewer, CHANGELOG, docs |
+| **5: Rust acceleration**  | 🟦 Pending     | Native SOR/multigrid/PEEC via PyO3        |
 
 Track gaps as [GitHub issues](https://github.com/RFingAdam/lineforge/issues),
 each tagged with its phase milestone.
@@ -368,13 +368,13 @@ each tagged with its phase milestone.
 
 ## Documentation
 
-- 📘 **[Quick Start](docs/quickstart.md)** — three-minute path from
+- 📘 **[Quick Start](docs/quickstart.md)**. Three-minute path from
   `pip install` to your first impedance answer.
 - 🐍 **[Python API tutorial](docs/tutorials/python.md)**
 - 💻 **[CLI tutorial](docs/tutorials/cli.md)**
 - 🤖 **[MCP server tutorial](docs/tutorials/mcp.md)** +
   [verification procedure](docs/MCP_VERIFICATION.md)
-- 📐 **[Geometry reference](docs/reference/geometries.md)** — every
+- 📐 **[Geometry reference](docs/reference/geometries.md)**. Every
   supported geometry with its dimensional fields and JSON Schema.
 - 📖 **Theory pages**:
   [analytical formulas](docs/theory/analytical.md) ·
@@ -382,7 +382,7 @@ each tagged with its phase milestone.
   [Faraday solver](docs/theory/faraday_solver.md) ·
   [skin effect](docs/theory/skin_effect.md) ·
   [3-wire decomposition](docs/theory/three_wire.md)
-- 📋 **[Implementation plan](docs/plan.md)** + **[audit report](AUDIT.md)** — what shipped vs what remains.
+- 📋 **[Implementation plan](docs/plan.md)** + **[audit report](AUDIT.md)**: what shipped vs what remains.
 - 📝 **[Changelog](CHANGELOG.md)**
 
 Built with [mkdocs-material](https://squidfunk.github.io/mkdocs-material/);
@@ -394,8 +394,8 @@ deploys to GitHub Pages on every push to `main`.
 
 Contributions are welcome and follow a phase-driven workflow.
 
-1. **Pick a [GitHub issue](https://github.com/RFingAdam/lineforge/issues)** —
-   each is tagged with its phase milestone and AC checklist.
+1. **Pick a [GitHub issue](https://github.com/RFingAdam/lineforge/issues)**.
+   Each is tagged with its phase milestone and AC checklist.
 2. **Fork + branch** (`feature/your-thing` or `fix/your-bug`).
 3. **Run the local check suite**:
    ```bash
@@ -404,7 +404,7 @@ Contributions are welcome and follow a phase-driven workflow.
    cargo fmt --all -- --check && cargo clippy -- -D warnings
    cargo test --workspace
    ```
-4. **Open a PR** — link the issue, tick AC checkboxes, request review.
+4. **Open a PR**: link the issue, tick AC checkboxes, request review.
 
 Full contributor guide in [`CONTRIBUTING.md`](CONTRIBUTING.md). Participation
 is governed by the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md).
@@ -466,7 +466,7 @@ or jump to a sibling:</sub>
 
 lineforge was originally released as **atlc3** (1.0.0 / 1.1.0,
 April-May 2026). It was renamed to lineforge at v2.0.0 to reflect the
-broader scope — the project has grown well past being a "successor to
+broader scope. The project has grown well past being a "successor to
 atlc/atlc2" into a programmable, agent-friendly platform with MCP, Touchstone
 export, optimizer, frequency sweeps, multi-layer stacks, GUI, and a
 three-conductor solver.
@@ -479,7 +479,7 @@ Beezley's atlc2 based on its publicly documented behavior at
 
 If you used `atlc3 1.x` previously: the `atlc3` PyPI package is frozen at
 1.1.0. For new work, use `lineforge`. The Python API is unchanged in name
-shapes — just rename your `import atlc3` to `import lineforge`.
+shapes: just rename your `import atlc3` to `import lineforge`.
 
 ## License
 
@@ -490,18 +490,18 @@ by GPL-3.0 section 13.
 
 ## Acknowledgments
 
-- **Dr. David Kirkby (G8WRB)** — original [atlc](http://atlc.sourceforge.net/) (2002, GPL).
-- **Brian Beezley (KQ6QV)** — [atlc2](http://www.hdtvprimer.com/kq6qv/atlc2.html) (2010),
+- **Dr. David Kirkby (G8WRB)**: original [atlc](http://atlc.sourceforge.net/) (2002, GPL).
+- **Brian Beezley (KQ6QV)**: [atlc2](http://www.hdtvprimer.com/kq6qv/atlc2.html) (2010),
   the comprehensive documented spec we built behavioral compatibility against.
 - **[scikit-rf](https://scikit-rf.readthedocs.io)**, **[PyAMG](https://pyamg.readthedocs.io/)**,
-  **[scipy.sparse](https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html)** —
-  the open-source numerical libraries that make this possible.
+  **[scipy.sparse](https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html)**.
+  The open-source numerical libraries that make this possible.
 - **[FastMCP](https://github.com/jlowin/fastmcp)**, **[Typer](https://typer.tiangolo.com/)**,
-  **[Pydantic](https://docs.pydantic.dev/)**, **[maturin](https://www.maturin.rs/)** —
-  the modern Python toolchain underneath the three user surfaces.
-- **[openEMS](https://openems.de/)** — independent 3D FDTD reference used to
+  **[Pydantic](https://docs.pydantic.dev/)**, **[maturin](https://www.maturin.rs/)**.
+  The modern Python toolchain underneath the three user surfaces.
+- **[openEMS](https://openems.de/)**: independent 3D FDTD reference used to
   cross-validate the closed-form solvers; see `examples/09_l3_sig1_em_validation/`.
-- **The MCP working group** — for the [Tasks SEP-1686 spec](https://modelcontextprotocol.io/seps/1686-tasks.md)
+- **The MCP working group**: for the [Tasks SEP-1686 spec](https://modelcontextprotocol.io/seps/1686-tasks.md)
   that made the async-solver pattern clean.
 
 <div align="center">

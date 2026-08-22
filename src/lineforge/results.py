@@ -1,6 +1,6 @@
 """Result types returned by lineforge solvers.
 
-All result models are Pydantic v2 — they serialize to JSON for the MCP surface
+All result models are Pydantic v2. They serialize to JSON for the MCP surface
 and CLI ``--output json``, and have generated JSON Schemas the MCP server uses
 to advertise tool return shapes.
 
@@ -100,7 +100,7 @@ class DiffResult(BaseModel):
 class ThreeWireResult(BaseModel):
     """Result of a 3-conductor (Y-decomposed) line analysis.
 
-    Per ``docs/theory/three_wire.md``, a 3-wire line has no single Z₀ — three
+    Per ``docs/theory/three_wire.md``, a 3-wire line has no single Z₀. Three
     pair-wise impedances combine in a "Y" arrangement. We carry both the raw
     pair impedances (each with one conductor floating) and the derived Y-leg
     impedances + odd/even mode equivalents.

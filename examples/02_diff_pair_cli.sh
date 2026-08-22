@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Phase 1 example — CLI usage.
+# Phase 1 example: CLI usage.
 #
 # Calculate Z0 / Zdiff for a few common stackups via the lineforge CLI.
 #

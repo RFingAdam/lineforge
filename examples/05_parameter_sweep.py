@@ -1,4 +1,4 @@
-"""Phase 1 example — parameter sweep via the Python API.
+"""Phase 1 example: parameter sweep via the Python API.
 
 Sweeps W from 3 mil to 25 mil for a microstrip on 4 mil FR4, prints Z0 and εeff
 for each value. Phase 3 will add a first-class `lineforge.sweep()` API for the

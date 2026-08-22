@@ -1,4 +1,4 @@
-# L and Rs — the Faraday solver
+# L and Rs. The Faraday solver
 
 lineforge's Phase 3 L/Rs pipeline solves a 2D **partial-element equivalent
 circuit** (PEEC) system, equivalent to atlc2's "one equation per conductor

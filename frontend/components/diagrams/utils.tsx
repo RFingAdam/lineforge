@@ -4,7 +4,7 @@
  * Each diagram component reads the current ``geometry`` dict from the
  * Zustand store, parses Length strings (W/H/T/...) to canonical meters,
  * computes layout fractions normalized to its viewBox, and renders a
- * labeled cross-section. Layout is "live" — every form-field change
+ * labeled cross-section. Layout is "live". Every form-field change
  * re-runs in <16ms with no debounce needed.
  */
 
@@ -57,9 +57,9 @@ export function dielectricFill(er: number): string {
 }
 
 export const PALETTE = {
-  signal: "#dc2626", // red — atlc2 +1 (signal)
-  signalAlt: "#3b82f6", // blue — atlc2 -1 (return signal in diff pairs)
-  ground: "#16a34a", // green — atlc2 0 (ground)
+  signal: "#dc2626", // red: atlc2 +1 (signal)
+  signalAlt: "#3b82f6", // blue: atlc2 -1 (return signal in diff pairs)
+  ground: "#16a34a", // green: atlc2 0 (ground)
   conductorOutline: "#0a0f17",
   dimension: "#94a3b8", // slate-400 for dimension lines + labels
   dimAccent: "#06b6d4", // cyan-500 for live-edited dimension

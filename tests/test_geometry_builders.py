@@ -1,4 +1,4 @@
-"""Parametrized rasterizer coverage — every geometry type goes through
+"""Parametrized rasterizer coverage. Every geometry type goes through
 the dispatcher and produces a valid usermap.
 
 The existing `tests/test_geometry.py` covers Pydantic validation and a
@@ -219,7 +219,7 @@ class TestBroadsideCoupledDiffStriplineRaster:
 
 
 # ---------------------------------------------------------------------------
-# Dispatcher — every type rasterizes through `rasterize()`
+# Dispatcher: every type rasterizes through `rasterize()`
 # ---------------------------------------------------------------------------
 
 
@@ -254,7 +254,7 @@ def test_dispatcher_rasterizes_every_type(geom_type: str) -> None:
 
 @pytest.mark.parametrize("geom_type", list(_MINIMAL_GEOMETRIES.keys()))
 def test_dispatcher_round_trips_via_from_dict(geom_type: str) -> None:
-    """Build via `from_dict(model_dump())` then re-rasterize — confirms each
+    """Build via `from_dict(model_dump())` then re-rasterize: confirms each
     Pydantic geometry round-trips through the JSON-schema bridge cleanly."""
     geom = _MINIMAL_GEOMETRIES[geom_type]
     # Use mode="python" so unit-string Length fields aren't dropped
@@ -277,7 +277,7 @@ def test_dispatcher_rejects_unknown_geometry() -> None:
 
 
 # ---------------------------------------------------------------------------
-# Geometry-type completeness — every registered type appears in the dispatcher
+# Geometry-type completeness. Every registered type appears in the dispatcher
 # ---------------------------------------------------------------------------
 
 
@@ -337,7 +337,7 @@ class TestDielectricRgbForEr:
         from lineforge.materials.database import lookup_by_rgb
 
         mat = lookup_by_rgb(rgb)
-        # Either lookup_by_rgb returns a record OR is None — but if the picker
+        # Either lookup_by_rgb returns a record OR is None, but if the picker
         # returned FR4_RGB or any palette RGB, lookup_by_rgb should find it.
         assert mat is not None
 

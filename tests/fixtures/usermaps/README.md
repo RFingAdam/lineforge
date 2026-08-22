@@ -4,7 +4,7 @@ These are atlc-format BMP24 files used to lock in lineforge's BMP I/O and bitmap
 solver against analytically-known transmission lines.
 
 The files are **regenerated locally** (not pulled from the atlc/atlc2
-SourceForge tree) so the licensing stays clean — they're MIT, same as the
+SourceForge tree) so the licensing stays clean. They're MIT, same as the
 project. Each BMP uses the standard atlc2 color palette
 (red=signal, green=ground, black=vacuum) and a documented pixel size, so the
 files are still loadable by atlc/atlc2 themselves and produce the same C
@@ -26,7 +26,7 @@ python tests/fixtures/usermaps/_generate.py
 ```
 
 The script is idempotent (overwrites in place). It uses the same builders
-that `tests/fixtures/geometries.py` uses for in-memory parity tests — these
+that `tests/fixtures/geometries.py` uses for in-memory parity tests. These
 files are simply the on-disk BMP serialization of those geometries.
 
 ## Why on-disk fixtures vs in-memory builders

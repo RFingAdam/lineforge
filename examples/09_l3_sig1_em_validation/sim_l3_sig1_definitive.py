@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
 """DEFINITIVE L3 SIG1 asymmetric stripline validation.
 
-Geometry — recommended narrowed configuration:
+Geometry: recommended narrowed configuration:
   W   = 2.92 mil (74.2 μm)
-  T   = 0.689 mil (17.5 μm)  — ½ oz Cu
-  H1  = 3.5 mil (88.9 μm)    — Core, εr=4.2, above to L2 GND
-  H2  = 5.3 mil (134.6 μm)   — Prepreg, εr=3.7, below to L4 PWR1
+  T   = 0.689 mil (17.5 μm) : ½ oz Cu
+  H1  = 3.5 mil (88.9 μm)   : Core, εr=4.2, above to L2 GND
+  H2  = 5.3 mil (134.6 μm)  : Prepreg, εr=3.7, below to L4 PWR1
   Cu  σ = 5.8 × 10⁷ S/m
   FR4 Df ≈ 0.02
 
@@ -72,7 +72,7 @@ def run_l3_sig1(use_real_losses=False, label="design"):
     mesh.AddLine("y", [-side, side])
     mesh.SmoothMeshLines("y", res)
 
-    # Z mesh — same as the working λ/120 case (1-2 cells through trace)
+    # Z mesh: same as the working λ/120 case (1-2 cells through trace)
     mesh.AddLine("z", np.linspace(0, z_trace_bot, 16))
     mesh.AddLine("z", z_trace_bot + third)
     mesh.AddLine("z", z_trace_top - third)
@@ -251,6 +251,6 @@ print("  Dielectric loss (FR4 Df=0.02): ~0.2 dB/inch at 850 MHz, ~0.5 dB/inch at
 print()
 print("Engineering takeaway:")
 print(
-    f"  Z₀ ≈ {np.mean(Z_below_r[band]):.0f} Ω across the band — confirms 50 Ω target hit (within EM accuracy)."
+    f"  Z₀ ≈ {np.mean(Z_below_r[band]):.0f} Ω across the band: confirms 50 Ω target hit (within EM accuracy)."
 )
 print("  Insertion loss is well-bounded for typical 0.5-1 inch L3 segments.")

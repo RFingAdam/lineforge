@@ -82,11 +82,11 @@ def stripline_symmetric(
 
     # IPC-2141A's symmetric-stripline formula is accurate over the full
     # practical W/(B-T) range (typically 0–1.5). Cohn wide-strip is only
-    # better for truly wide strips W/(B-T) > 2 — very rare in PCB design.
+    # better for truly wide strips W/(B-T) > 2: very rare in PCB design.
     z0 = _stripline_z0_narrow(W, T, B, er)
     method = "ipc2141-stripline"
 
-    eps_eff = er  # stripline is fully embedded — no air dispersion
+    eps_eff = er  # stripline is fully embedded. No air dispersion
     vp = C0 / math.sqrt(eps_eff)
     td_per_in = INCH_M / vp
 
@@ -125,7 +125,7 @@ def stripline_asymmetric(
     the symmetric IPC-2141A formula with B = 2h (good when T << h).
 
     When the geometry supplies ``er_above`` / ``er_below`` (different dielectric
-    above and below the strip — common when an inner signal layer sits
+    above and below the strip: common when an inner signal layer sits
     between a plane on Core and a plane on Prepreg), the formula uses a
     capacitance-weighted effective permittivity:
 

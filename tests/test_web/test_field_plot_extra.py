@@ -83,7 +83,7 @@ class TestAsyncFieldPlot:
     """The /async endpoint immediately returns a task_id; the background
     worker runs the same code path as the sync endpoint but pushes events
     over the progress WebSocket. We test that the endpoint accepts requests
-    and returns a task_id — the full WS streaming is exercised in
+    and returns a task_id. The full WS streaming is exercised in
     test_main.py::TestProgressWebSocket."""
 
     def test_async_returns_task_id(self, client: TestClient) -> None:
@@ -137,6 +137,6 @@ class TestAsyncFieldPlot:
 
 
 # NOTE: end-to-end exercise of the async worker's progress + result events
-# is covered by tests/test_web/test_main.py::TestProgressWebSocket — repeat-
+# is covered by tests/test_web/test_main.py::TestProgressWebSocket: repeat-
 # ing it here would race the background task. The async-endpoint smoke tests
 # above guarantee the request handler doesn't crash and returns a task_id.

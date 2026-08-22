@@ -66,7 +66,7 @@ export function MaterialPicker({
         }}
         className="w-full bg-navy-900 border border-navy-700 rounded px-2 py-1.5 text-slate-100 text-sm"
       >
-        <option value="">(custom — type εr / tan_δ below)</option>
+        <option value="">(custom: type εr / tan_δ below)</option>
         {laminates.map((l) => (
           <option
             key={l.name}
@@ -77,7 +77,7 @@ export function MaterialPicker({
                 : `εr=${l.er}, tan_δ=${l.tan_delta}`
             }
           >
-            {l.name} — εr {l.er.toFixed(2)}{l.tan_delta > 0 ? `, tan_δ ${l.tan_delta}` : ""}
+            {l.name}: εr {l.er.toFixed(2)}{l.tan_delta > 0 ? `, tan_δ ${l.tan_delta}` : ""}
           </option>
         ))}
       </select>

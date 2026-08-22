@@ -1,7 +1,7 @@
 {
   "name": "pcb-extended",
   "version": "1.1.0",
-  "description": "Common PCB substrate materials beyond atlc2's defaults — modern high-frequency laminate vendors plus shorthand entries for FR4-class generics. Where datasheets publish multi-frequency Dk/Df points, those tables are populated and used by lineforge's log-frequency interpolator.",
+  "description": "Common PCB substrate materials beyond atlc2's defaults: modern high-frequency laminate vendors plus shorthand entries for FR4-class generics. Where datasheets publish multi-frequency Dk/Df points, those tables are populated and used by lineforge's log-frequency interpolator.",
   "materials": [
     {
       "rgb": [180, 220, 200], "use": "insul",

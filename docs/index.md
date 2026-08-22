@@ -4,7 +4,7 @@ Open-source, MCP-enabled, AI-friendly transmission line calculator.
 
 lineforge.0 is the spiritual successor to David Kirkby's `atlc` and Brian
 Beezley's `atlc2`. It computes the full RLGC characterization (Z₀, εeff, vp,
-L, C, Rs, Gp) of any 2D transmission line cross-section — from standard PCB
+L, C, Rs, Gp) of any 2D transmission line cross-section: from standard PCB
 geometries (microstrip, stripline, CPWG, differential pairs) to arbitrary
 user-drawn bitmaps.
 
@@ -26,15 +26,15 @@ user-drawn bitmaps.
 
 | Phase | Goal |
 |---|---|
-| **0 — Bootstrap** | ✅ Repo, build system, CI, release pipeline, skeleton surfaces |
-| **1 — Analytical solvers** | ✅ Hammerstad-Jensen + Wadell, all 3 surfaces |
-| 2 — C and Gp solver | Bitmap kernel (Laplace FD), atlc2 compat |
-| 3 — L and Rs solver | Faraday sparse solver, full RLGC, sweeps |
-| 4 — Polish + 1.0.0 | Optimizer, caching, docs, PyPI release |
+| **0: Bootstrap** | ✅ Repo, build system, CI, release pipeline, skeleton surfaces |
+| **1: Analytical solvers** | ✅ Hammerstad-Jensen + Wadell, all 3 surfaces |
+| 2: C and Gp solver | Bitmap kernel (Laplace FD), atlc2 compat |
+| 3: L and Rs solver | Faraday sparse solver, full RLGC, sweeps |
+| 4: Polish + 1.0.0 | Optimizer, caching, docs, PyPI release |
 
 ## Get started
 
-- [Quick Start](quickstart.md) — first answer in three minutes
+- [Quick Start](quickstart.md): first answer in three minutes
 - [Python API tutorial](tutorials/python.md)
 - [CLI tutorial](tutorials/cli.md)
 - [MCP server tutorial](tutorials/mcp.md)
@@ -43,8 +43,8 @@ user-drawn bitmaps.
 
 ## Acknowledgments
 
-- **Dr. David Kirkby (G8WRB)** — the original `atlc`, GPL.
-- **Brian Beezley (KQ6QV)** — `atlc2`, the comprehensive documented spec we
+- **Dr. David Kirkby (G8WRB)**. The original `atlc`, GPL.
+- **Brian Beezley (KQ6QV)**: `atlc2`, the comprehensive documented spec we
   built against.
-- **scikit-rf, PyAMG, scipy.sparse** — the open-source numerical libraries
+- **scikit-rf, PyAMG, scipy.sparse**. The open-source numerical libraries
   that make this possible.

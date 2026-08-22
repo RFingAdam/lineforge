@@ -1,4 +1,4 @@
-"""Phase 3 AC Rs parity — Faraday/PEEC solver vs analytical skin-effect formula for a round-wire pair.
+"""Phase 3 AC Rs parity: Faraday/PEEC solver vs analytical skin-effect formula for a round-wire pair.
 
 Companion to ``test_coax_ac_rs.py`` (Workstream C-#9). Two parallel solid
 round wires of radius ``a``, centre-to-centre spacing ``D``, carrying equal
@@ -14,17 +14,17 @@ return path):
 
 References
 ----------
-* Pozar, *Microwave Engineering* 4th ed., §2.4 — surface impedance of a
+* Pozar, *Microwave Engineering* 4th ed., §2.4: surface impedance of a
   good conductor.
-* Wadell, *Transmission Line Design Handbook*, §3.3 — round-wire pair.
+* Wadell, *Transmission Line Design Handbook*, §3.3: round-wire pair.
 
 Test budget
 -----------
 Same dense-solve constraints as the coax test. We use:
 
-* **Fast** (no marker): a/δ = 3, D = 4·a, δ/px = 3 — ~500 conductor pixels,
+* **Fast** (no marker): a/δ = 3, D = 4·a, δ/px = 3: ~500 conductor pixels,
   ~1 s solve. Asserts ±20%.
-* **Slow** (``@pytest.mark.slow``): a/δ = 6, D = 4·a, δ/px = 3 — ~1500
+* **Slow** (``@pytest.mark.slow``): a/δ = 6, D = 4·a, δ/px = 3: ~1500
   conductor pixels, ~1.5 s solve. Asserts ±10%.
 * **Resolution warning**: dedicated test asserting that δ/px < 30 trips
   ``rs_low_confidence``. **Conductor-separation warning**: dedicated test
@@ -78,7 +78,7 @@ class TestRoundWirePairAcRsFast:
         D = 4.0 * a  # well-separated → no close-conductor warning
 
         usermap = build_wire_pair_usermap(a, D, pixel_width_m=px, margin_pixels=4)
-        # No skin masking — at a = 3·δ the masking would leave the wires solid
+        # No skin masking: at a = 3·δ the masking would leave the wires solid
         # anyway. Letting the solver carry all wire pixels gives the most direct
         # comparison to the surface-current formula.
         result = solve_lrs(usermap, frequency_hz=f, method="dense")
@@ -99,7 +99,7 @@ class TestRoundWirePairAcRsFast:
         """
         f = 1.0e9
         delta = _skin_depth(f)
-        # δ/px = 5 — clearly under the 30-px target → should flag.
+        # δ/px = 5: clearly under the 30-px target → should flag.
         px = delta / 5.0
         a = 3.0 * delta
         D = 4.0 * a

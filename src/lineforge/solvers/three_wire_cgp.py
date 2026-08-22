@@ -2,7 +2,7 @@
 
 For an arbitrary 3-conductor cross-section rasterized as a Usermap (red/+1
 signal, blue/−1 signal, green/0 third conductor), this module runs three
-Laplace solves — each with one of the three conductors set to *float* — to
+Laplace solves. Each with one of the three conductors set to *float*: to
 obtain the three pair impedances ``z_rcz`` / ``z_gcz`` / ``z_bcz``, then
 applies :func:`lineforge.analytical.three_wire.y_decomposition` to recover the
 Y-leg impedances ZoR/ZoG/ZoB plus the coupler odd/even-mode impedances.
@@ -97,7 +97,7 @@ def _conductor_charge(
     er_field: np.ndarray,
     conductor_mask: np.ndarray,
 ) -> float:
-    """Net induced charge on a conductor (scaled — only the ratio matters).
+    """Net induced charge on a conductor (scaled: only the ratio matters).
 
     Q ∝ ∮ εr E·n dA around the conductor's perimeter. We approximate this
     via the FD outward-flux through the cells immediately adjacent to the
@@ -168,13 +168,13 @@ def solve_modes(
     ----------
     usermap
         Usermap with at least red (+1), blue (−1), and green (0) conductor
-        pixels — :func:`lineforge.solvers.cgp._extract_masks` is used to find
+        pixels: :func:`lineforge.solvers.cgp._extract_masks` is used to find
         them. Floating conductors already in the usermap (use="float") are
-        ignored — this routine treats one of (R, G, B) as floating per run.
+        ignored: this routine treats one of (R, G, B) as floating per run.
     method
         Laplace solver (``"sor"`` / ``"amg"`` / ``"auto"``).
     floating_mode
-        ``"boundary_weighted"`` (default) or ``"average"`` — see
+        ``"boundary_weighted"`` (default) or ``"average"``. See
         :mod:`lineforge.solvers.laplace`.
 
     Returns

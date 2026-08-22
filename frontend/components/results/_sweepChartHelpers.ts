@@ -1,6 +1,6 @@
 /**
  * Pure helpers extracted from SweepChart.tsx to keep the component file
- * focused on JSX. None of these reference React state — they're tick
+ * focused on JSX. None of these reference React state. They're tick
  * generators and number formatters used by the SVG renderer.
  */
 
@@ -83,7 +83,7 @@ export function fmtY(y: number, metric: Metric): string {
   return y.toFixed(3);
 }
 
-/** Hover-readout flavour of fmtX — preserves SI prefix but appends units. */
+/** Hover-readout flavour of fmtX: preserves SI prefix but appends units. */
 export function fmtReadX(x: number, parameter: string): string {
   if (parameter === "frequency") {
     if (x >= 1e9) return `${(x / 1e9).toFixed(3)} GHz`;

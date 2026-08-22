@@ -13,10 +13,10 @@ where:
     - ``A_pixel = px²`` is the pixel area.
     - ``r_nk`` is the center-to-center distance between pixels n and k (with
       a self-pixel cap of ~0.5·px to avoid the singularity).
-    - ``d_ref`` is a reference distance — choose it so the reciprocal magnitudes
+    - ``d_ref`` is a reference distance: choose it so the reciprocal magnitudes
       look natural (we use the simulation extent).
 
-Constraints — one per conductor:
+Constraints: one per conductor:
     For each conductor c (the +1 and the −1 conductor for a 2-wire line),
     either fix V_c (voltage drive) or fix Σ_{n∈c} i_n (current drive).
 
@@ -114,7 +114,7 @@ def _self_inductance_per_m(px: float) -> float:
         L_self_per_m ≈ (μ₀/(2π)) · (ln(1/a) + 0.5)
 
     This produces correct DC inductance for a coax to within a few percent,
-    which is acceptable for Phase 3 — the off-diagonal terms dominate the
+    which is acceptable for Phase 3. The off-diagonal terms dominate the
     answer for any non-trivial geometry.
     """
     return float((MU0 / (2.0 * np.pi)) * (np.log(1.0 / max(px, 1e-12)) + 0.5))
@@ -229,11 +229,11 @@ def _check_rs_geometry(
 
     Two independent triggers, either of which sets ``rs_low_confidence``:
 
-    1. **Conductor separation** — per atlc2 §"Getting an accurate Rs": a corner
+    1. **Conductor separation**: per atlc2 §"Getting an accurate Rs": a corner
        pixel must be ≥ 16 pixels from another corner pixel of different voltage,
        or ≥ 8 pixels from a flat or curved surface of different voltage. If
        violated, Rs is flagged (atlc2 prints in red).
-    2. **Skin-depth resolution** — for the AC skin-effect formula
+    2. **Skin-depth resolution**: for the AC skin-effect formula
        ``R_s = 1/(σ·δ·P)`` to be reproduced to ±1%, the grid must resolve δ
        with at least ~30 pixels. When the smallest conductor material has
        ``δ / pixel_width < 30`` the bitmap solver under-resolves the surface

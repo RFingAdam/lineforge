@@ -21,7 +21,7 @@ export function DiffResultCard({ result }: { result: Record<string, unknown> }) 
           unit="Ω"
           hero
           tone="accent"
-          hint="Differential-mode characteristic impedance — 2·Z_odd"
+          hint="Differential-mode characteristic impedance: 2·Z_odd"
         />
       )}
 
@@ -41,7 +41,7 @@ export function DiffResultCard({ result }: { result: Record<string, unknown> }) 
               value={zc.toFixed(2)}
               unit="Ω"
               tone="info"
-              hint="Common-mode impedance — Z_even / 2"
+              hint="Common-mode impedance: Z_even / 2"
             />
           )}
           {epsEven !== null && <Stat label="ε_eff_even" value={epsEven.toFixed(4)} />}

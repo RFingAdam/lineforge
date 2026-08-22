@@ -1,6 +1,6 @@
 """Tests for the claude-agent-sdk integration (C3).
 
-Tests the **tool registrations** directly without invoking Claude — the
+Tests the **tool registrations** directly without invoking Claude. The
 agent's actual streaming behavior requires ANTHROPIC_API_KEY and is verified
 via a manual end-to-end demo (see README's verification section). What we
 *can* test in CI:

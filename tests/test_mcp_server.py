@@ -2,7 +2,7 @@
 
 FastMCP 1.27's ``call_tool`` returns a 2-tuple of (content_list,
 structured_content). Tests below use the structured-content path which is
-already a parsed dict — no JSON re-parsing needed.
+already a parsed dict. No JSON re-parsing needed.
 """
 
 from __future__ import annotations

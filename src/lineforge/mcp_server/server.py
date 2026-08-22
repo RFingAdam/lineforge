@@ -5,27 +5,27 @@ Phase 2 surface (extending Phase 1's analytical tools):
 Tools
 -----
 Phase 1 (synchronous, fast):
-- ``ping``                  — health check
-- ``calculate_impedance``   — closed-form solver
-- ``list_geometry_types``   — enumerate geometries
-- ``describe_geometry``     — JSON Schema for a type
-- ``export_geometry_schema``— union schema
+- ``ping``                 : health check
+- ``calculate_impedance``  : closed-form solver
+- ``list_geometry_types``  : enumerate geometries
+- ``describe_geometry``    : JSON Schema for a type
+- ``export_geometry_schema`` : union schema
 
 Phase 2 (long-running via Tasks pattern):
 - ``import_usermap(bmp_base64, pixel_width, name?) -> { uri }``
-- ``solve_cgp(geometry_or_uri, options?) -> { taskId }`` — async
-- ``tasks_get(taskId) -> { status, result?, error? }``    — poll
+- ``solve_cgp(geometry_or_uri, options?) -> { taskId }``: async
+- ``tasks_get(taskId) -> { status, result?, error? }``   : poll
 - ``tasks_cancel(taskId) -> { cancelled: bool }``
 - ``rasterize(geometry, pixel_width?) -> { uri, shape }``
 - ``run_atlc2_script(script_text, dry_run?) -> { outputs }``
 
 Resources
 ---------
-- ``atlc://materials``                          — atlc2 default DB
-- ``atlc://materials/{name}``                   — by-name lookup
-- ``atlc://geometries/{id}``                    — saved Usermaps
-- ``atlc://results/{id}``                       — completed task results
-- ``atlc://results/{id}/field/{V|E|D|T}``       — field-plot PNGs (base64-encoded in resource read)
+- ``atlc://materials``                         : atlc2 default DB
+- ``atlc://materials/{name}``                  : by-name lookup
+- ``atlc://geometries/{id}``                   : saved Usermaps
+- ``atlc://results/{id}``                      : completed task results
+- ``atlc://results/{id}/field/{V|E|D|T}``      : field-plot PNGs (base64-encoded in resource read)
 """
 
 from __future__ import annotations
@@ -79,10 +79,10 @@ def build_server() -> FastMCP:
     server = FastMCP(
         name="lineforge",
         instructions=(
-            "lineforge — open-source transmission line calculator. "
+            "lineforge: open-source transmission line calculator. "
             "Use `calculate_impedance` for fast closed-form solves on standard "
             "PCB geometries. For arbitrary cross-sections, use `import_usermap` "
-            "to upload a BMP, then `solve_cgp` (returns a taskId — poll via "
+            "to upload a BMP, then `solve_cgp` (returns a taskId: poll via "
             "`tasks_get` until status='completed'). Field plots are exposed as "
             "resources at `atlc://results/{id}/field/{V|E|D|T}`."
         ),
@@ -267,7 +267,7 @@ def build_server() -> FastMCP:
             ``"sor"`` | ``"amg"`` | ``"auto"``.
         extend_grid
             Pad the usermap for open-boundary simulation (atlc2 default).
-            Set False for shielded geometries (coax) or for fast tests —
+            Set False for shielded geometries (coax) or for fast tests:
             unshielded lines need True for accurate Z₀.
         render_fields
             Subset of ``["V", "E", "D", "T"]`` to render as PNGs and attach to
