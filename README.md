@@ -488,6 +488,12 @@ shapes: just rename your `import atlc3` to `import lineforge`.
 lineage is preserved and the GPL → AGPL move is explicitly permitted
 by GPL-3.0 section 13.
 
+## Brand assets
+
+The project name and the logo files in this repository are not part of the licensed
+work. The licence above grants no permission to use them, except as needed to describe
+the origin of the work.
+
 ## Acknowledgments
 
 - **Dr. David Kirkby (G8WRB)**: original [atlc](http://atlc.sourceforge.net/) (2002, GPL).
