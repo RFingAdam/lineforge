@@ -45,22 +45,22 @@ values and openEMS 3D FDTD to within ±2 %.
 
 **What lineforge does well:**
 
-- 🤖 **AI-native via MCP.** First-class [Model Context Protocol](https://modelcontextprotocol.io)
+- **AI-native via MCP.** First-class [Model Context Protocol](https://modelcontextprotocol.io)
   server with 14 tools. Any Claude / LLM agent can drive it.
   Long solves use the SEP-1686 Tasks pattern.
-- 🐍 **Three equal surfaces.** MCP server, CLI, and Python API are all
+- **Three equal surfaces.** MCP server, CLI, and Python API are all
   polished from day one. Use whichever fits your workflow.
-- ⚡ **Modern numerics.** Python+NumPy+SciPy orchestration with PyAMG
+- **Modern numerics.** Python+NumPy+SciPy orchestration with PyAMG
   multigrid + scipy.sparse BiCGSTAB+ILU0 solvers. Rust-accelerated kernels
   via [PyO3](https://pyo3.rs/) for inner loops (currently scaffolded;
   full implementation in Phase 5).
-- 📐 **atlc2-format compatible.** Existing atlc2 BMP usermaps,
+- **atlc2-format compatible.** Existing atlc2 BMP usermaps,
   `MoreColors.txt` files, and `.txt` script files run unchanged via the
   bitmap solver. New `.lineforge.json` is the modern alternative.
-- ✅ **Validated.** Closed-form solvers cross-checked against scikit-rf
+- yes **Validated.** Closed-form solvers cross-checked against scikit-rf
   and IPC-2141A reference values; bitmap solvers validated against
   analytical coax (Z₀ ±10%) and wire-pair (DC L ±25%) closed forms.
-- 🔒 **GPLv3.** Free as in freedom, with full source.
+- **GPLv3.** Free as in freedom, with full source.
 
 ---
 
@@ -354,12 +354,12 @@ with `ATLC3_NO_CACHE=1`; clear with `lineforge clear-cache`.
 
 | Phase                      | Status         | Headline                                  |
 | -------------------------- | -------------- | ----------------------------------------- |
-| **0: Bootstrap**          | ✅ Closed      | Repo, build, CI matrix, release pipeline  |
-| **1: Analytical solvers** | ✅ Closed      | All 8 standard PCB geometries, 3 surfaces |
-| **2: Bitmap C/Gp**        | ✅ Implemented | Laplace FD, atlc2 file compat, async MCP  |
-| **3: Faraday L/Rs**       | ✅ Implemented | PEEC sparse solver, skin depth, sweeps    |
-| **4: Polish + 1.0**       | 🚧 Closing     | Optimizer, cache, viewer, CHANGELOG, docs |
-| **5: Rust acceleration**  | 🟦 Pending     | Native SOR/multigrid/PEEC via PyO3        |
+| **0: Bootstrap**          | Closed      | Repo, build, CI matrix, release pipeline  |
+| **1: Analytical solvers** | Closed      | All 8 standard PCB geometries, 3 surfaces |
+| **2: Bitmap C/Gp**        | Implemented | Laplace FD, atlc2 file compat, async MCP  |
+| **3: Faraday L/Rs**       | Implemented | PEEC sparse solver, skin depth, sweeps    |
+| **4: Polish + 1.0**       | Closing     | Optimizer, cache, viewer, CHANGELOG, docs |
+| **5: Rust acceleration**  | Pending     | Native SOR/multigrid/PEEC via PyO3        |
 
 Track gaps as [GitHub issues](https://github.com/RFingAdam/lineforge/issues),
 each tagged with its phase milestone.
@@ -368,22 +368,22 @@ each tagged with its phase milestone.
 
 ## Documentation
 
-- 📘 **[Quick Start](docs/quickstart.md)**. Three-minute path from
+- **[Quick Start](docs/quickstart.md)**. Three-minute path from
   `pip install` to your first impedance answer.
-- 🐍 **[Python API tutorial](docs/tutorials/python.md)**
-- 💻 **[CLI tutorial](docs/tutorials/cli.md)**
-- 🤖 **[MCP server tutorial](docs/tutorials/mcp.md)** +
+- **[Python API tutorial](docs/tutorials/python.md)**
+- **[CLI tutorial](docs/tutorials/cli.md)**
+- **[MCP server tutorial](docs/tutorials/mcp.md)** +
   [verification procedure](docs/MCP_VERIFICATION.md)
-- 📐 **[Geometry reference](docs/reference/geometries.md)**. Every
+- **[Geometry reference](docs/reference/geometries.md)**. Every
   supported geometry with its dimensional fields and JSON Schema.
-- 📖 **Theory pages**:
+- **Theory pages**:
   [analytical formulas](docs/theory/analytical.md) ·
   [Laplace solver](docs/theory/laplace_solver.md) ·
   [Faraday solver](docs/theory/faraday_solver.md) ·
   [skin effect](docs/theory/skin_effect.md) ·
   [3-wire decomposition](docs/theory/three_wire.md)
-- 📋 **[Implementation plan](docs/plan.md)** + **[audit report](AUDIT.md)**: what shipped vs what remains.
-- 📝 **[Changelog](CHANGELOG.md)**
+- **[Implementation plan](docs/plan.md)** + **[audit report](AUDIT.md)**: what shipped vs what remains.
+- **[Changelog](CHANGELOG.md)**
 
 Built with [mkdocs-material](https://squidfunk.github.io/mkdocs-material/);
 deploys to GitHub Pages on every push to `main`.
@@ -485,7 +485,7 @@ shapes: just rename your `import atlc3` to `import lineforge`.
 
 [AGPLv3](LICENSE). Relicensed from GPLv3 in v2.2.0 to close the
 "wrap as a paid SaaS without contributing back" gap; the atlc / atlc2
-lineage is preserved and the GPL → AGPL move is explicitly permitted
+lineage is preserved and the GPL -> AGPL move is explicitly permitted
 by GPL-3.0 section 13.
 
 ## Brand assets
