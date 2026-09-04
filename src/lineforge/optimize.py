@@ -21,6 +21,7 @@ Common workflows:
 
 from __future__ import annotations
 
+import warnings
 from dataclasses import dataclass
 from typing import Any
 
@@ -58,6 +59,12 @@ def _extract_metric(result: Any, name: str) -> float | None:
 
 def _coerce_bound(b: float | str) -> float:
     return parse_length(b) if isinstance(b, str) else float(b)
+
+
+#: Cost returned for a candidate that could not be evaluated at all -- bad
+#: geometry, a solver refusal (e.g. a closed-form validity limit), or a target
+#: metric this geometry does not report. Large enough to lose to any real cost.
+INFEASIBLE_COST = 1e6
 
 
 def optimize_for(
@@ -99,6 +106,15 @@ def optimize_for(
         from lineforge.solvers.cgp import solve_cgp
         from lineforge.solvers.lrs import solve_full as solve_full_rlgc
 
+    # Best *evaluable* candidate seen. Closed-form models have validity limits
+    # (a strip can outgrow its cavity), so wide default bounds put a large slab
+    # of the search domain at INFEASIBLE_COST. A bounded scalar search that
+    # probes mostly inside that slab can return an infeasible x -- which then
+    # blew up in the un-guarded final re-solve below. Remembering the best
+    # feasible point makes the outcome independent of where the optimizer
+    # happens to stop.
+    best: dict[str, Any] = {"cost": float("inf"), "x": None}
+
     def objective(x: np.ndarray) -> float:
         # Build the geometry
         params = dict(template)
@@ -107,7 +123,7 @@ def optimize_for(
         try:
             geom = from_dict(params)
         except (KeyError, ValueError):
-            return 1e6  # bad geometry → huge penalty
+            return INFEASIBLE_COST  # bad geometry → huge penalty
 
         try:
             result: Any
@@ -124,19 +140,46 @@ def optimize_for(
             else:
                 raise ValueError(f"unknown solver {solver!r}")
         except Exception:
-            return 1e6
+            return INFEASIBLE_COST
 
         # Cost = RMS relative deviation across targets
         sqr_sum = 0.0
         for k, v_target in target.items():
             v_actual = _extract_metric(result, k)
             if v_actual is None:
-                return 1e6
+                return INFEASIBLE_COST
             sqr_sum += ((v_actual - v_target) / max(abs(v_target), 1e-12)) ** 2
-        return float(np.sqrt(sqr_sum / len(target)))
+        cost = float(np.sqrt(sqr_sum / len(target)))
+        if cost < best["cost"]:
+            best["cost"] = cost
+            best["x"] = np.array(x, dtype=float, copy=True)
+        return cost
 
     if len(fields) == 1:
         lo, hi = bounds[0]
+
+        # Bracket the search on the feasible sub-interval before optimizing.
+        # Closed-form models have validity limits, so a wide default bound such
+        # as 0.1-100 mil can leave the feasible region confined to the bottom
+        # fraction of the interval. Golden-section then probes only the flat
+        # INFEASIBLE_COST slab, never samples a solvable geometry, and returns
+        # an arbitrary endpoint. A coarse log-spaced scan costs a few dozen
+        # microsecond solves and makes the outcome bound-insensitive.
+        scan = np.geomspace(lo, hi, 64) if lo > 0 else np.linspace(lo, hi, 64)
+        with warnings.catch_warnings():
+            # The scan deliberately probes geometries outside model validity;
+            # those warnings describe throwaway samples, not the returned answer.
+            warnings.simplefilter("ignore")
+            feasible = [float(x) for x in scan if objective(np.array([x])) < INFEASIBLE_COST]
+        if feasible:
+            # Widen by one scan step so the true optimum is not clipped off the
+            # edge of the feasible samples.
+            step = (hi / lo) ** (1.0 / 63) if lo > 0 else (hi - lo) / 63
+            if lo > 0:
+                lo, hi = max(lo, min(feasible) / step), min(hi, max(feasible) * step)
+            else:
+                lo, hi = max(lo, min(feasible) - step), min(hi, max(feasible) + step)
+
         # xatol scaled to the bound-range. The optimizer should converge to a
         # tiny fraction of the search interval, not the default 1e-5 in absolute
         # SI units which is huge when bounds are in meters (0.1 mil = 2.5 µm).
@@ -162,6 +205,22 @@ def optimize_for(
         x_opt = res.x
         cost = float(res.fun)
         n_iter = res.nit
+
+    # Prefer the best evaluable point over whatever the optimizer returned:
+    # never worse, and it keeps an infeasible endpoint from reaching the
+    # un-guarded final solve below.
+    if best["x"] is not None and best["cost"] < cost:
+        x_opt = best["x"]
+        cost = float(best["cost"])
+
+    if best["x"] is None:
+        raise ValueError(
+            "optimize_for: no evaluable geometry inside the given bounds. Every "
+            f"candidate for {fields} failed to solve or did not report "
+            f"{sorted(target)}. Check that the target metric exists for this "
+            "geometry type (single-ended results carry 'z0', differential ones "
+            "'z_diff') and that the bounds lie inside the model's validity range."
+        )
 
     # Build the final geometry + result
     params = dict(template)
@@ -194,6 +253,41 @@ def optimize_for(
     )
 
 
+def _default_metric_for(
+    template: dict[str, Any],
+    vary_dict: dict[str, tuple[float | str, float | str]],
+    *,
+    frequency_hz: float | None,
+) -> str:
+    """Pick the impedance metric this geometry actually reports.
+
+    Single-ended geometries return a ``TLineResult`` carrying ``z0``;
+    differential ones return a ``DiffResult`` carrying ``z_odd``/``z_even``/
+    ``z_diff``/``z_common`` and **no** ``z0``. Targeting ``z0`` on a
+    differential pair made every candidate miss, so the objective returned the
+    1e6 penalty everywhere, the cost surface was perfectly flat, and the
+    optimizer parked wherever the bounded search happened to land -- reporting
+    ``success=False`` with a null impedance instead of the obvious "that
+    metric does not exist for this geometry".
+
+    The template normally omits the varying field, so fill each one with the
+    midpoint of its bounds before probing. Any failure here is non-fatal:
+    fall back to ``z0`` and let the normal machinery report the problem.
+    """
+    probe_params = dict(template)
+    for fld, (lo, hi) in vary_dict.items():
+        probe_params[fld] = 0.5 * (_coerce_bound(lo) + _coerce_bound(hi))
+    try:
+        probe = analytical_solve(from_dict(probe_params), frequency_hz=frequency_hz)
+    except Exception:
+        return "z0"
+    if _extract_metric(probe, "z0") is not None:
+        return "z0"
+    if _extract_metric(probe, "z_diff") is not None:
+        return "z_diff"
+    return "z0"
+
+
 def target_z0(
     template: dict[str, Any],
     *,
@@ -203,6 +297,7 @@ def target_z0(
     frequency_hz: float | None = None,
     max_iter: int = 100,
     bounds: tuple[float | str, float | str] | None = None,
+    metric: str | None = None,
 ) -> OptimizeResult:
     """Find a single dimension that hits a target characteristic impedance.
 
@@ -228,34 +323,51 @@ def target_z0(
     bounds
         ``(low, high)`` for the varied field. Only consulted when ``vary`` is a
         bare string. Accepts unit strings.
+    metric
+        Result field to drive toward ``target_ohms``. Defaults to ``"z0"`` for
+        single-ended geometries and ``"z_diff"`` for differential ones, chosen
+        by probe-solving the template. Set it explicitly to target something
+        else, e.g. ``"z_odd"`` on a coupled pair.
 
     Returns
     -------
     OptimizeResult
-        ``.geometry`` is the dimensioned geometry; ``.metric["z0"]`` is the
-        achieved Z₀; ``.success`` is ``True`` when within 1 % of target.
+        ``.geometry`` is the dimensioned geometry; ``.metric[<metric>]`` is the
+        achieved impedance; ``.success`` is ``True`` when within 1 % of target.
 
     Examples
     --------
-    Recover the L3 SIG1 W=3.18 mil result from the planning session::
+    Single-ended: width for 50 ohm on an asymmetric inner layer::
 
         >>> from lineforge.optimize import target_z0
         >>> r = target_z0(
         ...     template={
         ...         "type": "stripline_asymmetric",
-        ...         "T": "0.689mil",
-        ...         "H1": "3.5mil",
-        ...         "H2": "5.3mil",
+        ...         "T": "1.4mil",
+        ...         "H1": "4mil",
+        ...         "H2": "5mil",
         ...         "er": 4.2,
-        ...         "er_above": 4.2,
-        ...         "er_below": 3.7,
         ...     },
         ...     vary="W",
-        ...     target_ohms=48.0,
+        ...     target_ohms=50.0,
         ...     bounds=("1mil", "10mil"),
         ... )
-        >>> round(r.geometry.W * 39370.1, 2)  # convert m → mil
-        3.18
+        >>> r.success
+        True
+
+    Differential: the metric defaults to ``z_diff``, so a 100 ohm pair is::
+
+        >>> r = target_z0(
+        ...     template={
+        ...         "type": "edge_coupled_diff_microstrip",
+        ...         "H": "4mil", "T": "1.4mil", "S": "5mil", "er": 4.2,
+        ...     },
+        ...     vary="W",
+        ...     target_ohms=100.0,
+        ...     bounds=("1mil", "20mil"),
+        ... )
+        >>> r.success
+        True
     """
     if isinstance(vary, str):
         if bounds is None:
@@ -264,10 +376,12 @@ def target_z0(
     else:
         vary_dict = vary
 
+    metric_name = metric or _default_metric_for(template, vary_dict, frequency_hz=frequency_hz)
+
     return optimize_for(
         template=template,
         vary=vary_dict,
-        target={"z0": target_ohms},
+        target={metric_name: target_ohms},
         solver=solver,
         frequency_hz=frequency_hz,
         max_iter=max_iter,
