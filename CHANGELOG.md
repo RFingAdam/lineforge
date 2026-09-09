@@ -127,7 +127,7 @@ Total MCP tools now: 21.
 
 ### Migration
 - If you had the standalone `atlc3-gui` repo cloned: the standalone repo
-  at `/home/swamp/projects/github/atlc3-gui/` (or wherever you cloned it)
+  in your local checkout
   is preserved as the archive of granular C1–E10 commit history. Future
   development happens in this repo.
 
