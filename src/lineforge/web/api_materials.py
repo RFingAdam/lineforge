@@ -50,7 +50,7 @@ def list_laminates() -> dict[str, Any]:
     if not pcb.exists():
         raise HTTPException(status_code=500, detail="pcb_extended.json not found")
     records = load_json_pack(pcb)
-    laminates = [
+    laminates: list[dict[str, Any]] = [
         {
             "name": rec.name,
             "er": rec.er,
@@ -86,10 +86,7 @@ def series_reduce(req: SeriesReduceRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="layers must not be empty")
 
     try:
-        dl = [
-            DielectricLayer(h=layer.h, er=layer.er, tan_delta=layer.tan_delta, name=layer.name)
-            for layer in req.layers
-        ]
+        dl = [DielectricLayer.model_validate(layer.model_dump()) for layer in req.layers]
         h_total, er_eq, tan_eq = run_reduce(dl)
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

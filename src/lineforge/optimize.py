@@ -100,6 +100,11 @@ def optimize_for(
     fields = list(vary.keys())
     bounds = [(_coerce_bound(lo), _coerce_bound(hi)) for lo, hi in vary.values()]
 
+    if solver not in {"analytical", "cgp", "full"}:
+        raise ValueError(f"unknown solver {solver!r}")
+    if solver == "full" and frequency_hz is None:
+        raise ValueError("solver='full' requires frequency_hz")
+
     if solver != "analytical":
         # Lazy import to avoid circulars and skip-when-unused
         from lineforge.geometry.builders import rasterize
@@ -231,12 +236,11 @@ def optimize_for(
     final: Any
     if solver == "analytical":
         final = analytical_solve(geom, frequency_hz=frequency_hz)
+    elif solver == "full":
+        assert frequency_hz is not None
+        final = solve_full_rlgc(rasterize(geom), frequency_hz=frequency_hz)
     else:
-        from lineforge.geometry.builders import rasterize as _ras
-        from lineforge.solvers.cgp import solve_cgp as _cgp
-
-        usermap = _ras(geom)
-        final = _cgp(usermap, frequency_hz=frequency_hz)
+        final = solve_cgp(rasterize(geom), frequency_hz=frequency_hz)
 
     metrics: dict[str, float] = {}
     for k in target:

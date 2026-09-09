@@ -195,7 +195,7 @@ def main():
     pp = {"A": 75.6, "B": 28.6, "C": 15.6}
     for r in results:
         c_fF = r["C_pF"] * 1000 if r["C_pF"] else None
-        c_str = f"{c_fF:.1f}" if c_fF else "—"
+        c_str = f"{c_fF:.1f}" if c_fF else "-"
         print(
             f"  {r['option']:<4} {r['h_total_mil']:>8.2f} {r['er_eff']:>7.2f} "
             f"{c_str:>12} {pp[r['option']]:>12.1f}"

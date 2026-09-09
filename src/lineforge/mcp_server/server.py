@@ -793,11 +793,12 @@ def build_server() -> FastMCP:
         the keys accepted by ``pad_capacitance`` (W, L, h, er, method).
         ``trace_Z0_ohm`` is the trace characteristic impedance.
         """
+        from lineforge.analytical.pads import PadCapResult
         from lineforge.analytical.pads import pad_capacitance as _pad_capacitance
         from lineforge.path_budget import TraceSpec
         from lineforge.path_budget import rf_path_budget as _rf_path_budget
 
-        def _resolve_pad(p: dict[str, Any] | None):
+        def _resolve_pad(p: dict[str, Any] | None) -> PadCapResult | None:
             if p is None:
                 return None
             if "C_fF" in p:
