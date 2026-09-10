@@ -31,3 +31,28 @@ def test_full_solver_result_preserves_loss_metric(monkeypatch: pytest.MonkeyPatc
     )
     assert result.success
     assert result.metric["rs"] == pytest.approx(100.0, rel=0.01)
+
+
+@pytest.mark.parametrize(
+    ("vary", "target", "max_iter", "message"),
+    [
+        ({}, {"z0": 50.0}, 100, "vary must contain"),
+        ({"W": ("1mil", "10mil")}, {}, 100, "target must contain"),
+        ({"W": ("10mil", "1mil")}, {"z0": 50.0}, 100, "bound must be finite"),
+        ({"W": ("1mil", "10mil")}, {"z0": float("nan")}, 100, "target values"),
+        ({"W": ("1mil", "10mil")}, {"z0": 50.0}, 0, "max_iter"),
+    ],
+)
+def test_optimizer_rejects_invalid_contract_inputs(
+    vary: dict[str, tuple[float | str, float | str]],
+    target: dict[str, float],
+    max_iter: int,
+    message: str,
+) -> None:
+    with pytest.raises(ValueError, match=message):
+        optimize_for(
+            template={"type": "microstrip", "H": "4mil", "T": "1mil", "er": 4.4},
+            vary=vary,
+            target=target,
+            max_iter=max_iter,
+        )

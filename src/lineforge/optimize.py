@@ -97,8 +97,19 @@ def optimize_for(
     max_iter
         Maximum optimizer iterations.
     """
+    if not vary:
+        raise ValueError("vary must contain at least one geometry field")
+    if not target:
+        raise ValueError("target must contain at least one electrical metric")
+    if max_iter < 1:
+        raise ValueError("max_iter must be at least 1")
+
     fields = list(vary.keys())
     bounds = [(_coerce_bound(lo), _coerce_bound(hi)) for lo, hi in vary.values()]
+    if any(not np.isfinite(lo) or not np.isfinite(hi) or lo >= hi for lo, hi in bounds):
+        raise ValueError("each optimization bound must be finite and increase from low to high")
+    if any(not np.isfinite(value) for value in target.values()):
+        raise ValueError("target values must be finite")
 
     if solver not in {"analytical", "cgp", "full"}:
         raise ValueError(f"unknown solver {solver!r}")
