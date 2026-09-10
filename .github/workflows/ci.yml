@@ -1,3 +1,7 @@
+# The macOS and Windows lanes were dropped when CI moved to the homelab
+# runners: the pool is Linux x64 only. Whatever those lanes covered is
+# uncovered now -- said here rather than left silent. Restoring it needs a
+# Windows or macOS runner in the pool, not a change to this file.
 name: CI
 
 on:
@@ -18,7 +22,7 @@ env:
 jobs:
   python-lint:
     name: Python lint + type-check
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, haven]
     steps:
       - uses: actions/checkout@v4
 
@@ -46,7 +50,7 @@ jobs:
 
   rust-lint:
     name: Rust lint
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, Linux, X64, haven]
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -64,9 +68,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13"]
-    runs-on: ${{ matrix.os }}
+    [self-hosted, Linux, X64, haven]
     steps:
       - uses: actions/checkout@v4
 
