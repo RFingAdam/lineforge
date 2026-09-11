@@ -616,13 +616,23 @@ def build_server() -> FastMCP:
             )
         except (KeyError, ValueError) as exc:
             return {"error": str(exc)}
+        # Report whichever impedance metric was actually driven. Differential
+        # geometries converge on ``z_diff`` and have no ``z0`` at all, so
+        # reading ``z0`` alone returned a null achieved-value next to
+        # ``success: true`` -- the number the caller asked for, dropped on the
+        # floor. ``metric_achieved`` names the field so the result is
+        # self-describing; ``z0_achieved`` stays for backwards compatibility.
+        metric_name = next(iter(result.metric), "z0")
+        achieved = result.metric.get(metric_name)
         return {
             "geometry": (
                 result.geometry.model_dump()
                 if hasattr(result.geometry, "model_dump")
                 else dict(result.geometry)
             ),
-            "z0_achieved": result.metric.get("z0"),
+            "metric": metric_name,
+            "metric_achieved": achieved,
+            "z0_achieved": result.metric.get("z0", achieved),
             "cost": result.cost,
             "iterations": result.iterations,
             "success": result.success,
@@ -783,11 +793,12 @@ def build_server() -> FastMCP:
         the keys accepted by ``pad_capacitance`` (W, L, h, er, method).
         ``trace_Z0_ohm`` is the trace characteristic impedance.
         """
+        from lineforge.analytical.pads import PadCapResult
         from lineforge.analytical.pads import pad_capacitance as _pad_capacitance
         from lineforge.path_budget import TraceSpec
         from lineforge.path_budget import rf_path_budget as _rf_path_budget
 
-        def _resolve_pad(p: dict[str, Any] | None):
+        def _resolve_pad(p: dict[str, Any] | None) -> PadCapResult | None:
             if p is None:
                 return None
             if "C_fF" in p:

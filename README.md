@@ -31,7 +31,7 @@
 ## What is lineforge?
 
 lineforge is a programmable transmission-line calculator built for the
-agent era. It computes the full RLGC characterization: characteristic
+analysis workflows. It computes RLGC parameters: characteristic
 impedance Z₀, effective permittivity εₑff, phase velocity v_p, distributed
 inductance L, capacitance C, skin-effect resistance Rs, and dielectric
 conductance Gp: for any 2D transmission line cross-section.
@@ -40,8 +40,8 @@ Drive it from Python, the terminal, any LLM agent over Model Context
 Protocol, or the chat-driven web GUI (`lineforge gui`). Closed-form analytical solvers for the common geometries
 (microstrip, stripline, coplanar, differential pairs, three-conductor
 lines) hand off seamlessly to a bitmap FD-Laplace + Faraday solver for
-arbitrary cross-sections. Validated against published IPC-2141 reference
-values and openEMS 3D FDTD to within ±2 %.
+arbitrary cross-sections. Accuracy depends on the geometry, model, mesh, and boundary conditions.
+See the validation examples and tests for the cases checked.
 
 **What lineforge does well:**
 
@@ -49,7 +49,7 @@ values and openEMS 3D FDTD to within ±2 %.
   server with 14 tools. Any Claude / LLM agent can drive it.
   Long solves use the SEP-1686 Tasks pattern.
 - **Three equal surfaces.** MCP server, CLI, and Python API are all
-  polished from day one. Use whichever fits your workflow.
+  available through a shared solver library.
 - **Modern numerics.** Python+NumPy+SciPy orchestration with PyAMG
   multigrid + scipy.sparse BiCGSTAB+ILU0 solvers. Rust-accelerated kernels
   via [PyO3](https://pyo3.rs/) for inner loops (currently scaffolded;
@@ -57,10 +57,10 @@ values and openEMS 3D FDTD to within ±2 %.
 - **atlc2-format compatible.** Existing atlc2 BMP usermaps,
   `MoreColors.txt` files, and `.txt` script files run unchanged via the
   bitmap solver. New `.lineforge.json` is the modern alternative.
-- yes **Validated.** Closed-form solvers cross-checked against scikit-rf
+- **Validation.** Closed-form solvers cross-checked against scikit-rf
   and IPC-2141A reference values; bitmap solvers validated against
   analytical coax (Z₀ ±10%) and wire-pair (DC L ±25%) closed forms.
-- **GPLv3.** Free as in freedom, with full source.
+- **AGPLv3.** See LICENSE for the terms.
 
 ---
 
@@ -68,20 +68,15 @@ values and openEMS 3D FDTD to within ±2 %.
 
 ### Install
 
+Install from source with Python 3.11 or newer and a Rust toolchain:
+
 ```bash
-pip install lineforge
+git clone https://github.com/RFingAdam/lineforge.git
+cd lineforge
+pip install -e ".[dev,gui]"
 ```
 
-You'll need a [Rust toolchain](https://rustup.rs/) only if installing from
-source: the wheels on PyPI are pre-built for `cp311`/`cp312`/`cp313` ×
-{Linux x86_64/aarch64, macOS universal2, Windows amd64}.
-
-> Pre-alpha: not yet on PyPI. Install from the repo:
-> ```bash
-> git clone https://github.com/RFingAdam/lineforge.git
-> cd lineforge
-> pip install -e ".[dev]"
-> ```
+The GUI extra is required for the web interface and the complete test suite.
 
 ### Three surfaces, same answer
 

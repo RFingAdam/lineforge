@@ -100,7 +100,7 @@ class PadCapResult:
 
 
 def _resolve_stack(
-    h: object | None,
+    h: float | str | None,
     er: float | None,
     stack: list[DielectricLayer] | None,
 ) -> tuple[float, float]:
@@ -123,14 +123,14 @@ def _resolve_stack(
 
 
 def pad_capacitance(
-    W: object,
-    L: object | None = None,
-    h: object | None = None,
+    W: float | str,
+    L: float | str | None = None,
+    h: float | str | None = None,
     er: float | None = None,
     *,
     stack: list[DielectricLayer] | None = None,
     method: Method = "ya",
-    T: object | None = None,
+    T: float | str | None = None,
 ) -> PadCapResult:
     """Compute the capacitance of an electrically small RF pad.
 
@@ -206,11 +206,10 @@ def pad_capacitance(
     # HJ requires T > 0; use a very thin value if not specified.
     if T_m <= 0:
         T_m = 1e-9
-    h_unit = "m"
     g = Microstrip(
-        W=f"{W_m}{h_unit}",
-        T=f"{T_m}{h_unit}",
-        H=f"{h_m}{h_unit}",
+        W=W_m,
+        T=T_m,
+        H=h_m,
         er=eps_eff,
     )
     r = microstrip(g)
@@ -275,8 +274,8 @@ class ReliefAdvice:
 
 
 def pad_relief_advisor(
-    W: object,
-    L: object | None = None,
+    W: float | str,
+    L: float | str | None = None,
     *,
     options: list[ReliefOption],
     band_max_ghz: float,

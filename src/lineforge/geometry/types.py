@@ -325,7 +325,7 @@ class BroadsideCoupledDiffStripline(_BaseGeometry):
 
 # --- discriminated union --------------------------------------------------------
 
-GeometryUnion = Union[  # noqa: UP007 — Pydantic discriminated union needs Union[]
+GeometryUnion = Union[  # noqa: UP007 - Pydantic discriminated union needs Union[]
     Microstrip,
     EmbeddedMicrostrip,
     StriplineSymmetric,

@@ -5,6 +5,7 @@ from __future__ import annotations
 import pytest
 
 import lineforge
+from lineforge.units import parse_length
 
 
 class TestOptimizer:
@@ -113,3 +114,90 @@ class TestTargetZ0:
         # The optimizer will find the best it can within the bounds; flag as
         # not-success because cost > 1%.
         assert not result.success
+
+
+class TestTargetZ0MetricSelection:
+    """``target_z0`` must drive the metric the geometry actually reports.
+
+    Regression: it hardcoded ``target={"z0": ...}``, but a DiffResult exposes
+    z_odd/z_even/z_diff/z_common and no ``z0``. Every candidate therefore
+    scored the 1e6 "metric missing" penalty, the cost surface was flat, and the
+    optimizer parked at an arbitrary bound reporting success=False with a null
+    impedance -- instead of simply targeting z_diff.
+    """
+
+    def test_differential_defaults_to_z_diff(self) -> None:
+        from lineforge.optimize import target_z0
+
+        result = target_z0(
+            template={
+                "type": "edge_coupled_diff_microstrip",
+                "H": "4mil",
+                "T": "1.4mil",
+                "S": "5mil",
+                "er": 4.2,
+            },
+            vary="W",
+            target_ohms=100.0,
+            bounds=("1mil", "20mil"),
+        )
+        assert result.success
+        assert result.metric["z_diff"] == pytest.approx(100.0, abs=1.0)
+        # and it must not have parked against a bound
+        assert result.geometry.W < parse_length("20mil")
+
+    def test_single_ended_still_targets_z0(self) -> None:
+        from lineforge.optimize import target_z0
+
+        result = target_z0(
+            template={
+                "type": "stripline_asymmetric",
+                "T": "1.4mil",
+                "H1": "4mil",
+                "H2": "5mil",
+                "er": 4.2,
+            },
+            vary="W",
+            target_ohms=50.0,
+            bounds=("1mil", "10mil"),
+        )
+        assert result.success
+        assert result.metric["z0"] == pytest.approx(50.0, abs=1.0)
+
+    def test_explicit_metric_override(self) -> None:
+        """A caller can target an odd-mode impedance directly."""
+        from lineforge.optimize import target_z0
+
+        result = target_z0(
+            template={
+                "type": "edge_coupled_diff_microstrip",
+                "H": "4mil",
+                "T": "1.4mil",
+                "S": "5mil",
+                "er": 4.2,
+            },
+            vary="W",
+            target_ohms=50.0,
+            bounds=("1mil", "20mil"),
+            metric="z_odd",
+        )
+        assert result.success
+        assert result.metric["z_odd"] == pytest.approx(50.0, abs=1.0)
+
+    def test_wide_bounds_do_not_crash_asymmetric_stripline(self) -> None:
+        """The default 100 mil upper bound sweeps the optimizer through the
+        unphysical wide-strip region; it must steer back, not die."""
+        from lineforge.optimize import target_z0
+
+        result = target_z0(
+            template={
+                "type": "stripline_asymmetric",
+                "T": "1.4mil",
+                "H1": "4mil",
+                "H2": "5mil",
+                "er": 4.2,
+            },
+            vary="W",
+            target_ohms=50.0,
+        )
+        assert result.metric["z0"] == pytest.approx(50.0, abs=1.0)

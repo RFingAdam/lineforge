@@ -36,7 +36,7 @@ source .venv/bin/activate     # macOS/Linux
 # OR: .venv\Scripts\activate  # Windows PowerShell
 
 pip install --upgrade pip maturin
-pip install -e ".[dev]"       # editable install with dev deps
+pip install -e ".[dev,gui]"       # editable install with dev deps
 ```
 
 This builds the Rust kernel (`lineforge._kernel`) in debug mode and links it into your
@@ -111,7 +111,7 @@ Please target your PRs at open issues so the AC list can be ticked off.
 
 ## Licensing
 
-By contributing, you agree your contributions are licensed under [GPLv3](LICENSE).
+By contributing, you agree your contributions are licensed under [AGPLv3](LICENSE).
 lineforge references and is partially derived from David Kirkby's GPL atlc v1; we
 preserve copyleft on all derivatives.
 

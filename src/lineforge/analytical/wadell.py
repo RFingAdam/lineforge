@@ -158,7 +158,32 @@ def stripline_asymmetric(
 
     H_eff = 2.0 * H1 * H2 / (H1 + H2)
     d = 0.8 * W + T
-    z0 = (60.0 / math.sqrt(er_eff)) * math.log(8.0 * H_eff / (0.67 * math.pi * d))
+
+    # The IPC-2141A logarithmic form only holds while its argument exceeds 1.
+    # Past that point ln() turns negative and the formula reports a negative
+    # Z0 -- and, downstream, negative L_per_m and C_per_m. Those are not
+    # merely inaccurate, they are unphysical, so refuse rather than return
+    # them: TLineResult's validators would reject the result anyway, and the
+    # bare ValidationError gives no hint that the strip is simply too wide for
+    # the cavity. Optimizers that sweep W across a wide bound (see
+    # lineforge.optimize.optimize_for) land here routinely and rely on a
+    # catchable exception to steer back.
+    log_arg = 8.0 * H_eff / (0.67 * math.pi * d)
+    if log_arg <= 1.0:
+        w_max = (8.0 * H_eff / (0.67 * math.pi) - T) / 0.8
+        # ASCII only: this message is raised on paths that get printed to
+        # consoles (Windows cp1252 among them), and a message carrying the
+        # usual typographic dot/pi would itself die with UnicodeEncodeError.
+        raise ValueError(
+            "stripline_asymmetric: geometry is outside the IPC-2141A validity "
+            "range. The formula needs 8*H_eff/(0.67*pi*(0.8W+T)) > 1, but "
+            f"W={W:.6g} m with H_eff={H_eff:.6g} m gives {log_arg:.4g}. "
+            "The strip is too wide for this cavity: W must be below "
+            f"~{w_max:.6g} m for these H1/H2/T. Use the bitmap kernel "
+            "(solver='cgp') for wide-strip geometries."
+        )
+
+    z0 = (60.0 / math.sqrt(er_eff)) * math.log(log_arg)
 
     vp = C0 / math.sqrt(er_eff)
     td_per_in = INCH_M / vp

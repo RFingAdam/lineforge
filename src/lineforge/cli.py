@@ -839,8 +839,8 @@ def _stream_with_color(proc: object, prefix: str, color: str) -> None:
 
     from rich.text import Text
 
-    popen = proc  # type: _sub.Popen[str]  # narrow only for type checkers
-    assert isinstance(popen, _sub.Popen)
+    assert isinstance(proc, _sub.Popen)
+    popen = proc
     if popen.stdout is None:
         return
     for raw in popen.stdout:
