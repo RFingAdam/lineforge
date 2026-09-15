@@ -153,6 +153,11 @@ class Usermap:
             raise ValueError("material_ids must be 2-D")
         if material_ids.max(initial=-1) >= len(materials):
             raise ValueError("material_ids references a material outside the list")
+        if material_ids.min(initial=-1) < -1:
+            raise ValueError("material_ids values must be -1 (vacuum) or a material index")
+        cid = np.asarray(conductor_ids) if conductor_ids is not None else None
+        if cid is not None and cid.shape != material_ids.shape:
+            raise ValueError("conductor_ids must match material_ids in shape")
         h, w = material_ids.shape
         rgb = np.full((h, w, 3), 255, dtype=np.uint8)
         for idx, mat in enumerate(materials):
@@ -166,10 +171,7 @@ class Usermap:
             _materials=materials,
             _conductor_ids=conductor_ids,
         )
-        if conductor_ids is not None:
-            cid = np.asarray(conductor_ids)
-            if cid.shape != material_ids.shape:
-                raise ValueError("conductor_ids must match material_ids in shape")
+        if cid is not None:
             conductor_material = np.zeros(material_ids.shape, dtype=bool)
             for idx, mat in enumerate(materials):
                 if mat.is_conductor:

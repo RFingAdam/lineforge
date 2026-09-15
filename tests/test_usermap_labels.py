@@ -10,11 +10,9 @@ from lineforge.materials.database import MaterialRecord
 from lineforge.solvers import extension
 
 CU = MaterialRecord(rgb=(255, 0, 0), use="+1", name="copper")
-GND = MaterialRecord(rgb=(0, 255, 0), use="0", name="ground")
 FR4 = MaterialRecord(
     rgb=(223, 247, 136), use="insul", er=3.7, tan_delta=0.018, name="FR4", resistivity_ohm_cm=1e6
 )
-VAC = MaterialRecord(rgb=(255, 255, 255), use="insul", name="vacuum", resistivity_ohm_cm=1e6)
 
 
 def three_conductor_map() -> Usermap:
@@ -86,7 +84,7 @@ def test_vectorised_init_matches_reference_loop() -> None:
     assert (names_u == names_r).all()
 
 
-def test_replicate_and_extend_keep_labels(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_replicate_and_extend_keep_labels() -> None:
     u = three_conductor_map()
     padded = u.replicate_edges(3)
     assert padded.shape == (26, 46)
@@ -98,3 +96,24 @@ def test_replicate_and_extend_keep_labels(monkeypatch: pytest.MonkeyPatch) -> No
     big = extension.extend_to_shape(u, 40, 80)
     assert big.n_signal_conductors == 2
     assert big.conductor_mask(2).sum() == 14
+
+
+def test_from_labels_rejects_material_id_below_vacuum() -> None:
+    mat = np.full((3, 3), -1, dtype=np.int32)
+    mat[0, 0] = -2
+    with pytest.raises(ValueError, match="material_ids values must be -1"):
+        Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5)
+
+
+def test_from_labels_rejects_mismatched_conductor_ids_shape_before_building(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    mat = np.full((3, 3), -1, dtype=np.int32)
+    cid = np.full((3, 4), -1, dtype=np.int32)  # wrong shape
+
+    def fail_if_called(self: Usermap, *args: object, **kwargs: object) -> None:
+        raise AssertionError("Usermap.__init__ must not run for a mismatched conductor_ids shape")
+
+    monkeypatch.setattr(Usermap, "__init__", fail_if_called)
+    with pytest.raises(ValueError, match="conductor_ids must match material_ids in shape"):
+        Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5, conductor_ids=cid)
