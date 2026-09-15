@@ -25,7 +25,7 @@ import json
 from pathlib import Path
 from typing import Any
 
-from lineforge.materials.database import MaterialRecord, MaterialUse
+from lineforge.materials.database import DSParams, MaterialRecord, MaterialUse, RoughnessSpec
 
 
 class MoreColorsParseError(ValueError):
@@ -214,6 +214,8 @@ def load_json_pack(path: str | Path) -> list[MaterialRecord]:
             name=m["name"],
             er_freq=_to_freq_dict(m.get("er_freq")),
             tan_freq=_to_freq_dict(m.get("tan_freq")),
+            ds_params=DSParams(**m["ds_params"]) if m.get("ds_params") else None,
+            roughness=RoughnessSpec(**m["roughness"]) if m.get("roughness") else None,
         )
         for m in materials
     ]
@@ -230,7 +232,7 @@ def dump_json_pack(
         {
             "name": name,
             "version": version,
-            "materials": [m.model_dump(mode="json") for m in records],
+            "materials": [m.model_dump(mode="json", exclude_none=True) for m in records],
         },
         indent=2,
     )
