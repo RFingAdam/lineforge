@@ -89,3 +89,30 @@ def test_huray_refuses_both_radius_and_rz() -> None:
     # Either one on its own is still fine.
     assert RoughnessSpec(model="huray", radius_um=0.5, ratio=4.887).rz_um is None
     assert RoughnessSpec(model="huray", rz_um=6.0).radius_um > 0
+
+
+def test_cannonball_spec_survives_nesting_in_a_material_record() -> None:
+    """Pydantic re-validates the nested spec, so the completed one must still be valid."""
+    expected = 6.0 / (2 * (1 + math.sqrt(2)))
+    rough = RoughnessSpec(model="huray", rz_um=6.0)
+    cu = MaterialRecord(rgb=(255, 0, 0), use="+1", name="rough copper", roughness=rough)
+    assert cu.roughness is not None
+    assert cu.roughness.radius_um == pytest.approx(expected)
+    assert cu.roughness.ratio == pytest.approx(4.887, rel=1e-3)
+    assert rough.rz_um is None  # consumed by the back-fill, so it cannot read as ambiguous
+
+
+def test_cannonball_spec_survives_a_pack_roundtrip(tmp_path: Path) -> None:
+    expected = 6.0 / (2 * (1 + math.sqrt(2)))
+    cu = MaterialRecord(
+        rgb=(255, 0, 0),
+        use="+1",
+        name="rough copper",
+        roughness=RoughnessSpec(model="huray", rz_um=6.0),
+    )
+    path = tmp_path / "pack.json"
+    path.write_text(dump_json_pack([cu], name="t", version="1.0.0"))
+    back = load_json_pack(path)
+    assert back[0].roughness is not None
+    assert back[0].roughness.radius_um == pytest.approx(expected)
+    assert back[0].roughness == cu.roughness

@@ -64,7 +64,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   the constructor refuses a half-specified `_codes`/`_materials` pair rather
   than silently re-deriving both from the RGB array.
 - `src/lineforge/materials/database.py`: `RoughnessSpec` raises when a huray
-  spec gives both `radius_um` and `rz_um`, instead of ignoring `rz_um`.
+  spec gives both `radius_um` and `rz_um`, instead of ignoring `rz_um`. A spec
+  built from `rz_um` alone clears it once the cannonball radius is filled in,
+  so the completed spec stays valid when it is validated again (nested in a
+  `MaterialRecord`, or through a `dump_json_pack` / `load_json_pack` round
+  trip).
 - `src/lineforge/solvers/roughness.py`: the guards on the model's required
   fields are `raise` rather than `assert`, so they survive `python -O`.
 - `src/lineforge/solvers/diff_modes.py`: the bitmap differential-pair mode

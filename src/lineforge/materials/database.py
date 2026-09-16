@@ -99,6 +99,10 @@ class RoughnessSpec(BaseModel):
                 object.__setattr__(self, "radius_um", radius)
                 if self.ratio is None:
                     object.__setattr__(self, "ratio", _CANNONBALL_RATIO)
+                # rz_um has done its job. Clearing it keeps the completed spec valid when it
+                # is validated again (nesting it in a MaterialRecord, or a dump/load round
+                # trip), which would otherwise look like the ambiguous both-given call above.
+                object.__setattr__(self, "rz_um", None)
             if self.radius_um is None or self.ratio is None:
                 raise ValueError(
                     "huray roughness needs radius_um and ratio, or rz_um for the cannonball parameterisation"
