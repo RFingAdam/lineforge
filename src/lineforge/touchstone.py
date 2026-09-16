@@ -29,8 +29,9 @@ Example
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -181,4 +182,98 @@ def to_touchstone(
     return out
 
 
-__all__ = ["to_touchstone"]
+def to_touchstone_nport(
+    freqs_hz: np.ndarray,
+    s: np.ndarray,
+    path: str | Path,
+    *,
+    z_ref: float | Sequence[float] = 50.0,
+    port_names: Sequence[str] | None = None,
+    mixed_mode_order: Sequence[str] | None = None,
+    version: Literal[1, 2] = 1,
+    comment: str = "",
+) -> Path:
+    """Write an N-port S-parameter set as Touchstone 1.x (via scikit-rf) or 2.0 (native writer).
+
+    Parameters
+    ----------
+    freqs_hz
+        Frequency points in Hz, shape ``(F,)``.
+    s
+        S-parameters, shape ``(F, P, P)``.
+    path
+        Output file path. Version 1 forces the suffix ``.s{P}p``; version 2
+        keeps whatever suffix is given (or ``.s{P}p`` if none).
+    z_ref
+        Reference impedance: a scalar applied to every port, or one value
+        per port.
+    port_names
+        Optional per-port names. Written into the scikit-rf network (v1) or
+        as comment lines (v2).
+    mixed_mode_order
+        Optional mixed-mode port order labels (e.g. ``"D1,2"``, ``"C1,2"``),
+        written to the ``[Mixed-Mode Order]`` header (version 2 only).
+    version
+        ``1`` writes Touchstone 1.x via scikit-rf; ``2`` writes Touchstone
+        2.0 natively.
+    comment
+        Optional comment line written into the version 2 header.
+
+    Returns
+    -------
+    Path
+        The actual path written.
+
+    Raises
+    ------
+    ValueError
+        If ``s`` is not shaped ``(F, P, P)`` matching ``freqs_hz``, or
+        ``z_ref`` does not provide exactly one value per port.
+    """
+    freqs = np.asarray(freqs_hz, dtype=np.float64)
+    s = np.asarray(s, dtype=np.complex128)
+    if s.ndim != 3 or s.shape[1] != s.shape[2] or s.shape[0] != len(freqs):
+        raise ValueError(
+            f"s must have shape (F, P, P) matching {len(freqs)} frequencies, got {s.shape}"
+        )
+    ports = s.shape[1]
+    zs = [float(z_ref)] * ports if isinstance(z_ref, (int, float)) else [float(z) for z in z_ref]
+    if len(zs) != ports:
+        raise ValueError("z_ref must be a scalar or one value per port")
+    out = Path(path)
+    if out.suffix.lower() != f".s{ports}p":
+        out = out.with_suffix(f".s{ports}p")
+    if version == 1:
+        import skrf
+
+        net = skrf.Network(
+            frequency=skrf.Frequency.from_f(freqs, unit="Hz"), s=s, z0=np.array(zs), name=out.stem
+        )
+        if port_names:
+            net.port_names = list(port_names)
+        net.write_touchstone(str(out.with_suffix("")), form="ri", write_z0=False)
+        return out
+    lines = ["[Version] 2.0", f"# Hz S RI R {zs[0]:g}", f"[Number of Ports] {ports}"]
+    if ports == 2:
+        lines.append("[Two-Port Data Order] 12_21")
+    lines.append("[Reference] " + " ".join(f"{z:g}" for z in zs))
+    if mixed_mode_order:
+        lines.append("[Mixed-Mode Order] " + " ".join(mixed_mode_order))
+    if comment:
+        lines.append(f"! {comment}")
+    if port_names:
+        lines.extend(f"! port {i + 1}: {name}" for i, name in enumerate(port_names))
+    lines.append(f"[Number of Frequencies] {len(freqs)}")
+    lines.append("[Network Data]")
+    for fi, f in enumerate(freqs):
+        row = [f"{f:.9e}"]
+        for i in range(ports):
+            for j in range(ports):
+                row.append(f"{s[fi, i, j].real:.9e} {s[fi, i, j].imag:.9e}")
+        lines.append(" ".join(row))
+    lines.append("[End]")
+    out.write_text("\n".join(lines) + "\n")
+    return out
+
+
+__all__ = ["to_touchstone", "to_touchstone_nport"]
