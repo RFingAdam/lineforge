@@ -80,3 +80,12 @@ def test_roughness_spec_requires_model_parameters() -> None:
     assert RoughnessSpec(model="huray", rz_um=6.0).radius_um == pytest.approx(
         6.0 / (2 * (1 + math.sqrt(2)))
     )
+
+
+def test_huray_refuses_both_radius_and_rz() -> None:
+    """rz_um is only the cannonball parameterisation of radius_um; given both, it was ignored."""
+    with pytest.raises(ValueError, match="not both"):
+        RoughnessSpec(model="huray", radius_um=0.5, ratio=4.887, rz_um=6.0)
+    # Either one on its own is still fine.
+    assert RoughnessSpec(model="huray", radius_um=0.5, ratio=4.887).rz_um is None
+    assert RoughnessSpec(model="huray", rz_um=6.0).radius_um > 0

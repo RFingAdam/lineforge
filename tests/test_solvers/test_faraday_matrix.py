@@ -92,3 +92,15 @@ def test_skin_masking_preserves_conductor_ids() -> None:
     # The surviving pixels are exactly what the matrix solver then bills against.
     r_mat, _l_mat = solve_impedance_matrix(labels, frequency_hz=1e7, restrict_to_skin_depth=True)
     assert r_mat.shape == (2, 2)
+
+
+def test_non_finite_solve_is_rejected(monkeypatch: pytest.MonkeyPatch) -> None:
+    """A near-singular Z gives inf/nan out of lu_solve rather than an exception; catch it."""
+    import scipy.linalg
+
+    labels, _ = small_pair(second=True)
+    monkeypatch.setattr(
+        scipy.linalg, "lu_solve", lambda *_a, **_kw: np.full((4, 2), np.nan, dtype=np.complex128)
+    )
+    with pytest.raises(ValueError, match="singular or ill-conditioned"):
+        solve_impedance_matrix(labels, frequency_hz=1e8, restrict_to_skin_depth=False)

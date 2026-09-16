@@ -197,3 +197,54 @@ def test_roughness_for_an_absent_id_is_reported() -> None:
     )
     assert "roughness_id_not_in_map" in {w.code for w in res.warnings}
     assert 7 not in res.roughness_factors
+
+
+def _strip_floats(usermap: Usermap) -> Usermap:
+    cid = usermap.conductor_ids.copy()
+    cid[cid == -2] = -1
+    return Usermap.from_labels(
+        usermap.codes.astype(np.int32), [CU], pixel_width_m=usermap.pixel_width_m, conductor_ids=cid
+    )
+
+
+def test_a_stale_base_is_discarded_when_an_unusable_label_is_dropped() -> None:
+    """The map is rebuilt without the bad label, so a base solved on the old one is wrong."""
+    u = parallel_plate()
+    u.conductor_ids[16:22, 40:80] = -2  # a floating label over vacuum in the plate gap
+    stale = solve_maxwell(u, method="sor", tol=1e-6, vacuum_only=True)
+    clean = solve_wheeler_resistance(u, frequency_hz=5e9, method="sor", tol=1e-6)
+    with_base = solve_wheeler_resistance(u, frequency_hz=5e9, method="sor", tol=1e-6, base=stale)
+    # The stale base really is a different problem, or this test could not fail.
+    assert stale.C0[0, 0] != pytest.approx(
+        solve_maxwell(_strip_floats(u), method="sor", tol=1e-6, vacuum_only=True).C0[0, 0],
+        rel=1e-6,
+    )
+    assert with_base.R_per_m[0, 0] == pytest.approx(clean.R_per_m[0, 0], rel=1e-9)
+
+
+def test_even_thickness_is_reported_within_one_pixel_and_never_over() -> None:
+    """``2 * d_max - 1`` is exact for odd t only; t = 4 comes back as 3, the safe direction."""
+    from lineforge.solvers.wheeler import _thickness_m
+
+    px = 1e-5
+    mask = np.zeros((20, 20), dtype=bool)
+    mask[5:9, 4:16] = True  # a slab 4 pixels thick
+    assert _thickness_m(mask, px) == pytest.approx(3.0 * px)
+    mask_odd = np.zeros((20, 20), dtype=bool)
+    mask_odd[5:8, 4:16] = True  # 3 pixels thick, recovered exactly
+    assert _thickness_m(mask_odd, px) == pytest.approx(3.0 * px)
+
+
+def test_roughness_factor_guards_survive_optimised_python() -> None:
+    """The guards are raises, not asserts, so ``python -O`` does not strip them."""
+    from lineforge.solvers.roughness import roughness_factor
+
+    hammerstad = RoughnessSpec.model_construct(model="hammerstad", rms_um=None)
+    with pytest.raises(ValueError, match="hammerstad roughness needs rms_um"):
+        roughness_factor(hammerstad, 1e-6)
+    groisse = RoughnessSpec.model_construct(model="groisse", rms_um=None)
+    with pytest.raises(ValueError, match="groisse roughness needs rms_um"):
+        roughness_factor(groisse, 1e-6)
+    huray = RoughnessSpec.model_construct(model="huray", radius_um=None, ratio=None)
+    with pytest.raises(ValueError, match="huray roughness needs radius_um and ratio"):
+        roughness_factor(huray, 1e-6)

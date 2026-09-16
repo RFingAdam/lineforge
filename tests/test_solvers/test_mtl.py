@@ -74,7 +74,6 @@ def test_pair_reduces_to_odd_and_even_modes() -> None:
     res = solve_maxwell(labels, method="sor", tol=1e-6, extend_grid=True)
     C, _, L = rlgc_matrices(res, 1e9)
     assert C.shape == (2, 2)
-    assert C[0, 1] == pytest.approx(C[1, 0], rel=1e-6)
     assert C[0, 1] < 0 < C[0, 0]
     modes = diff_modes.solve_modes(roles)
     c_odd = C[0, 0] - C[0, 1]
@@ -83,8 +82,11 @@ def test_pair_reduces_to_odd_and_even_modes() -> None:
     z_even = np.sqrt((L[0, 0] + L[0, 1]) / c_even)
     assert z_odd == pytest.approx(modes.z_odd, rel=3e-3)
     assert z_even == pytest.approx(modes.z_even, rel=3e-3)
-    eig = np.linalg.eigvalsh(C)
-    assert (eig > 0).all()
+    # Every row of a Maxwell matrix sums to that conductor's capacitance to the reference,
+    # which has to be positive. Unlike ``C[0, 1] == C[1, 0]`` (symmetric by construction in
+    # ``_energy_matrices``) or ``eigvalsh(C) > 0`` on a 2x2 whose signs were just asserted,
+    # this one fails if the reference is mislabelled or a sign is dropped.
+    assert (C.sum(axis=1) > 0).all()
 
 
 def test_keep_fields_and_warnings_shape() -> None:
@@ -205,3 +207,19 @@ def test_dispersive_material_reference_frequency() -> None:
     c_nom, _, _ = rlgc_matrices(nominal, 1e9)
     c_ref, _, _ = rlgc_matrices(res, 1e9)
     assert c_ref[0, 0] == pytest.approx(c_nom[0, 0], rel=0.2)
+
+
+def test_vacuum_only_reproduces_c0_and_refuses_rlgc() -> None:
+    """The vacuum set is the same solve either way, so C0 must match bit for bit."""
+    labels, _ = stripline_pair(with_second=True)
+    full = solve_maxwell(labels, method="sor", tol=1e-6, extend_grid=True)
+    vac = solve_maxwell(labels, method="sor", tol=1e-6, extend_grid=True, vacuum_only=True)
+    np.testing.assert_array_equal(vac.C0, full.C0)
+    np.testing.assert_array_equal(vac.W0, full.W0)
+    assert vac.W == {}
+    assert vac.phi is None
+    # Half the Laplace solves: the dielectric set is not run at all.
+    assert len(vac.iterations) * 2 == len(full.iterations)
+    assert vac.pixel_width_m == full.pixel_width_m == labels.pixel_width_m
+    with pytest.raises(ValueError, match="vacuum_only"):
+        rlgc_matrices(vac, 1e9)
