@@ -88,9 +88,15 @@ def _conductor_material(usermap: Usermap, conductor_id: int) -> MaterialRecord |
 def _thickness_m(mask: np.ndarray, pixel_width_m: float) -> float:
     """Minimum cross-sectional dimension, from the distance transform of the pixel set.
 
-    For a slab ``t`` pixels thick the deepest pixel sits ``(t + 1) / 2`` from the outside,
-    so ``2 * d_max - 1`` recovers ``t`` exactly; for other shapes it is the inscribed
-    diameter, which is the dimension the skin has to fit inside.
+    For a slab ``t`` pixels thick the deepest pixel sits ``(t + 1) / 2`` from the outside
+    when ``t`` is odd, so ``2 * d_max - 1`` recovers ``t`` exactly there; for even ``t``
+    the two deepest rows are tied and the same expression returns ``t - 1`` (``t = 4``
+    gives 3). The result is therefore accurate to within one pixel and never overestimates,
+    which is the conservative direction: an understated thickness only makes the
+    ``skin_depth_not_small`` warning more eager. The parity cannot be recovered from
+    ``d_max`` alone (``d_max = 2`` is both ``t = 3`` and ``t = 4``), so no correction is
+    applied. For other shapes it is the inscribed diameter, which is the dimension the skin
+    has to fit inside.
 
     ``distance_transform_edt`` measures the distance to the nearest *background pixel of the
     array*, so the edge of the map is never a background and a conductor running off it is
@@ -174,6 +180,10 @@ def _geometry_derivatives(
 ) -> dict[int, np.ndarray]:
     """``dL_ext/dn`` per conductor id, one eroded vacuum solve each.
 
+    Only ``base.C0`` and ``base.conductor_ids`` are read, so the solves here (and the base
+    solve when this routine's caller makes it) run with ``vacuum_only=True``: the dielectric
+    solve set would be built and thrown away.
+
     Appends the base solve's warnings and any new warning code raised by an eroded solve to
     ``warnings``, so an ignored floating group or an unlabelled conductor pixel stays visible
     on the Wheeler result instead of being discarded with the intermediate solves.
@@ -196,7 +206,9 @@ def _geometry_derivatives(
                 )
             )
             continue
-        res_c = solve_maxwell(eroded, method=method, tol=tol, extend_grid=extend_grid)
+        res_c = solve_maxwell(
+            eroded, method=method, tol=tol, extend_grid=extend_grid, vacuum_only=True
+        )
         for w in res_c.warnings:
             if w.code not in seen:
                 seen.add(w.code)
@@ -219,8 +231,10 @@ def solve_wheeler_resistance(
 ) -> WheelerResult:
     """Skin-effect ``R`` and ``L_int`` matrices of ``usermap`` at ``frequency_hz``.
 
-    One extra vacuum Maxwell solve per conductor is needed, so the cost is roughly
-    ``(1 + n_conductors)`` times :func:`lineforge.solvers.mtl.solve_maxwell`. The geometry
+    One extra vacuum Maxwell solve per conductor is needed. Only ``C0`` is read from each,
+    so every one of them, the unperturbed solve included, runs with ``vacuum_only=True``:
+    the cost is ``(1 + n_conductors)`` vacuum solve sets, which is about half of
+    ``(1 + n_conductors)`` full :func:`lineforge.solvers.mtl.solve_maxwell` calls. The geometry
     derivative ``dL_ext/dn`` is frequency independent: only ``Rs(f)`` and the roughness factor
     are not. Pass ``dl_dn=<earlier result>.dL_dn`` to sweep frequency with no solve at all, or
     ``base`` to at least reuse the unperturbed solve.
@@ -260,6 +274,20 @@ def solve_wheeler_resistance(
       underestimate;
     - ``roughness_id_not_in_map``: a ``roughness`` entry names a conductor id the map has no
       pixel of, so that spec had no effect.
+
+    Notes
+    -----
+    Every floating conductor shares the single label ``-2``, which carries no group identity,
+    so they are treated here as one conductor: they are eroded as one set, they get one
+    roughness spec (keyed ``-2``) and one entry in ``per_conductor``, and their material,
+    skin depth and thickness are those of the largest floating pixel set. In particular the
+    ``skin_depth_not_small`` check sees only that thickness, so a thick floating conductor
+    masks a thin one sharing the map and no warning is raised for the thin one. Where that
+    matters, solve the floats' loss separately or label them as signals.
+
+    When a caller-supplied ``base`` is given but a conductor label turns out to be unusable
+    (see ``conductor_without_material`` above), the map is rebuilt without that label and
+    ``base`` is discarded and re-solved, since it describes the map as it was.
     """
     warnings: list[SolverWarning] = []
     specs = roughness or {}
@@ -282,6 +310,9 @@ def solve_wheeler_resistance(
     if unusable:
         warnings.extend(_no_material_warning(c) for c in unusable)
         usermap = _without_ids(usermap, unusable)
+        # The map just changed, so a caller-supplied base belongs to the old one: its C0 and
+        # its conductor_ids would be a solve of a different problem. Force the re-solve.
+        base = None
 
     if dl_dn is not None:
         derivatives = {int(c): np.asarray(d) for c, d in dl_dn.items()}
@@ -290,7 +321,9 @@ def solve_wheeler_resistance(
         n = int(next(iter(derivatives.values())).shape[0])
     else:
         if base is None:
-            base = solve_maxwell(usermap, method=method, tol=tol, extend_grid=extend_grid)
+            base = solve_maxwell(
+                usermap, method=method, tol=tol, extend_grid=extend_grid, vacuum_only=True
+            )
         n = len(base.conductor_ids)
         derivatives = _geometry_derivatives(
             usermap,

@@ -461,7 +461,9 @@ def solve_impedance_matrix(
     SolverBudgetExceeded
         If the conductor pixel count after masking exceeds ``max_pixels``.
     ValueError
-        If there are no conductor pixels, or no reference conductor (id 0).
+        If there are no conductor pixels, or no reference conductor (id 0), or
+        the assembled impedance matrix is singular enough that the solve
+        returns non-finite currents.
 
     Notes
     -----
@@ -527,6 +529,14 @@ def solve_impedance_matrix(
         rhs[n_pixels + conductor_index[drive], j] = 1.0
         rhs[n_pixels + ref_col, j] = -1.0
     sol = lu_solve(lu_piv, rhs)
+    # A near-singular Z has lu_solve return inf or nan without raising; letting that through
+    # only hides the cause behind a matrix of nans somewhere downstream.
+    if not np.isfinite(sol).all():
+        raise ValueError(
+            "PEEC impedance matrix is singular or ill-conditioned; the solve returned "
+            "non-finite values. Check that the conductor pixel sets are distinct and "
+            "non-degenerate and that the reference conductor (id 0) has pixels"
+        )
 
     voltages = sol[n_pixels:, :]  # (n_c, n_sig)
     rows = np.array([conductor_index[c] for c in signals], dtype=np.intp)

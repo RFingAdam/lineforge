@@ -82,6 +82,11 @@ class Usermap:
         self.meta: UsermapMetadata = meta
         self.material_lookup = material_lookup or build_lookup()
 
+        if (_codes is None) != (_materials is None):
+            raise ValueError(
+                "_codes and _materials must be given together; with only one of them the "
+                "codes would be silently re-derived from the rgb array instead"
+            )
         if _codes is not None and _materials is not None:
             self.materials = list(_materials)
             self.codes = _codes.astype(np.int16)
@@ -151,10 +156,10 @@ class Usermap:
         material_ids = np.asarray(material_ids)
         if material_ids.ndim != 2:
             raise ValueError("material_ids must be 2-D")
-        if material_ids.max(initial=-1) >= len(materials):
-            raise ValueError("material_ids references a material outside the list")
         if material_ids.min(initial=-1) < -1:
             raise ValueError("material_ids values must be -1 (vacuum) or a material index")
+        if material_ids.max(initial=-1) >= len(materials):
+            raise ValueError("material_ids references a material outside the list")
         cid = np.asarray(conductor_ids) if conductor_ids is not None else None
         if cid is not None and cid.shape != material_ids.shape:
             raise ValueError("conductor_ids must match material_ids in shape")
@@ -169,7 +174,7 @@ class Usermap:
             unknown_warning=False,
             _codes=material_ids.astype(np.int16),
             _materials=materials,
-            _conductor_ids=conductor_ids,
+            _conductor_ids=cid,
         )
         if cid is not None:
             conductor_material = np.zeros(material_ids.shape, dtype=bool)

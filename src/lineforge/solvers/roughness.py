@@ -39,13 +39,22 @@ def cannonball_from_rz(rz_m: float) -> tuple[float, float]:
 
 
 def roughness_factor(spec: RoughnessSpec, delta_m: float) -> float:
+    """Loss multiplier of ``spec`` at skin depth ``delta_m``.
+
+    ``RoughnessSpec``'s validator fills each model's fields in, so a spec that arrives here
+    with one missing was built around that validator. The guards are ``raise`` rather than
+    ``assert`` so they survive ``python -O``.
+    """
     if spec.model == "hammerstad":
-        assert spec.rms_um is not None
+        if spec.rms_um is None:
+            raise ValueError("hammerstad roughness needs rms_um")
         return hammerstad_factor(delta_m, spec.rms_um * 1e-6)
     if spec.model == "groisse":
-        assert spec.rms_um is not None
+        if spec.rms_um is None:
+            raise ValueError("groisse roughness needs rms_um")
         return groisse_factor(delta_m, spec.rms_um * 1e-6)
-    assert spec.radius_um is not None and spec.ratio is not None
+    if spec.radius_um is None or spec.ratio is None:
+        raise ValueError("huray roughness needs radius_um and ratio")
     return huray_factor(delta_m, spec.radius_um * 1e-6, spec.ratio)
 
 

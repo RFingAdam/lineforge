@@ -42,7 +42,13 @@ class MaxwellResult:
     ``W[m]`` is the (N, N) energy matrix restricted to the pixels of material code ``m``
     (``-1`` is vacuum / unrecognized), computed from the potentials solved with the
     materials' permittivity at ``f_ref_hz``. ``W0`` is the all-space energy matrix of the
-    vacuum solves and ``C0 = eps0 * W0``.
+    vacuum solves and ``C0 = eps0 * W0``. ``W`` is empty when the result came from a
+    ``vacuum_only=True`` solve, and :func:`rlgc_matrices` then refuses.
+
+    ``pixel_width_m`` is the pixel size of the grid the matrices were solved on (the
+    open-boundary extension replicates pixels and does not rescale them). It is carried so
+    that a consumer holding only the result can convert between pixel counts and metres,
+    for instance to rebuild or perturb the geometry the matrices belong to.
     """
 
     conductor_ids: list[int]
@@ -185,6 +191,7 @@ def solve_maxwell(
     extend_grid: bool = True,
     target_extent: int = 3200,
     keep_fields: bool = False,
+    vacuum_only: bool = False,
 ) -> MaxwellResult:
     """Solve the N-conductor Maxwell energy matrices of ``usermap``.
 
@@ -213,6 +220,11 @@ def solve_maxwell(
     keep_fields
         Keep the (N, H, W) potential stacks on the result (for field plots or the
         roughness/erosion re-solves).
+    vacuum_only
+        Run only the vacuum solve set, halving the cost. ``C0``, ``W0`` and ``phi0`` are
+        as usual; ``W`` is left empty and ``phi`` is None, so ``C`` and ``G`` cannot be
+        formed and :func:`rlgc_matrices` raises ``ValueError`` on such a result. Use it
+        when only the inductance side is wanted, as the Wheeler erosion solves do.
     """
     ids = sorted(int(i) for i in np.unique(usermap.conductor_ids) if i >= 1)
     if not ids:
@@ -221,8 +233,12 @@ def solve_maxwell(
 
     er_field = _er_field(extended, f_ref_hz)
 
-    phi, it_er = _solve_set(extended, er_field, ids, method=method, tol=tol, max_iter=max_iter)
-    w_per_material, _ = _energy_matrices(phi, extended.codes)
+    phi: np.ndarray | None = None
+    it_er: list[int] = []
+    w_per_material: dict[int, np.ndarray] = {}
+    if not vacuum_only:
+        phi, it_er = _solve_set(extended, er_field, ids, method=method, tol=tol, max_iter=max_iter)
+        w_per_material, _ = _energy_matrices(phi, extended.codes)
 
     phi0, it_vac = _solve_set(
         extended, np.ones_like(er_field), ids, method=method, tol=tol, max_iter=max_iter
@@ -269,7 +285,7 @@ def solve_maxwell(
         W0=w0,
         materials=list(extended.materials),
         pixel_width_m=extended.pixel_width_m,
-        phi=phi if keep_fields else None,
+        phi=phi if keep_fields else None,  # already None when vacuum_only
         phi0=phi0 if keep_fields else None,
         iterations=it_er + it_vac,
         warnings=warnings,
@@ -277,7 +293,16 @@ def solve_maxwell(
 
 
 def rlgc_matrices(res: MaxwellResult, freq_hz: float) -> tuple[np.ndarray, np.ndarray, np.ndarray]:
-    """Return ``(C, G, L_ext)`` in F/m, S/m and H/m at ``freq_hz``."""
+    """Return ``(C, G, L_ext)`` in F/m, S/m and H/m at ``freq_hz``.
+
+    Raises ``ValueError`` when ``res`` came from a ``vacuum_only=True`` solve, which leaves
+    out the per-material energy matrices that C and G are built from.
+    """
+    if not res.W:
+        raise ValueError(
+            "MaxwellResult has no per-material energy matrices (W is empty), so C and G "
+            "cannot be formed; re-run solve_maxwell with vacuum_only=False"
+        )
     n = len(res.conductor_ids)
     c = np.zeros((n, n))
     g = np.zeros((n, n))

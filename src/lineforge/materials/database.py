@@ -89,6 +89,11 @@ class RoughnessSpec(BaseModel):
         if self.model in ("hammerstad", "groisse") and self.rms_um is None:
             raise ValueError(f"{self.model} roughness needs rms_um")
         if self.model == "huray":
+            if self.rz_um is not None and self.radius_um is not None:
+                raise ValueError(
+                    "huray roughness takes radius_um or rz_um, not both: rz_um is only the "
+                    "cannonball parameterisation of radius_um and would be ignored here"
+                )
             if self.rz_um is not None and self.radius_um is None:
                 radius = self.rz_um / _CANNONBALL_HEIGHT
                 object.__setattr__(self, "radius_um", radius)
