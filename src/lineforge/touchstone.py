@@ -178,7 +178,10 @@ def to_touchstone(
     out = Path(path)
     if out.suffix.lower() != ".s2p":
         out = out.with_suffix(".s2p")
-    net.write_touchstone(str(out.with_suffix("")), form="ri")
+    # The full path, not out.with_suffix(""): scikit-rf keeps a filename that already carries
+    # an extension and appends one otherwise, while with_suffix("") would eat a dotted stem
+    # as well, turning "trace_v1.2.s2p" into "trace_v1.s2p".
+    net.write_touchstone(str(out), form="ri")
     return out
 
 

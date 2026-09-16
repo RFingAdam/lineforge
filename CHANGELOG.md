@@ -49,6 +49,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
   version 2 writer emits one matrix row per line and the spec's keyword
   order, and an output path with a dotted stem (`chan_v1.2.s4p`) is no
   longer truncated.
+- `src/lineforge/touchstone.py`: the two-port `to_touchstone` truncated an
+  output path with a dotted stem the same way, writing `trace_v1.s2p` for a
+  requested `trace_v1.2.s2p`; it now keeps the name it was given.
 - `src/lineforge/solvers/faraday.py`: `solve_impedance_matrix` raises on a
   singular or ill-conditioned impedance matrix instead of returning R and L
   full of inf or nan.
