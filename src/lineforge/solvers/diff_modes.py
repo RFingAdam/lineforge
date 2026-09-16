@@ -71,9 +71,6 @@ def _solve_with_strip_voltages(
     res = laplace.solve_laplace(er, v_mask, v_value, method="auto", tol=1e-7)
     res_vac = laplace.solve_laplace(np.ones_like(er), v_mask, v_value, method="auto", tol=1e-7)
 
-    px = extended.pixel_width_m
-    Vd = abs(v_strip_1 - v_strip_2) if v_strip_1 != v_strip_2 else 1.0
-
     # ∫ εr |E|² dA
     def integrate(v_field: np.ndarray, er_field: np.ndarray) -> float:
         Ex = np.zeros_like(v_field)
@@ -85,11 +82,19 @@ def _solve_with_strip_voltages(
     integ = integrate(res.v_field, er)
     integ_vac = integrate(res_vac.v_field, np.ones_like(er))
 
-    if v_strip_1 == v_strip_2:
-        # Even-mode: both strips at +1 V relative to ground. Effective drive V = 1.
-        Vd = 1.0
-    C_per_m = EPS0 * integ * (px * px) / (Vd * Vd)
-    C_vac_per_m = EPS0 * integ_vac * (px * px) / (Vd * Vd)
+    # Per-line mode capacitance. The stored energy of the two driven strips is
+    # Σ_lines C_mode · V_line², so C_mode = ε₀ ∫ εr|E|² dA / (n_lines · V_line²).
+    # This is the quantity that pairs with the per-line mode inductance in
+    # Z_odd/even = √(L_mode/C_mode) (Paul, MTL 2nd ed. §5; C_odd = C11 − C12,
+    # C_even = C11 + C12 of the Maxwell matrix), so the odd drive (±1 V) is
+    # normalized by 2, not by the 2 V differential drive squared.
+    #
+    # The pixel-unit gradients and pixel-unit areas already cancel the dx
+    # factors (see cgp._energy_integral): no pixel_width² scaling belongs here.
+    n_lines = 2.0
+    v_line_sq = 0.5 * (v_strip_1 * v_strip_1 + v_strip_2 * v_strip_2)
+    C_per_m = EPS0 * integ / (n_lines * v_line_sq)
+    C_vac_per_m = EPS0 * integ_vac / (n_lines * v_line_sq)
     if C_vac_per_m <= 0:
         return 0.0, 0.0
     eps_eff = C_per_m / C_vac_per_m
