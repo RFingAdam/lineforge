@@ -202,8 +202,8 @@ def to_touchstone_nport(
     s
         S-parameters, shape ``(F, P, P)``.
     path
-        Output file path. Version 1 forces the suffix ``.s{P}p``; version 2
-        keeps whatever suffix is given (or ``.s{P}p`` if none).
+        Output file path. The suffix is forced to ``.s{P}p`` for the given
+        port count ``P``, for both versions.
     z_ref
         Reference impedance: a scalar applied to every port, or one value
         per port.
