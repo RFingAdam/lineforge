@@ -82,12 +82,16 @@ def mask_skin_depth(
     Returns
     -------
     Usermap
-        New usermap with the masked pixels replaced.
+        New usermap with the masked pixels replaced. Material codes and
+        ``conductor_ids`` are carried over from the input, with the blackened
+        pixels set to ``-1`` in both, so label-built maps keep their conductor
+        identities across the mask.
     """
     if frequency_hz <= 0:
         return usermap
 
     new_rgb = usermap.rgb.copy()
+    blackened = np.zeros(usermap.shape, dtype=bool)
     px = usermap.pixel_width_m
 
     # For each conductor material, compute δ and mask pixels in that material's
@@ -116,6 +120,12 @@ def mask_skin_depth(
             distances = distances[0]
         deep = material_mask & (distances > depth_pixels)
         new_rgb[deep] = np.array(blacken_color, dtype=np.uint8)
+        blackened |= deep
+
+    new_codes = usermap.codes.copy()
+    new_codes[blackened] = -1
+    new_conductor_ids = usermap.conductor_ids.copy()
+    new_conductor_ids[blackened] = -1
 
     return Usermap(
         new_rgb,
@@ -126,6 +136,9 @@ def mask_skin_depth(
         ),
         material_lookup=usermap.material_lookup,
         unknown_warning=False,
+        _codes=new_codes,
+        _materials=usermap.materials,
+        _conductor_ids=new_conductor_ids,
     )
 
 
