@@ -195,6 +195,12 @@ def to_touchstone_nport(
 ) -> Path:
     """Write an N-port S-parameter set as Touchstone 1.x (via scikit-rf) or 2.0 (native writer).
 
+    Port ``i`` of the file (1-based in the file, ``s[:, i, j]`` here) is the ``i``-th
+    conductor in ascending ``conductor_ids`` order, that is
+    ``MaxwellResult.conductor_ids[i]``. This is the same ordering the rows and columns of
+    :func:`lineforge.solvers.faraday.solve_impedance_matrix` carry, so an S-matrix built
+    from those matrices needs no permutation here.
+
     Parameters
     ----------
     freqs_hz
@@ -206,7 +212,9 @@ def to_touchstone_nport(
         port count ``P``, for both versions.
     z_ref
         Reference impedance: a scalar applied to every port, or one value
-        per port.
+        per port. Touchstone 1.x has a single ``R`` on its option line and no
+        way to record per-port references, so differing values are refused
+        there; pass ``version=2`` for those.
     port_names
         Optional per-port names. Written into the scikit-rf network (v1) or
         as comment lines (v2).
@@ -228,7 +236,8 @@ def to_touchstone_nport(
     ------
     ValueError
         If ``s`` is not shaped ``(F, P, P)`` matching ``freqs_hz``, or
-        ``z_ref`` does not provide exactly one value per port.
+        ``z_ref`` does not provide exactly one value per port, or
+        ``version == 1`` was asked for with per-port references that differ.
     """
     freqs = np.asarray(freqs_hz, dtype=np.float64)
     s = np.asarray(s, dtype=np.complex128)
@@ -244,6 +253,12 @@ def to_touchstone_nport(
     if out.suffix.lower() != f".s{ports}p":
         out = out.with_suffix(f".s{ports}p")
     if version == 1:
+        if len(set(zs)) > 1:
+            raise ValueError(
+                "Touchstone 1.x carries one reference impedance on its option line, so the "
+                "per-port values would be silently reduced to the first one; pass "
+                "version=2 to keep per-port references"
+            )
         import skrf
 
         net = skrf.Network(
@@ -251,13 +266,21 @@ def to_touchstone_nport(
         )
         if port_names:
             net.port_names = list(port_names)
-        net.write_touchstone(str(out.with_suffix("")), form="ri", write_z0=False)
+        # The full path, not out.with_suffix(""): scikit-rf keeps a filename that already
+        # carries an extension and appends one otherwise, while with_suffix("") would eat a
+        # dotted stem as well, turning "chan_v1.2.s4p" into "chan_v1.s4p".
+        net.write_touchstone(str(out), form="ri", write_z0=False)
         return out
-    # zs[0] here is only the nominal reference for legacy readers that pre-date per-port
-    # references; the actual per-port values are the ones in the [Reference] line below.
+    # Keyword order below is the one the 2.0 spec fixes: [Version], the option line, then
+    # [Number of Ports], [Two-Port Data Order] (two-ports only), [Number of Frequencies],
+    # [Reference], [Mixed-Mode Order], [Network Data], [End].
+    #
+    # zs[0] on the option line is only the nominal reference for legacy readers that pre-date
+    # per-port references; the actual per-port values are the ones in the [Reference] line.
     lines = ["[Version] 2.0", f"# Hz S RI R {zs[0]:g}", f"[Number of Ports] {ports}"]
     if ports == 2:
         lines.append("[Two-Port Data Order] 12_21")
+    lines.append(f"[Number of Frequencies] {len(freqs)}")
     lines.append("[Reference] " + " ".join(f"{z:g}" for z in zs))
     if mixed_mode_order:
         lines.append("[Mixed-Mode Order] " + " ".join(mixed_mode_order))
@@ -265,14 +288,14 @@ def to_touchstone_nport(
         lines.append(f"! {comment}")
     if port_names:
         lines.extend(f"! port {i + 1}: {name}" for i, name in enumerate(port_names))
-    lines.append(f"[Number of Frequencies] {len(freqs)}")
     lines.append("[Network Data]")
     for fi, f in enumerate(freqs):
-        row = [f"{f:.9e}"]
+        # One matrix row per line, the frequency leading the first of them.
         for i in range(ports):
+            row = [f"{f:.9e}"] if i == 0 else []
             for j in range(ports):
                 row.append(f"{s[fi, i, j].real:.9e} {s[fi, i, j].imag:.9e}")
-        lines.append(" ".join(row))
+            lines.append(" ".join(row))
     lines.append("[End]")
     out.write_text("\n".join(lines) + "\n")
     return out
