@@ -114,10 +114,11 @@ cross-section built from labels rather than the atlc2 `+1`/`-1`/`0` RGB
 roles. The pieces:
 
 1. **Label the conductors.** `Usermap.from_labels` takes an integer
-   material-id grid plus an integer `conductor_ids` grid: `0` is the
-   reference conductor, `1..N` are the signal conductors, `-2` marks a
-   floating group. This is how a fieldforge-extracted cross-section with
-   more than two signal conductors gets into lineforge.
+   material-id grid plus an integer `conductor_ids` grid: `-1` marks a
+   non-conductor (dielectric or unlabeled) pixel, `0` is the reference
+   conductor, `1..N` are the signal conductors, and `-2` marks a floating
+   group. This is how a fieldforge-extracted cross-section with more than
+   two signal conductors gets into lineforge.
 2. **Capacitance and external inductance.** `solvers.mtl.solve_maxwell` runs
    one Laplace solve per signal conductor (that conductor at 1 V, every
    other fixed conductor at 0 V) plus the same set in vacuum, and stores the

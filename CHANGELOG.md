@@ -8,9 +8,9 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Added
 
-- `Usermap.from_labels`, integer `conductor_ids` (`0` reference, `1..N`
-  signal, `-2` floating), and a vectorised RGB-to-material colour mapping
-  (`src/lineforge/geometry/usermap.py`).
+- `Usermap.from_labels`, integer `conductor_ids` (`-1` non-conductor, `0`
+  reference, `1..N` signal, `-2` floating), and a vectorised RGB-to-material
+  colour mapping (`src/lineforge/geometry/usermap.py`).
 - `DSParams` (Djordjevic-Sarkar wideband Debye model), `RoughnessSpec`
   (Hammerstad / Groisse / Huray roughness description), and
   `MaterialRecord.er_complex`, plus the `.lineforge.json` material-pack I/O
