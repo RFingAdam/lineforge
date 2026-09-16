@@ -205,9 +205,6 @@ def _build_system(
     its column.
     """
     N = len(ys)
-    if N == 0:
-        raise ValueError("no conductor pixels in usermap")
-
     pixel_cid = cid[ys, xs]  # int per pixel
     Z = _assemble_impedance(ys, xs, pixel_cid, rho_field, px, omega, n_conductors)
 
@@ -465,6 +462,15 @@ def solve_impedance_matrix(
         If the conductor pixel count after masking exceeds ``max_pixels``.
     ValueError
         If there are no conductor pixels, or no reference conductor (id 0).
+
+    Notes
+    -----
+    Floating conductors (``conductor_ids == -2``) are **excluded**: they are
+    dropped from the pixel selection, carry no induced current in the solve,
+    and do not appear as a row or column of the returned matrices. This differs
+    from :func:`solve_lrs`, which gives every floating material group its own
+    conductor and constraint row. For a cross-section with floating metal the
+    two routines will therefore not agree.
     """
     del tol  # the LU path is direct; kept for call-site symmetry with solve_lrs
 
@@ -479,6 +485,8 @@ def solve_impedance_matrix(
     )
 
     cid_field = working.conductor_ids
+    # Only the reference (0) and the signals (1..N). Floating conductors are
+    # tagged -2 and are deliberately left out of the system; see Notes above.
     ys, xs = np.where(cid_field >= 0)
     n_pixels = len(ys)
     if n_pixels > max_pixels:
@@ -486,16 +494,15 @@ def solve_impedance_matrix(
             f"{n_pixels} conductor pixels exceed the budget of {max_pixels}; "
             "coarsen the grid, enable restrict_to_skin_depth, or raise max_pixels"
         )
-    if n_pixels == 0:
-        raise ValueError("no conductor pixels in usermap")
 
     pixel_cid = cid_field[ys, xs]
-    ids = sorted(int(c) for c in np.unique(pixel_cid))
-    if 0 not in ids:
-        raise ValueError("solve_impedance_matrix needs a reference conductor with id 0")
+    ids = [int(c) for c in np.unique(pixel_cid)]  # np.unique already returns them sorted
     signals = [c for c in ids if c >= 1]
-    if not signals:
-        raise ValueError("solve_impedance_matrix needs at least one signal conductor (id >= 1)")
+    if n_pixels:  # an empty map is _assemble_impedance's error to report
+        if 0 not in ids:
+            raise ValueError("solve_impedance_matrix needs a reference conductor with id 0")
+        if not signals:
+            raise ValueError("solve_impedance_matrix needs at least one signal conductor (id >= 1)")
 
     # Column offset of each conductor's voltage unknown, in ascending id order.
     conductor_index = {c: i for i, c in enumerate(ids)}

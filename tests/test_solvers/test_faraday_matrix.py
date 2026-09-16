@@ -85,6 +85,9 @@ def test_skin_masking_preserves_conductor_ids() -> None:
     assert np.array_equal(masked.conductor_ids[kept], labels.conductor_ids[kept])
     dropped = (labels.conductor_ids >= 0) & (masked.conductor_ids < 0)
     assert dropped.any()
+    # A blackened pixel is exactly -1 in both planes: not -2 (which would read as
+    # floating metal), and not a stale material code.
+    assert np.all(masked.conductor_ids[dropped] == -1)
     assert np.all(masked.codes[dropped] == -1)
     # The surviving pixels are exactly what the matrix solver then bills against.
     r_mat, _l_mat = solve_impedance_matrix(labels, frequency_hz=1e7, restrict_to_skin_depth=True)
