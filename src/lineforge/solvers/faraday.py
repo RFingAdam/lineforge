@@ -120,6 +120,67 @@ def _self_inductance_per_m(px: float) -> float:
     return float((MU0 / (2.0 * np.pi)) * (np.log(1.0 / max(px, 1e-12)) + 0.5))
 
 
+def _partial_inductance(
+    ys: np.ndarray, xs: np.ndarray, field_shape: tuple[int, ...], px: float
+) -> np.ndarray:
+    """Dense pairwise partial-inductance matrix ``(μ₀/2π)·ln(d_ref/r_nk)`` in H/m.
+
+    ``d_ref`` is the simulation extent so the logs stay positive; the self term
+    is capped at half a pixel and then replaced by :func:`_self_inductance_per_m`.
+    """
+    h, w = field_shape[0], field_shape[1]
+    d_ref = float(max(h, w)) * px
+
+    yy = ys[:, None].astype(np.float64) * px
+    xx = xs[:, None].astype(np.float64) * px
+    yy_t = yy.T
+    xx_t = xx.T
+    r2 = (yy - yy_t) ** 2 + (xx - xx_t) ** 2
+    np.fill_diagonal(r2, (px * 0.5) ** 2)
+    L_partial = (MU0 / (2.0 * np.pi)) * np.log(d_ref / np.sqrt(r2))
+    np.fill_diagonal(L_partial, _self_inductance_per_m(px))
+    return L_partial
+
+
+def _assemble_impedance(
+    ys: np.ndarray,
+    xs: np.ndarray,
+    pixel_col: np.ndarray,
+    rho_field: np.ndarray,
+    px: float,
+    omega: float,
+    n_conductors: int,
+) -> np.ndarray:
+    """Assemble the square PEEC matrix shared by the single- and multi-drive solvers.
+
+    ``pixel_col[n]`` is the *column offset* of the conductor that pixel n belongs
+    to, i.e. its voltage unknown lives at index ``N + pixel_col[n]``. Rows
+    ``0..N-1`` are Ohm's law, rows ``N..N+n_conductors-1`` are ``Σ i_n = I_c``.
+    """
+    N = len(ys)
+    if N == 0:
+        raise ValueError("no conductor pixels in usermap")
+
+    Z = np.zeros((N + n_conductors, N + n_conductors), dtype=np.complex128)
+
+    # ---- R diagonal -------------------------------------------------------
+    R_diag = rho_field[ys, xs] / (px * px)  # Ω/m per pixel
+
+    # ---- Top-left block: R_diag + jω·L_partial -----------------------------
+    Z[:N, :N] = 1j * omega * _partial_inductance(ys, xs, rho_field.shape, px)
+    np.fill_diagonal(Z[:N, :N], np.diag(Z[:N, :N]) + R_diag)
+
+    # Voltage columns: each pixel n in conductor c subtracts V_c from its row
+    # so the equation is: Σ_k Z[n,k]·i_k − V_{c(n)} = 0
+    Z[np.arange(N), N + pixel_col] = -1.0
+
+    # Constraint rows: Σ_{n in c} i_n = I_drive[c]
+    for c in range(n_conductors):
+        Z[N + c, np.where(pixel_col == c)[0]] = 1.0
+
+    return Z
+
+
 def _build_system(
     ys: np.ndarray,
     xs: np.ndarray,
@@ -144,52 +205,11 @@ def _build_system(
     its column.
     """
     N = len(ys)
-    if N == 0:
-        raise ValueError("no conductor pixels in usermap")
-
-    n_eq = N + n_conductors
-    Z = np.zeros((n_eq, n_eq), dtype=np.complex128)
-    b = np.zeros(n_eq, dtype=np.complex128)
-
-    # ---- R diagonal -------------------------------------------------------
-    rho_pixel = rho_field[ys, xs]  # Ω·m
-    A_pixel = px * px
-    R_diag = rho_pixel / A_pixel  # Ω/m per pixel
-
-    # ---- L_partial: dense pairwise -----------------------------------------
-    # Use d_ref = max simulation extent so logs stay positive
-    h, w = rho_field.shape
-    d_ref = float(max(h, w)) * px
-
-    yy = ys[:, None].astype(np.float64) * px
-    xx = xs[:, None].astype(np.float64) * px
-    yy_t = yy.T
-    xx_t = xx.T
-    r2 = (yy - yy_t) ** 2 + (xx - xx_t) ** 2
-    # Self term: cap at half a pixel
-    np.fill_diagonal(r2, (px * 0.5) ** 2)
-    # L_partial[n,k] = (μ₀/(2π)) ln(d_ref / r_nk)
-    L_partial = (MU0 / (2.0 * np.pi)) * np.log(d_ref / np.sqrt(r2))
-
-    # Refine the self-term explicitly
-    np.fill_diagonal(L_partial, _self_inductance_per_m(px))
-
-    # ---- Build Z ----------------------------------------------------------
-    # Top-left block: R_diag (sparse) + jω·L_partial (dense)
-    Z[:N, :N] = 1j * omega * L_partial
-    np.fill_diagonal(Z[:N, :N], np.diag(Z[:N, :N]) + R_diag)
-
-    # Voltage columns: each pixel n in conductor c subtracts V_c from its row
-    # so the equation is: Σ_k Z[n,k]·i_k − V_{c(n)} = 0
     pixel_cid = cid[ys, xs]  # int per pixel
-    for n_idx in range(N):
-        c = pixel_cid[n_idx]
-        Z[n_idx, N + c] = -1.0
+    Z = _assemble_impedance(ys, xs, pixel_cid, rho_field, px, omega, n_conductors)
 
-    # Constraint rows: Σ_{n in c} i_n = I_drive[c]
+    b = np.zeros(N + n_conductors, dtype=np.complex128)
     for c in range(n_conductors):
-        rows_in_c = np.where(pixel_cid == c)[0]
-        Z[N + c, rows_in_c] = 1.0
         b[N + c] = drive_currents.get(c, 0.0)
 
     return Z, b
@@ -386,4 +406,143 @@ def solve_lrs(
     )
 
 
-__all__ = ["FaradayResult", "solve_lrs"]
+class SolverBudgetExceeded(ValueError):  # noqa: N818  name is part of the public solver API
+    """The dense PEEC system would exceed the configured pixel budget."""
+
+
+def solve_impedance_matrix(
+    usermap: Usermap,
+    *,
+    frequency_hz: float,
+    restrict_to_skin_depth: bool = True,
+    skin_factor: float = 3.0,
+    max_pixels: int = 6000,
+    tol: float = 1e-8,
+) -> tuple[np.ndarray, np.ndarray]:
+    """Per-unit-length R and L matrices for an N-conductor cross-section.
+
+    The usermap must carry ``conductor_ids``: ``0`` for the reference conductor
+    and ``1..N`` for the signal conductors (see
+    :meth:`lineforge.geometry.usermap.Usermap.from_labels`).
+
+    Drive *j* puts ``+1 A`` on signal conductor *j*, ``-1 A`` on the reference,
+    and ``0 A`` on every other signal conductor. Column *j* of the impedance
+    matrix is then ``Z[k, j] = V_k − V_ref`` for each signal conductor *k*.
+    Because every drive shares one matrix, the dense system is assembled once
+    and factored once; the N drives are N right-hand sides of that one LU.
+
+    Parameters
+    ----------
+    usermap
+        Cross-section with ``conductor_ids`` assigned.
+    frequency_hz
+        Frequency for the solve (sets ω and the skin depth).
+    restrict_to_skin_depth
+        Blacken conductor interiors deeper than ``skin_factor·δ`` before
+        solving (see :func:`lineforge.solvers.skin_depth.mask_skin_depth`).
+    skin_factor
+        Multiplier on δ for that masking.
+    max_pixels
+        Refusal threshold on the conductor pixel count *after* masking. The
+        dense system is ``(N + n_c)²`` complex entries, so this is the knob
+        that keeps a careless call from allocating tens of gigabytes.
+    tol
+        Accepted for signature compatibility with :func:`solve_lrs`; the
+        direct LU path is exact and does not iterate.
+
+    Returns
+    -------
+    tuple of ndarray
+        ``(R, L)``, each ``(N, N)``, in Ω/m and H/m, indexed by signal
+        conductor in ascending ``conductor_ids`` order.
+
+    Raises
+    ------
+    SolverBudgetExceeded
+        If the conductor pixel count after masking exceeds ``max_pixels``.
+    ValueError
+        If there are no conductor pixels, or no reference conductor (id 0), or
+        the assembled impedance matrix is singular enough that the solve
+        returns non-finite currents.
+
+    Notes
+    -----
+    Floating conductors (``conductor_ids == -2``) are **excluded**: they are
+    dropped from the pixel selection, carry no induced current in the solve,
+    and do not appear as a row or column of the returned matrices. This differs
+    from :func:`solve_lrs`, which gives every floating material group its own
+    conductor and constraint row. For a cross-section with floating metal the
+    two routines will therefore not agree.
+    """
+    del tol  # the LU path is direct; kept for call-site symmetry with solve_lrs
+
+    from scipy.linalg import lu_factor, lu_solve
+
+    from lineforge.solvers.skin_depth import mask_skin_depth
+
+    working = (
+        mask_skin_depth(usermap, frequency_hz, factor=skin_factor)
+        if restrict_to_skin_depth
+        else usermap
+    )
+
+    cid_field = working.conductor_ids
+    # Only the reference (0) and the signals (1..N). Floating conductors are
+    # tagged -2 and are deliberately left out of the system; see Notes above.
+    ys, xs = np.where(cid_field >= 0)
+    n_pixels = len(ys)
+    if n_pixels > max_pixels:
+        raise SolverBudgetExceeded(
+            f"{n_pixels} conductor pixels exceed the budget of {max_pixels}; "
+            "coarsen the grid, enable restrict_to_skin_depth, or raise max_pixels"
+        )
+
+    pixel_cid = cid_field[ys, xs]
+    ids = [int(c) for c in np.unique(pixel_cid)]  # np.unique already returns them sorted
+    signals = [c for c in ids if c >= 1]
+    if n_pixels:  # an empty map is _assemble_impedance's error to report
+        if 0 not in ids:
+            raise ValueError("solve_impedance_matrix needs a reference conductor with id 0")
+        if not signals:
+            raise ValueError("solve_impedance_matrix needs at least one signal conductor (id >= 1)")
+
+    # Column offset of each conductor's voltage unknown, in ascending id order.
+    conductor_index = {c: i for i, c in enumerate(ids)}
+    pixel_col = np.array([conductor_index[int(c)] for c in pixel_cid], dtype=np.intp)
+
+    omega = 2.0 * np.pi * frequency_hz
+    Z = _assemble_impedance(
+        ys,
+        xs,
+        pixel_col,
+        working.resistivity_field_ohm_m(),
+        working.pixel_width_m,
+        omega,
+        len(ids),
+    )
+
+    lu_piv = lu_factor(Z)
+    ref_col = conductor_index[0]
+    n_sig = len(signals)
+    rhs = np.zeros((Z.shape[0], n_sig), dtype=np.complex128)
+    for j, drive in enumerate(signals):
+        rhs[n_pixels + conductor_index[drive], j] = 1.0
+        rhs[n_pixels + ref_col, j] = -1.0
+    sol = lu_solve(lu_piv, rhs)
+    # A near-singular Z has lu_solve return inf or nan without raising; letting that through
+    # only hides the cause behind a matrix of nans somewhere downstream.
+    if not np.isfinite(sol).all():
+        raise ValueError(
+            "PEEC impedance matrix is singular or ill-conditioned; the solve returned "
+            "non-finite values. Check that the conductor pixel sets are distinct and "
+            "non-degenerate and that the reference conductor (id 0) has pixels"
+        )
+
+    voltages = sol[n_pixels:, :]  # (n_c, n_sig)
+    rows = np.array([conductor_index[c] for c in signals], dtype=np.intp)
+    zmat = voltages[rows, :] - voltages[ref_col, :][None, :]
+
+    return np.real(zmat), np.imag(zmat) / omega
+
+
+__all__ = ["FaradayResult", "SolverBudgetExceeded", "solve_impedance_matrix", "solve_lrs"]

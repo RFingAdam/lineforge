@@ -93,6 +93,16 @@ class TestTouchstoneRoundTrip:
         """Missing .s2p suffix gets added."""
         out = to_touchstone(fr4_microstrip_sweep, tmp_path / "no_suffix")
         assert out.suffix == ".s2p"
+        assert out.exists()
+
+    def test_dotted_stem_survives_the_suffix_swap(
+        self, fr4_microstrip_sweep: list, tmp_path: Path
+    ) -> None:
+        """``with_suffix('')`` would turn trace_v1.2.s2p into trace_v1.s2p."""
+        out = to_touchstone(fr4_microstrip_sweep, tmp_path / "trace_v1.2.s2p")
+        assert out.name == "trace_v1.2.s2p"
+        assert out.exists()
+        assert not (tmp_path / "trace_v1.s2p").exists()
 
     def test_reciprocity(self, fr4_microstrip_sweep: list, tmp_path: Path) -> None:
         """A uniform line is reciprocal: S12 = S21."""

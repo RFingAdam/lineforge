@@ -90,3 +90,36 @@ class TestUsermapIO:
         loaded = Usermap.from_json(path)
         assert loaded.shape == u.shape
         assert loaded.meta.name == "t"
+
+
+def test_half_specified_codes_and_materials_are_refused() -> None:
+    """Passing one of the pair used to re-derive both from the rgb array, silently."""
+    rgb = _tiny_microstrip_array()
+    meta = UsermapMetadata(pixel_width_m=1e-5)
+    codes = np.zeros(rgb.shape[:2], dtype=np.int16)
+    with pytest.raises(ValueError, match="must be given together"):
+        Usermap(rgb, meta, unknown_warning=False, _codes=codes)
+    with pytest.raises(ValueError, match="must be given together"):
+        Usermap(rgb, meta, unknown_warning=False, _materials=[])
+
+
+def test_from_labels_accepts_conductor_ids_as_a_nested_list() -> None:
+    """The asarray'd copy is what reaches the constructor, so a plain list works."""
+    from lineforge.materials.database import MaterialRecord
+
+    cu = MaterialRecord(rgb=(255, 0, 0), use="+1", name="copper")
+    mat = [[0, 0], [-1, -1]]
+    cid = [[1, 1], [-1, -1]]
+    u = Usermap.from_labels(np.asarray(mat), [cu], pixel_width_m=1e-5, conductor_ids=cid)
+    assert u.conductor_ids.dtype == np.int32
+    assert u.conductor_ids.tolist() == cid
+
+
+def test_material_ids_lower_bound_is_reported_before_the_upper_one() -> None:
+    """A map that breaks both bounds should name the first violation, not the second."""
+    from lineforge.materials.database import MaterialRecord
+
+    cu = MaterialRecord(rgb=(255, 0, 0), use="+1", name="copper")
+    bad = np.array([[-5, 9]], dtype=np.int32)
+    with pytest.raises(ValueError, match="must be -1"):
+        Usermap.from_labels(bad, [cu], pixel_width_m=1e-5)

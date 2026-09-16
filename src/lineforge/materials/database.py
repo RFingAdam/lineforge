@@ -15,11 +15,99 @@ Use:
 
 from __future__ import annotations
 
+import math
 from typing import Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 MaterialUse = Literal["+1", "-1", "0", "float", "insul"]
+
+EPS0 = 8.8541878128e-12
+# Simonovich cannonball parameterisation (DesignCon 2015): a Huray "snowball" roughness
+# profile fit from a single Rz reading. Height of a stack of 14 close-packed spheres, in
+# radii, and the sphere-to-flat area ratio the model uses. Shared with
+# :mod:`lineforge.solvers.roughness`, which imports these two names directly: that module
+# already imports :class:`RoughnessSpec` from here, so the constants live on this side of
+# the pair to avoid a cycle.
+_CANNONBALL_HEIGHT = 2.0 * (1.0 + math.sqrt(2.0))
+_CANNONBALL_RATIO = 14.0 * 4.0 * math.pi / 36.0
+
+
+class DSParams(BaseModel):
+    """Djordjevic-Sarkar wideband Debye (IEEE Trans. EMC 43(4), 2001), causal by construction."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    eps_inf: float = Field(..., gt=0)
+    delta_eps: float = Field(..., ge=0)
+    f1_hz: float = Field(1e3, gt=0)
+    f2_hz: float = Field(1e12, gt=0)
+    sigma_dc_s_per_m: float = Field(0.0, ge=0)
+
+    def _units(self, freq_hz: float) -> tuple[float, float]:
+        w = 2.0 * math.pi * freq_hz
+        w1 = 2.0 * math.pi * self.f1_hz
+        w2 = 2.0 * math.pi * self.f2_hz
+        span = math.log(self.f2_hz / self.f1_hz)
+        real_unit = math.log(math.hypot(w2, w) / math.hypot(w1, w)) / span
+        imag_unit = (math.atan2(w, w2) - math.atan2(w, w1)) / span
+        return real_unit, imag_unit
+
+    def er_complex(self, freq_hz: float) -> complex:
+        if freq_hz <= 0:
+            raise ValueError("freq_hz must be positive")
+        real_unit, imag_unit = self._units(freq_hz)
+        w = 2.0 * math.pi * freq_hz
+        cond = self.sigma_dc_s_per_m / (w * EPS0)
+        return complex(self.eps_inf + self.delta_eps * real_unit, self.delta_eps * imag_unit - cond)
+
+    @classmethod
+    def fit_point(
+        cls, er: float, tan_delta: float, f_ref_hz: float, f1_hz: float = 1e3, f2_hz: float = 1e12
+    ) -> DSParams:
+        probe = cls(eps_inf=1.0, delta_eps=1.0, f1_hz=f1_hz, f2_hz=f2_hz)
+        real_unit, imag_unit = probe._units(f_ref_hz)
+        delta_eps = -tan_delta * er / imag_unit if imag_unit != 0 else 0.0
+        return cls(
+            eps_inf=er - delta_eps * real_unit, delta_eps=delta_eps, f1_hz=f1_hz, f2_hz=f2_hz
+        )
+
+
+class RoughnessSpec(BaseModel):
+    """Conductor surface roughness description consumed by ``solvers.roughness``."""
+
+    model_config = ConfigDict(extra="forbid", frozen=True)
+
+    model: Literal["hammerstad", "huray", "groisse"]
+    rms_um: float | None = Field(None, gt=0)
+    radius_um: float | None = Field(None, gt=0)
+    ratio: float | None = Field(None, gt=0)
+    rz_um: float | None = Field(None, gt=0)
+
+    @model_validator(mode="after")
+    def _complete(self) -> RoughnessSpec:
+        if self.model in ("hammerstad", "groisse") and self.rms_um is None:
+            raise ValueError(f"{self.model} roughness needs rms_um")
+        if self.model == "huray":
+            if self.rz_um is not None and self.radius_um is not None:
+                raise ValueError(
+                    "huray roughness takes radius_um or rz_um, not both: rz_um is only the "
+                    "cannonball parameterisation of radius_um and would be ignored here"
+                )
+            if self.rz_um is not None and self.radius_um is None:
+                radius = self.rz_um / _CANNONBALL_HEIGHT
+                object.__setattr__(self, "radius_um", radius)
+                if self.ratio is None:
+                    object.__setattr__(self, "ratio", _CANNONBALL_RATIO)
+                # rz_um has done its job. Clearing it keeps the completed spec valid when it
+                # is validated again (nesting it in a MaterialRecord, or a dump/load round
+                # trip), which would otherwise look like the ambiguous both-given call above.
+                object.__setattr__(self, "rz_um", None)
+            if self.radius_um is None or self.ratio is None:
+                raise ValueError(
+                    "huray roughness needs radius_um and ratio, or rz_um for the cannonball parameterisation"
+                )
+        return self
 
 
 class MaterialRecord(BaseModel):
@@ -38,7 +126,13 @@ class MaterialRecord(BaseModel):
     use: MaterialUse = Field(..., description="Conductor (+1/-1/0/float) or insulator role.")
     resistivity_ohm_cm: float = Field(
         1.7241,
-        description="Resistivity [Ω·cm]. atlc2 uses cm for legacy reasons.",
+        description=(
+            "Resistivity, nominally [Ω·cm] for atlc2 legacy-format reasons, but in "
+            "practice every value in this database (including the copper default, "
+            "1.7241) is in micro-ohm-centimetres [µΩ·cm]. Multiplied by 1e-8 to get "
+            "ohm-metres [Ω·m]; see Usermap.resistivity_field_ohm_m. The field is not "
+            "renamed to avoid breaking the atlc2/MoreColors.txt on-disk format."
+        ),
         ge=0,
     )
     er: float = Field(1.0, description="Relative permittivity (1.0 for conductors).", ge=1)
@@ -55,6 +149,12 @@ class MaterialRecord(BaseModel):
     tan_freq: dict[float, float] | None = Field(
         None,
         description="Optional Df(f) table {Hz: tan_δ}. Same semantics as er_freq.",
+    )
+    ds_params: DSParams | None = Field(
+        None, description="Djordjevic-Sarkar parameters; overrides er/tan tables when set."
+    )
+    roughness: RoughnessSpec | None = Field(
+        None, description="Surface roughness model for conductors."
     )
 
     @property
@@ -91,6 +191,13 @@ class MaterialRecord(BaseModel):
             tan_freq=self.tan_freq,
             freq_hz=freq_hz,
         )
+
+    def er_complex(self, freq_hz: float) -> complex:
+        """Complex relative permittivity ``er' - j er''`` at ``freq_hz``."""
+        if self.ds_params is not None:
+            return self.ds_params.er_complex(freq_hz)
+        er, tan = self.at_frequency(freq_hz)
+        return complex(er, -er * tan)
 
 
 # fmt: off
@@ -191,8 +298,10 @@ def find_by_name(name: str) -> list[MaterialRecord]:
 
 __all__ = [
     "ATLC2_DEFAULTS",
+    "DSParams",
     "MaterialRecord",
     "MaterialUse",
+    "RoughnessSpec",
     "find_by_name",
     "list_atlc2_default",
     "lookup_by_rgb",

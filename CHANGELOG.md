@@ -6,6 +6,83 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `Usermap.from_labels`, integer `conductor_ids` (`-1` non-conductor, `0`
+  reference, `1..N` signal, `-2` floating), and a vectorised RGB-to-material
+  colour mapping (`src/lineforge/geometry/usermap.py`).
+- `DSParams` (Djordjevic-Sarkar wideband Debye model), `RoughnessSpec`
+  (Hammerstad / Groisse / Huray roughness description), and
+  `MaterialRecord.er_complex`, plus the `.lineforge.json` material-pack I/O
+  in `load_json_pack` (`src/lineforge/materials/database.py`,
+  `src/lineforge/materials/morecolors.py`).
+- `src/lineforge/solvers/roughness.py`: Hammerstad, Groisse, and Huray
+  surface-roughness loss factors, and the Simonovich cannonball
+  parameterisation from `Rz`.
+- `src/lineforge/solvers/mtl.py`: `solve_maxwell` (N-conductor Maxwell
+  energy matrices from one Laplace solve per signal conductor) and
+  `rlgc_matrices` (C, G, and L_ext at a given frequency from those
+  matrices).
+- `src/lineforge/solvers/wheeler.py`: `solve_wheeler_resistance` (skin-effect
+  R by Wheeler's incremental-inductance rule on the Maxwell inductance
+  matrix, with per-conductor roughness).
+- `src/lineforge/solvers/faraday.py`: `solve_impedance_matrix` (N-conductor
+  PEEC R/L matrices from a single LU factorisation reused across N
+  right-hand sides) and `SolverBudgetExceeded`.
+- `src/lineforge/touchstone.py`: `to_touchstone_nport` (N-port export as
+  Touchstone 1.x via scikit-rf, or a native Touchstone 2.0 writer with
+  mixed-mode port ordering).
+- `solve_maxwell(..., vacuum_only=True)` runs only the vacuum solve set,
+  halving the cost when just `C0` (and so `L_ext`) is wanted;
+  `rlgc_matrices` refuses such a result with a clear error. The Wheeler
+  erosion solves now use it (`src/lineforge/solvers/mtl.py`,
+  `src/lineforge/solvers/wheeler.py`).
+- `lineforge.solvers` re-exports `solve_wheeler_resistance`,
+  `WheelerResult`, `solve_impedance_matrix`, `SolverBudgetExceeded` and the
+  roughness factor helpers (`src/lineforge/solvers/__init__.py`).
+
+### Fixed
+
+- `src/lineforge/touchstone.py`: `to_touchstone_nport` refused nothing when
+  asked for Touchstone 1.x with per-port reference impedances that differ,
+  and quietly wrote only the first one; that combination now raises. The
+  version 2 writer emits one matrix row per line and the spec's keyword
+  order, and an output path with a dotted stem (`chan_v1.2.s4p`) is no
+  longer truncated.
+- `src/lineforge/touchstone.py`: the two-port `to_touchstone` truncated an
+  output path with a dotted stem the same way, writing `trace_v1.s2p` for a
+  requested `trace_v1.2.s2p`; it now keeps the name it was given.
+- `src/lineforge/solvers/faraday.py`: `solve_impedance_matrix` raises on a
+  singular or ill-conditioned impedance matrix instead of returning R and L
+  full of inf or nan.
+- `src/lineforge/solvers/wheeler.py`: a caller-supplied `base` is discarded
+  and re-solved when an unusable conductor label forces the map to be
+  rebuilt, instead of mixing derivatives from two different geometries.
+- `src/lineforge/geometry/usermap.py`: `from_labels` accepts `conductor_ids`
+  as a nested list (it passed the raw argument through, which failed later),
+  reports an out-of-range material index against the lower bound first, and
+  the constructor refuses a half-specified `_codes`/`_materials` pair rather
+  than silently re-deriving both from the RGB array.
+- `src/lineforge/materials/database.py`: `RoughnessSpec` raises when a huray
+  spec gives both `radius_um` and `rz_um`, instead of ignoring `rz_um`. A spec
+  built from `rz_um` alone clears it once the cannonball radius is filled in,
+  so the completed spec stays valid when it is validated again (nested in a
+  `MaterialRecord`, or through a `dump_json_pack` / `load_json_pack` round
+  trip).
+- `src/lineforge/solvers/roughness.py`: the guards on the model's required
+  fields are `raise` rather than `assert`, so they survive `python -O`.
+- `src/lineforge/solvers/diff_modes.py`: the bitmap differential-pair mode
+  solve carried a spurious `pixel_width**2` factor on the mode capacitance
+  and normalised by the differential/common drive voltage instead of the
+  per-line voltage. The old `z_odd` and `z_even` were off by `2/px**2` and
+  `0.5/px**2` respectively (`px` = pixel width in metres) and each carried
+  the other quantity's meaning (old `z_odd` behaved like `Z_diff`, old
+  `z_even` like `Z_common`). Both are now cross-checked against
+  `solvers.mtl.solve_maxwell` + `rlgc_matrices` to within 3e-3. Any
+  externally saved `z_odd`/`z_even` numbers produced by the bitmap
+  differential-pair path (`solvers.diff_modes.solve_modes`) before this
+  change are invalid and must be re-run.
+
 ## [2.2.0]: 2026-05-13
 
 ### Changed
