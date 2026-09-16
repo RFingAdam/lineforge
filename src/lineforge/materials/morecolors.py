@@ -228,11 +228,19 @@ def dump_json_pack(
     version: str = "1.0.0",
 ) -> str:
     """Serialize records to the JSON-pack format. Returns a JSON string."""
+    materials = []
+    for m in records:
+        data = m.model_dump(mode="json")
+        if data.get("ds_params") is None:
+            data.pop("ds_params", None)
+        if data.get("roughness") is None:
+            data.pop("roughness", None)
+        materials.append(data)
     return json.dumps(
         {
             "name": name,
             "version": version,
-            "materials": [m.model_dump(mode="json", exclude_none=True) for m in records],
+            "materials": materials,
         },
         indent=2,
     )
