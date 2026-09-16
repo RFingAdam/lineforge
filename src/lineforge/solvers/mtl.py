@@ -13,6 +13,12 @@ in 2-D (the pixel-size factors of the gradient and of the area element cancel), 
 frequency through :meth:`MaterialRecord.er_complex`. Conductor and unknown pixels carry
 er = 1, matching :func:`lineforge.solvers.cgp.solve_cgp`.
 
+Re-evaluating ``C(f)`` from potentials that were solved once at ``f_ref_hz`` is a
+stationary estimate: the capacitance functional is second order in the error of the
+potential, so a first-order change of the permittivity field away from ``f_ref_hz``
+leaves a second-order error in ``C``. It is not exact. For a wide sweep over a strongly
+dispersive stack, re-solve at a reference frequency near the band of interest.
+
 Paul, Analysis of Multiconductor Transmission Lines, 2nd ed., ch. 5.
 """
 
@@ -76,6 +82,45 @@ def _float_groups(usermap: Usermap) -> list[np.ndarray]:
     return groups
 
 
+def _er_field(usermap: Usermap, f_ref_hz: float | None) -> np.ndarray:
+    """Per-pixel permittivity for the solve.
+
+    Insulators use their nominal ``er`` (``f_ref_hz is None``) or ``Re er(f_ref_hz)``.
+    Conductors and unrecognized pixels carry er = 1 in both branches, as in
+    :func:`lineforge.solvers.cgp.solve_cgp`.
+    """
+    out = np.ones(usermap.shape, dtype=np.float64)
+    for idx, mat in enumerate(usermap.materials):
+        if not mat.is_insulator:
+            continue
+        out[usermap.codes == idx] = mat.er if f_ref_hz is None else mat.er_complex(f_ref_hz).real
+    return out
+
+
+def _unlabelled_conductor_count(usermap: Usermap) -> int:
+    """Conductor-material pixels that no ``conductor_ids`` entry claims."""
+    material_conductor = np.zeros(usermap.shape, dtype=bool)
+    for idx, mat in enumerate(usermap.materials):
+        if mat.is_conductor:
+            material_conductor |= usermap.codes == idx
+    return int((material_conductor & (usermap.conductor_ids == -1)).sum())
+
+
+def _fixed_mask(usermap: Usermap) -> np.ndarray:
+    """Dirichlet pixels: every conductor except the floating ones."""
+    fixed: np.ndarray = usermap.conductor_mask(None) & ~(usermap.conductor_ids == -2)
+    return fixed
+
+
+def _amg_selected(method: str, fixed: np.ndarray) -> bool:
+    """Replicate ``laplace.solve_laplace``'s dispatch: does this solve go to AMG?"""
+    if method == "amg":
+        return True
+    if method == "auto":
+        return int((~fixed).sum()) >= 250_000
+    return False
+
+
 def _solve_set(
     usermap: Usermap,
     er_field: np.ndarray,
@@ -86,8 +131,7 @@ def _solve_set(
     max_iter: int | None,
 ) -> tuple[np.ndarray, list[int]]:
     """Solve one Laplace problem per signal conductor, that conductor at 1 V."""
-    floats = usermap.conductor_ids == -2
-    fixed = usermap.conductor_mask(None) & ~floats
+    fixed = _fixed_mask(usermap)
     float_groups = _float_groups(usermap)
     phi = np.zeros((len(ids), *usermap.shape), dtype=np.float64)
     iters: list[int] = []
@@ -149,6 +193,18 @@ def solve_maxwell(
     everywhere for the external inductance. The outer grid boundary is 0 V, as in
     :func:`lineforge.solvers.cgp.solve_cgp`.
 
+    Conventions and limitations, both reported through :attr:`MaxwellResult.warnings`:
+
+    - A conductor-material pixel that carries no ``conductor_ids`` entry (``-1``) is
+      pinned to 0 V, that is, treated as part of the reference. Such pixels raise the
+      ``unlabelled_conductor_pixels`` warning with their count.
+    - :func:`lineforge.solvers.laplace.solve_amg` has no floating-conductor support and
+      silently ignores ``float_groups``. When this solve dispatches to AMG (explicitly,
+      or through ``method="auto"`` on a grid with at least 250k free pixels) and the map
+      has floating conductors, the ``float_groups_ignored_by_amg`` warning is raised and
+      the floating conductors are solved as ordinary dielectric. Pass ``method="sor"``
+      for a map with floating conductors.
+
     Parameters
     ----------
     f_ref_hz
@@ -163,13 +219,7 @@ def solve_maxwell(
         raise ValueError("usermap has no signal conductors (conductor_ids >= 1)")
     extended = extension.extend(usermap, target_size=target_extent) if extend_grid else usermap
 
-    if f_ref_hz is None:
-        er_field = extended.er_field()
-    else:
-        er_field = np.ones(extended.shape, dtype=np.float64)
-        for idx, mat in enumerate(extended.materials):
-            if mat.is_insulator:
-                er_field[extended.codes == idx] = mat.er_complex(f_ref_hz).real
+    er_field = _er_field(extended, f_ref_hz)
 
     phi, it_er = _solve_set(extended, er_field, ids, method=method, tol=tol, max_iter=max_iter)
     w_per_material, _ = _energy_matrices(phi, extended.codes)
@@ -181,6 +231,27 @@ def solve_maxwell(
     c0 = EPS0 * w0
 
     warnings: list[SolverWarning] = []
+    n_unlabelled = _unlabelled_conductor_count(extended)
+    if n_unlabelled:
+        warnings.append(
+            SolverWarning(
+                code="unlabelled_conductor_pixels",
+                message=(
+                    f"{n_unlabelled} conductor pixel(s) carry no conductor_ids entry and are "
+                    "driven at 0 V (treated as reference); label them 1..N to drive them"
+                ),
+            )
+        )
+    if _float_groups(extended) and _amg_selected(method, _fixed_mask(extended)):
+        warnings.append(
+            SolverWarning(
+                code="float_groups_ignored_by_amg",
+                message=(
+                    "the AMG Laplace solver ignores floating conductors; they were solved as "
+                    "dielectric. Pass method='sor' to enforce the floating equipotential"
+                ),
+            )
+        )
     if float(np.linalg.eigvalsh(c0).min()) <= 0.0:
         warnings.append(
             SolverWarning(

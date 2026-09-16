@@ -6,7 +6,7 @@ import numpy as np
 import pytest
 
 from lineforge.geometry.usermap import Usermap
-from lineforge.materials.database import MaterialRecord
+from lineforge.materials.database import DSParams, MaterialRecord
 from lineforge.solvers import cgp, diff_modes, extension
 from lineforge.solvers.mtl import rlgc_matrices, solve_maxwell
 
@@ -93,3 +93,115 @@ def test_keep_fields_and_warnings_shape() -> None:
     assert res.phi is not None and res.phi.shape[0] == 2
     assert res.conductor_ids == [1, 2]
     assert set(res.W) >= {0, 1}
+    assert res.warnings == []
+
+
+FLOAT = MaterialRecord(rgb=(0, 255, 255), use="float", name="floater")
+DS = MaterialRecord(
+    rgb=(200, 200, 100),
+    use="insul",
+    er=4.0,
+    tan_delta=0.02,
+    name="ds-laminate",
+    resistivity_ohm_cm=1e6,
+    ds_params=DSParams(eps_inf=3.6, delta_eps=0.9, f1_hz=1e3, f2_hz=1e12),
+)
+
+
+def _shielded_map(
+    *,
+    floater: bool = False,
+    unlabelled: bool = False,
+    vacuum_gap: bool = False,
+) -> Usermap:
+    """A small box: ground top and bottom, one signal strip, optional extras."""
+    h, w = 24, 40
+    mats = [CU, FR4, FLOAT]
+    mat = np.full((h, w), 1, dtype=np.int32)
+    cid = np.full((h, w), -1, dtype=np.int32)
+    mat[0, :] = 0
+    cid[0, :] = 0
+    mat[h - 1, :] = 0
+    cid[h - 1, :] = 0
+    mat[11:13, 8:16] = 0
+    cid[11:13, 8:16] = 1
+    if floater:
+        mat[11:13, 24:32] = 2
+        cid[11:13, 24:32] = -2
+    if unlabelled:
+        mat[6:8, 24:32] = 0  # copper, but left at conductor_ids == -1
+    if vacuum_gap:
+        mat[17:19, 4:36] = -1  # no material at all: the vacuum bucket
+    return Usermap.from_labels(mat, mats, pixel_width_m=2e-5, conductor_ids=cid)
+
+
+def test_float_group_stays_equipotential() -> None:
+    res = solve_maxwell(
+        _shielded_map(floater=True), method="sor", tol=1e-7, extend_grid=False, keep_fields=True
+    )
+    assert res.phi is not None
+    group = _shielded_map(floater=True).conductor_ids == -2
+    v_float = res.phi[0][group]
+    assert float(np.ptp(v_float)) < 1e-12
+    assert 0.0 < float(v_float[0]) < 1.0  # it floats to something, not to the BC values
+    assert [w.code for w in res.warnings] == []
+
+
+def test_amg_path_warns_that_float_groups_are_ignored() -> None:
+    res = solve_maxwell(
+        _shielded_map(floater=True), method="amg", tol=1e-7, extend_grid=False, max_iter=50
+    )
+    assert "float_groups_ignored_by_amg" in [w.code for w in res.warnings]
+
+
+def test_no_float_group_no_amg_warning() -> None:
+    res = solve_maxwell(_shielded_map(), method="amg", tol=1e-7, extend_grid=False, max_iter=50)
+    assert "float_groups_ignored_by_amg" not in [w.code for w in res.warnings]
+
+
+def test_unlabelled_conductor_pixels_warn() -> None:
+    res = solve_maxwell(_shielded_map(unlabelled=True), method="sor", extend_grid=False, tol=1e-5)
+    warned = [w for w in res.warnings if w.code == "unlabelled_conductor_pixels"]
+    assert len(warned) == 1
+    assert "16 conductor pixel(s)" in warned[0].message
+
+
+def test_vacuum_bucket_is_its_own_material_key() -> None:
+    res = solve_maxwell(_shielded_map(vacuum_gap=True), method="sor", extend_grid=False, tol=1e-5)
+    assert -1 in res.W
+    assert res.W[-1][0, 0] > 0.0
+
+
+def test_no_signal_conductor_raises() -> None:
+    h, w = 12, 12
+    mat = np.full((h, w), 1, dtype=np.int32)
+    cid = np.full((h, w), -1, dtype=np.int32)
+    mat[0, :] = 0
+    cid[0, :] = 0
+    um = Usermap.from_labels(mat, [CU, FR4], pixel_width_m=2e-5, conductor_ids=cid)
+    with pytest.raises(ValueError, match="no signal conductors"):
+        solve_maxwell(um, method="sor", extend_grid=False)
+
+
+def test_dispersive_material_reference_frequency() -> None:
+    h, w = 24, 40
+    mat = np.full((h, w), 1, dtype=np.int32)
+    cid = np.full((h, w), -1, dtype=np.int32)
+    mat[0, :] = 0
+    cid[0, :] = 0
+    mat[h - 1, :] = 0
+    cid[h - 1, :] = 0
+    mat[11:13, 8:16] = 0
+    cid[11:13, 8:16] = 1
+    um = Usermap.from_labels(mat, [CU, DS], pixel_width_m=2e-5, conductor_ids=cid)
+
+    res = solve_maxwell(um, f_ref_hz=1e9, method="sor", tol=1e-6, extend_grid=False)
+    c_lo, g_lo, _ = rlgc_matrices(res, 1e8)
+    c_hi, g_hi, _ = rlgc_matrices(res, 1e10)
+    assert c_lo[0, 0] > c_hi[0, 0] > 0.0  # Djordjevic-Sarkar er' falls with frequency
+    assert g_lo[0, 0] > 0.0 and g_hi[0, 0] > g_lo[0, 0]
+
+    nominal = solve_maxwell(um, method="sor", tol=1e-6, extend_grid=False)
+    c_nom, _, _ = rlgc_matrices(nominal, 1e9)
+    c_ref, _, _ = rlgc_matrices(res, 1e9)
+    assert c_ref[0, 0] == pytest.approx(c_nom[0, 0], rel=0.2)

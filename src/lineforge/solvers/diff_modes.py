@@ -9,14 +9,21 @@ This is empirical and loses accuracy for tightly coupled pairs (S/H < 0.5).
 For the bitmap path, lineforge can drive the C/Gp Laplace solver with explicit
 odd/even-mode BCs:
 
-    Odd  mode: V(strip 1) = +1, V(strip 2) = −1   → Z_diff direct
-    Even mode: V(strip 1) = +1, V(strip 2) = +1   → Z_common direct
+    Odd  mode: V(strip 1) = +1, V(strip 2) = −1   → Z_odd direct
+    Even mode: V(strip 1) = +1, V(strip 2) = +1   → Z_even direct
 
-Both modes share the ground BC. Run two separate Laplace solves; extract
-$Z_\text{odd/even} = \\sqrt{L_\\text{vac}/C_\\text{odd/even}}$.
+Both modes share the ground BC. Run two separate Laplace solves; extract the
+*per-line* mode capacitance (see :func:`_solve_with_strip_voltages`) and
+$Z_\text{odd/even} = \\sqrt{L_\\text{vac}/C_\\text{odd/even}}$. These are the
+per-line mode impedances of Paul, MTL 2nd ed. §5, that is
+$C_\\text{odd} = C_{11} - C_{12}$ and $C_\\text{even} = C_{11} + C_{12}$ of the
+Maxwell capacitance matrix; :mod:`lineforge.solvers.mtl` reproduces them from an
+N-conductor solve.
 
-This produces $Z_\\text{diff} = 2 Z_\\text{odd}$ exactly (not the IPC-2141A
-approximation): typically within 1% of measured for tight pairs.
+The differential and common-mode impedances then follow exactly (not by the
+IPC-2141A approximation): $Z_\\text{diff} = 2 Z_\\text{odd}$ and
+$Z_\\text{common} = Z_\\text{even} / 2$; typically within 1% of measured for
+tight pairs.
 """
 
 from __future__ import annotations
@@ -89,10 +96,17 @@ def _solve_with_strip_voltages(
     # C_even = C11 + C12 of the Maxwell matrix), so the odd drive (±1 V) is
     # normalized by 2, not by the 2 V differential drive squared.
     #
+    # This normalization is only valid for the two symmetric drives this module
+    # applies (±1 and +1/+1) on a symmetric pair, where both lines carry the
+    # same |V| and the same mode capacitance. It is not a general N-conductor
+    # formula: use solvers.mtl.solve_maxwell for arbitrary drives.
+    #
     # The pixel-unit gradients and pixel-unit areas already cancel the dx
     # factors (see cgp._energy_integral): no pixel_width² scaling belongs here.
     n_lines = 2.0
     v_line_sq = 0.5 * (v_strip_1 * v_strip_1 + v_strip_2 * v_strip_2)
+    if v_line_sq <= 0.0:
+        raise ValueError("mode solve needs a non-zero drive on at least one strip")
     C_per_m = EPS0 * integ / (n_lines * v_line_sq)
     C_vac_per_m = EPS0 * integ_vac / (n_lines * v_line_sq)
     if C_vac_per_m <= 0:
