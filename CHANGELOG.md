@@ -6,6 +6,47 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Added
+
+- `Usermap.from_labels`, integer `conductor_ids` (`0` reference, `1..N`
+  signal, `-2` floating), and a vectorised RGB-to-material colour mapping
+  (`src/lineforge/geometry/usermap.py`).
+- `DSParams` (Djordjevic-Sarkar wideband Debye model), `RoughnessSpec`
+  (Hammerstad / Groisse / Huray roughness description), and
+  `MaterialRecord.er_complex`, plus the `.lineforge.json` material-pack I/O
+  in `load_json_pack` (`src/lineforge/materials/database.py`,
+  `src/lineforge/materials/morecolors.py`).
+- `src/lineforge/solvers/roughness.py`: Hammerstad, Groisse, and Huray
+  surface-roughness loss factors, and the Simonovich cannonball
+  parameterisation from `Rz`.
+- `src/lineforge/solvers/mtl.py`: `solve_maxwell` (N-conductor Maxwell
+  energy matrices from one Laplace solve per signal conductor) and
+  `rlgc_matrices` (C, G, and L_ext at a given frequency from those
+  matrices).
+- `src/lineforge/solvers/wheeler.py`: `solve_wheeler_resistance` (skin-effect
+  R by Wheeler's incremental-inductance rule on the Maxwell inductance
+  matrix, with per-conductor roughness).
+- `src/lineforge/solvers/faraday.py`: `solve_impedance_matrix` (N-conductor
+  PEEC R/L matrices from a single LU factorisation reused across N
+  right-hand sides) and `SolverBudgetExceeded`.
+- `src/lineforge/touchstone.py`: `to_touchstone_nport` (N-port export as
+  Touchstone 1.x via scikit-rf, or a native Touchstone 2.0 writer with
+  mixed-mode port ordering).
+
+### Fixed
+
+- `src/lineforge/solvers/diff_modes.py`: the bitmap differential-pair mode
+  solve carried a spurious `pixel_width**2` factor on the mode capacitance
+  and normalised by the differential/common drive voltage instead of the
+  per-line voltage. The old `z_odd` and `z_even` were off by `2/px**2` and
+  `0.5/px**2` respectively (`px` = pixel width in metres) and each carried
+  the other quantity's meaning (old `z_odd` behaved like `Z_diff`, old
+  `z_even` like `Z_common`). Both are now cross-checked against
+  `solvers.mtl.solve_maxwell` + `rlgc_matrices` to within 3e-3. Any
+  externally saved `z_odd`/`z_even` numbers produced by the bitmap
+  differential-pair path (`solvers.diff_modes.solve_modes`) before this
+  change are invalid and must be re-run.
+
 ## [2.2.0]: 2026-05-13
 
 ### Changed

@@ -107,6 +107,43 @@ width). For tighter geometries, accuracy degrades to ±5% with the standard
 PEEC formulation, and lineforge emits a `low_confidence` warning when conductors
 are too close (matching atlc2's red-text behavior).
 
+## N-conductor extraction workflow
+
+The two-wire formulations above generalize to an arbitrary N-conductor
+cross-section built from labels rather than the atlc2 `+1`/`-1`/`0` RGB
+roles. The pieces:
+
+1. **Label the conductors.** `Usermap.from_labels` takes an integer
+   material-id grid plus an integer `conductor_ids` grid: `0` is the
+   reference conductor, `1..N` are the signal conductors, `-2` marks a
+   floating group. This is how a fieldforge-extracted cross-section with
+   more than two signal conductors gets into lineforge.
+2. **Capacitance and external inductance.** `solvers.mtl.solve_maxwell` runs
+   one Laplace solve per signal conductor (that conductor at 1 V, every
+   other fixed conductor at 0 V) plus the same set in vacuum, and stores the
+   resulting energy matrices partitioned by material code. `rlgc_matrices`
+   turns those into the `(N, N)` `C`, `G`, and `L_ext` matrices at any
+   frequency via `MaterialRecord.er_complex`, without re-solving.
+3. **Skin-effect resistance.** `solvers.wheeler.solve_wheeler_resistance`
+   gets `R` from Wheeler's incremental-inductance rule
+   ($R = (R_s/\mu_0)\, dL_\text{ext}/dn$): it erodes each conductor by a
+   pixel, re-solves the vacuum Maxwell problem, and takes the inductance
+   derivative, which needs no separate surface-current extraction.
+4. **Roughness.** A `RoughnessSpec` per conductor (Hammerstad, Groisse, or
+   Huray/cannonball, `solvers.roughness`) multiplies that conductor's own
+   contribution to `R`.
+5. **Direct N-conductor PEEC alternative.** `solvers.faraday.solve_impedance_matrix`
+   is the N-conductor generalization of the two-wire PEEC system above: the
+   same dense complex system, but assembled and factored once (a single LU)
+   and solved for N right-hand sides, one per signal-conductor drive. It
+   returns `R` and `L` together in one call and raises
+   `SolverBudgetExceeded` rather than silently building a system too large
+   to factor.
+6. **Export.** `touchstone.to_touchstone_nport` writes the resulting
+   frequency-swept S-parameters as an N-port Touchstone file (version 1.x
+   via scikit-rf, or a native version 2.0 writer with mixed-mode port
+   ordering), ready for HyperLynx, ADS, or any other cascade-analysis tool.
+
 ## References
 
 - atlc2 docs §"L and Rs": <http://www.hdtvprimer.com/kq6qv/atlc2.html>.
