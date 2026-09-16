@@ -13,10 +13,12 @@ from __future__ import annotations
 
 import math
 
-from lineforge.materials.database import RoughnessSpec
-
-_CANNONBALL_HEIGHT = 2.0 * (1.0 + math.sqrt(2.0))
-_CANNONBALL_RATIO = 14.0 * 4.0 * math.pi / 36.0
+# RoughnessSpec's huray cannonball fill-in (materials/database.py) would ideally call
+# cannonball_from_rz below instead of duplicating its constants, but this module already
+# imports RoughnessSpec from materials.database, so materials importing back from here would
+# be a cycle. The constants therefore live in materials/database.py and are imported from
+# there instead, keeping a single definition.
+from lineforge.materials.database import _CANNONBALL_HEIGHT, _CANNONBALL_RATIO, RoughnessSpec
 
 
 def hammerstad_factor(delta_m: float, rms_m: float) -> float:

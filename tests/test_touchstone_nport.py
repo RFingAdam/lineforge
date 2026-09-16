@@ -45,6 +45,16 @@ def test_v2_header_and_mixed_mode(tmp_path) -> None:
     assert text.strip().endswith("[End]")
 
 
+def test_v2_two_port_roundtrip(tmp_path) -> None:
+    f, s = _sample(ports=2)
+    path = to_touchstone_nport(f, s, tmp_path / "chan2", z_ref=50.0, version=2)
+    text = path.read_text()
+    assert "[Two-Port Data Order] 12_21" in text
+    net = skrf.Network(str(path))
+    np.testing.assert_allclose(net.s, s, atol=1e-9)
+    np.testing.assert_allclose(net.f, f)
+
+
 def test_shape_validation(tmp_path) -> None:
     f, s = _sample()
     with pytest.raises(ValueError):

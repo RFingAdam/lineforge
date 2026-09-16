@@ -253,6 +253,8 @@ def to_touchstone_nport(
             net.port_names = list(port_names)
         net.write_touchstone(str(out.with_suffix("")), form="ri", write_z0=False)
         return out
+    # zs[0] here is only the nominal reference for legacy readers that pre-date per-port
+    # references; the actual per-port values are the ones in the [Reference] line below.
     lines = ["[Version] 2.0", f"# Hz S RI R {zs[0]:g}", f"[Number of Ports] {ports}"]
     if ports == 2:
         lines.append("[Two-Port Data Order] 12_21")

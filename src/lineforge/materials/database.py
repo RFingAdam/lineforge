@@ -23,9 +23,14 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 MaterialUse = Literal["+1", "-1", "0", "float", "insul"]
 
 EPS0 = 8.8541878128e-12
-_CANNONBALL_HEIGHT = 2.0 * (
-    1.0 + math.sqrt(2.0)
-)  # stack height of 14 close-packed spheres in radii
+# Simonovich cannonball parameterisation (DesignCon 2015): a Huray "snowball" roughness
+# profile fit from a single Rz reading. Height of a stack of 14 close-packed spheres, in
+# radii, and the sphere-to-flat area ratio the model uses. Shared with
+# :mod:`lineforge.solvers.roughness`, which imports these two names directly: that module
+# already imports :class:`RoughnessSpec` from here, so the constants live on this side of
+# the pair to avoid a cycle.
+_CANNONBALL_HEIGHT = 2.0 * (1.0 + math.sqrt(2.0))
+_CANNONBALL_RATIO = 14.0 * 4.0 * math.pi / 36.0
 
 
 class DSParams(BaseModel):
@@ -88,7 +93,7 @@ class RoughnessSpec(BaseModel):
                 radius = self.rz_um / _CANNONBALL_HEIGHT
                 object.__setattr__(self, "radius_um", radius)
                 if self.ratio is None:
-                    object.__setattr__(self, "ratio", 14.0 * 4.0 * math.pi / 36.0)
+                    object.__setattr__(self, "ratio", _CANNONBALL_RATIO)
             if self.radius_um is None or self.ratio is None:
                 raise ValueError(
                     "huray roughness needs radius_um and ratio, or rz_um for the cannonball parameterisation"
@@ -112,7 +117,13 @@ class MaterialRecord(BaseModel):
     use: MaterialUse = Field(..., description="Conductor (+1/-1/0/float) or insulator role.")
     resistivity_ohm_cm: float = Field(
         1.7241,
-        description="Resistivity [Ω·cm]. atlc2 uses cm for legacy reasons.",
+        description=(
+            "Resistivity, nominally [Ω·cm] for atlc2 legacy-format reasons, but in "
+            "practice every value in this database (including the copper default, "
+            "1.7241) is in micro-ohm-centimetres [µΩ·cm]. Multiplied by 1e-8 to get "
+            "ohm-metres [Ω·m]; see Usermap.resistivity_field_ohm_m. The field is not "
+            "renamed to avoid breaking the atlc2/MoreColors.txt on-disk format."
+        ),
         ge=0,
     )
     er: float = Field(1.0, description="Relative permittivity (1.0 for conductors).", ge=1)

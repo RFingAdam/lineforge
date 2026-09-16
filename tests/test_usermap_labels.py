@@ -117,3 +117,43 @@ def test_from_labels_rejects_mismatched_conductor_ids_shape_before_building(
     monkeypatch.setattr(Usermap, "__init__", fail_if_called)
     with pytest.raises(ValueError, match="conductor_ids must match material_ids in shape"):
         Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5, conductor_ids=cid)
+
+
+def test_from_labels_rejects_non_2d_material_ids() -> None:
+    mat = np.full((3, 3, 1), -1, dtype=np.int32)
+    with pytest.raises(ValueError, match="material_ids must be 2-D"):
+        Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5)
+
+
+def test_from_labels_rejects_material_id_outside_list() -> None:
+    mat = np.full((3, 3), -1, dtype=np.int32)
+    mat[0, 0] = 5  # only two materials given, indices 0 and 1
+    with pytest.raises(ValueError, match="material_ids references a material outside the list"):
+        Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5)
+
+
+def test_from_labels_rejects_conductor_id_on_non_conductor_material() -> None:
+    mat = np.full((3, 3), 1, dtype=np.int32)  # all FR4 (insulator)
+    cid = np.full((3, 3), -1, dtype=np.int32)
+    cid[0, 0] = 1  # marks an insulator pixel as signal conductor 1
+    with pytest.raises(
+        ValueError, match="conductor_ids marks a pixel whose material is not a conductor"
+    ):
+        Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5, conductor_ids=cid)
+
+
+def test_from_labels_without_conductor_ids_falls_back_to_material_roles() -> None:
+    """No ``conductor_ids`` given: ``Usermap.__init__`` derives them from each
+    material's ``use`` role, same as the plain RGB path."""
+    mat = np.full((3, 3), -1, dtype=np.int32)
+    mat[0, 0] = 0  # CU, use="+1"
+    u = Usermap.from_labels(mat, [CU, FR4], pixel_width_m=1e-5)
+    assert u.conductor_ids[0, 0] == 1
+    assert u.conductor_ids[1, 1] == -1
+
+
+def test_rgb_map_derives_floating_conductor_id() -> None:
+    rgb = np.full((4, 4, 3), 255, dtype=np.uint8)
+    rgb[1:3, 1:3] = (0, 255, 255)  # atlc2 default: copper, use="float"
+    u = Usermap(rgb, UsermapMetadata(pixel_width_m=1e-4))
+    assert (u.conductor_ids[1:3, 1:3] == -2).all()
