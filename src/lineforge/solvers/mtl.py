@@ -10,8 +10,16 @@ in 2-D (the pixel-size factors of the gradient and of the area element cancel), 
     L_ext = mu0 * eps0 * inv(C0)         [H/m]   with C0 from the vacuum solves
 
 ``W`` is partitioned by material code so the same solve can be re-evaluated at any
-frequency through :meth:`MaterialRecord.er_complex`. Conductor and unknown pixels carry
-er = 1, matching :func:`lineforge.solvers.cgp.solve_cgp`.
+frequency through :meth:`MaterialRecord.er_complex`. A conductor pixel's contribution
+is booked on the dielectric it faces, not on the conductor: no field energy exists
+inside a perfect conductor, so a conductor material's matrix is the zero matrix.
+
+The Laplace edge coefficient is the arithmetic mean of the two pixels. A conductor
+cell that touches an insulator is painted with that insulator's er so a homogeneous
+fill's discrete operator is a scalar multiple of vacuum and C = er C0 holds to
+round-off. Interior conductor pixels stay at er = 1; they are Dirichlet and the
+stencil does not read them. This is the permittivity the adjacent dielectric already
+stated, not a default.
 
 Re-evaluating ``C(f)`` from potentials that were solved once at ``f_ref_hz`` is a
 stationary estimate: the capacitance functional is second order in the error of the
@@ -39,11 +47,13 @@ from lineforge.solvers import extension, laplace
 class MaxwellResult:
     """Energy matrices of an N-conductor cross-section.
 
-    ``W[m]`` is the (N, N) energy matrix restricted to the pixels of material code ``m``
-    (``-1`` is vacuum / unrecognized), computed from the potentials solved with the
-    materials' permittivity at ``f_ref_hz``. ``W0`` is the all-space energy matrix of the
-    vacuum solves and ``C0 = eps0 * W0``. ``W`` is empty when the result came from a
-    ``vacuum_only=True`` solve, and :func:`rlgc_matrices` then refuses.
+    ``W[m]`` is the (N, N) energy matrix of material code ``m`` (``-1`` is vacuum /
+    unrecognized), computed from the potentials solved with the materials' permittivity
+    at ``f_ref_hz``. A conductor material's matrix is the zero matrix: pixel energy on
+    the metal surface is attributed to the dielectric the pixel faces. ``W0`` is the
+    all-space energy matrix of the vacuum solves and ``C0 = eps0 * W0``. ``W`` is empty
+    when the result came from a ``vacuum_only=True`` solve, and :func:`rlgc_matrices`
+    then refuses.
 
     ``pixel_width_m`` is the pixel size of the grid the matrices were solved on (the
     open-boundary extension replicates pixels and does not rescale them). It is carried so
@@ -92,14 +102,45 @@ def _er_field(usermap: Usermap, f_ref_hz: float | None) -> np.ndarray:
     """Per-pixel permittivity for the solve.
 
     Insulators use their nominal ``er`` (``f_ref_hz is None``) or ``Re er(f_ref_hz)``.
-    Conductors and unrecognized pixels carry er = 1 in both branches, as in
-    :func:`lineforge.solvers.cgp.solve_cgp`.
+    Unrecognized pixels stay at 1. A conductor pixel that touches an insulator is
+    painted with the mean of those neighbouring insulator values so the arithmetic-mean
+    edge coefficient on a PEC face equals the dielectric er. Interior conductor pixels
+    stay at 1; they are Dirichlet and unused.
     """
     out = np.ones(usermap.shape, dtype=np.float64)
+    insulator = np.zeros(usermap.shape, dtype=bool)
+    conductor = np.zeros(usermap.shape, dtype=bool)
     for idx, mat in enumerate(usermap.materials):
-        if not mat.is_insulator:
-            continue
-        out[usermap.codes == idx] = mat.er if f_ref_hz is None else mat.er_complex(f_ref_hz).real
+        sel = usermap.codes == idx
+        if mat.is_insulator:
+            out[sel] = mat.er if f_ref_hz is None else mat.er_complex(f_ref_hz).real
+            insulator |= sel
+        elif mat.is_conductor:
+            conductor |= sel
+    if not conductor.any() or not insulator.any():
+        return out
+    acc = np.zeros_like(out)
+    cnt = np.zeros(usermap.shape, dtype=np.int32)
+
+    def _add(shifted_er: np.ndarray, shifted_ins: np.ndarray) -> None:
+        nonlocal acc, cnt
+        acc = acc + np.where(shifted_ins, shifted_er, 0.0)
+        cnt = cnt + shifted_ins
+
+    e_er, e_ins = np.zeros_like(out), np.zeros(usermap.shape, dtype=bool)
+    e_er[:, :-1], e_ins[:, :-1] = out[:, 1:], insulator[:, 1:]
+    _add(e_er, e_ins)
+    w_er, w_ins = np.zeros_like(out), np.zeros(usermap.shape, dtype=bool)
+    w_er[:, 1:], w_ins[:, 1:] = out[:, :-1], insulator[:, :-1]
+    _add(w_er, w_ins)
+    s_er, s_ins = np.zeros_like(out), np.zeros(usermap.shape, dtype=bool)
+    s_er[:-1, :], s_ins[:-1, :] = out[1:, :], insulator[1:, :]
+    _add(s_er, s_ins)
+    n_er, n_ins = np.zeros_like(out), np.zeros(usermap.shape, dtype=bool)
+    n_er[1:, :], n_ins[1:, :] = out[:-1, :], insulator[:-1, :]
+    _add(n_er, n_ins)
+    take = conductor & (cnt > 0)
+    out = np.where(take, acc / np.maximum(cnt, 1), out)
     return out
 
 
@@ -158,26 +199,96 @@ def _solve_set(
     return phi, iters
 
 
+def _conductor_codes(materials: list[MaterialRecord]) -> frozenset[int]:
+    """Material indices whose pixels are conductors."""
+    return frozenset(i for i, mat in enumerate(materials) if mat.is_conductor)
+
+
 def _energy_matrices(
-    phi: np.ndarray, codes: np.ndarray
+    phi: np.ndarray,
+    codes: np.ndarray,
+    conductor_codes: frozenset[int],
 ) -> tuple[dict[int, np.ndarray], np.ndarray]:
-    """Per-material and total energy matrices ``W[j, k] = sum grad(phi_j) . grad(phi_k)``."""
+    """Per-material energy matrices. Conductor-pixel energy is booked on the dielectric.
+
+    The gradient is the same central-difference stencil as ``cgp._energy_integral``.
+    A conductor pixel that faces one or more dielectric pixels has its ``|grad|^2``
+    split equally among those dielectric material codes. Interior conductor pixels
+    keep their own code; their gradient is zero to solver tolerance.
+    """
     n = phi.shape[0]
     grads = [_gradients(phi[i]) for i in range(n)]
+    h, w = codes.shape
+    cond = np.zeros((h, w), dtype=bool)
+    if conductor_codes:
+        cond_ids = np.fromiter(conductor_codes, dtype=codes.dtype)
+        cond = np.isin(codes, cond_ids)
+    else:
+        cond_ids = np.empty(0, dtype=codes.dtype)
+
+    missing = np.iinfo(codes.dtype).min
+
+    def _shift(src: np.ndarray, dy: int, dx: int) -> np.ndarray:
+        out = np.full_like(src, missing)
+        if dy == 0 and dx == 1:
+            out[:, :-1] = src[:, 1:]
+        elif dy == 0 and dx == -1:
+            out[:, 1:] = src[:, :-1]
+        elif dy == 1 and dx == 0:
+            out[:-1, :] = src[1:, :]
+        else:
+            out[1:, :] = src[:-1, :]
+        return out
+
+    nbrs = [_shift(codes, 0, 1), _shift(codes, 0, -1), _shift(codes, 1, 0), _shift(codes, -1, 0)]
+    diel_nbr: list[np.ndarray] = []
+    for nbr in nbrs:
+        is_diel = (nbr != missing) & (~np.isin(nbr, cond_ids) if conductor_codes else True)
+        diel_nbr.append(np.where(is_diel, nbr, missing))
+    n_diel = np.zeros((h, w), dtype=np.int32)
+    for d in diel_nbr:
+        n_diel += d != missing
+
+    per_material: dict[int, np.ndarray] = {
+        int(c): np.zeros((n, n)) for c in np.unique(codes)
+    }
     total = np.zeros((n, n))
-    per_material: dict[int, np.ndarray] = {}
-    for m in (int(c) for c in np.unique(codes)):
-        sel = codes == m
-        w = np.zeros((n, n))
-        for j in range(n):
-            exj, eyj = grads[j]
-            for k in range(j, n):
-                exk, eyk = grads[k]
-                val = float(((exj * exk + eyj * eyk)[sel]).sum())
-                w[j, k] = val
-                w[k, j] = val
-        per_material[m] = w
-        total += w
+
+    def _add(key: int, mask: np.ndarray, scale: np.ndarray, e_jk: np.ndarray, j: int, k: int) -> None:
+        if not mask.any():
+            return
+        val = float((e_jk[mask] * scale[mask]).sum())
+        bucket = per_material.setdefault(key, np.zeros((n, n)))
+        bucket[j, k] += val
+        total[j, k] += val
+        if k != j:
+            bucket[k, j] += val
+            total[k, j] += val
+
+    ones = np.ones((h, w), dtype=np.float64)
+    for j in range(n):
+        exj, eyj = grads[j]
+        for k in range(j, n):
+            exk, eyk = grads[k]
+            e_jk = exj * exk + eyj * eyk
+            diel = ~cond
+            if diel.any():
+                for m in np.unique(codes[diel]):
+                    _add(int(m), diel & (codes == m), ones, e_jk, j, k)
+            split = cond & (n_diel > 0)
+            if split.any():
+                wgt = np.zeros((h, w), dtype=np.float64)
+                wgt[split] = 1.0 / n_diel[split]
+                for d in diel_nbr:
+                    present = split & (d != missing)
+                    if not present.any():
+                        continue
+                    for m in np.unique(d[present]):
+                        _add(int(m), present & (d == m), wgt, e_jk, j, k)
+            leftover = cond & (n_diel == 0)
+            if leftover.any():
+                for m in np.unique(codes[leftover]):
+                    _add(int(m), leftover & (codes == m), ones, e_jk, j, k)
     return per_material, total
 
 
@@ -232,18 +343,19 @@ def solve_maxwell(
     extended = extension.extend(usermap, target_size=target_extent) if extend_grid else usermap
 
     er_field = _er_field(extended, f_ref_hz)
+    conductor_codes = _conductor_codes(extended.materials)
 
     phi: np.ndarray | None = None
     it_er: list[int] = []
     w_per_material: dict[int, np.ndarray] = {}
     if not vacuum_only:
         phi, it_er = _solve_set(extended, er_field, ids, method=method, tol=tol, max_iter=max_iter)
-        w_per_material, _ = _energy_matrices(phi, extended.codes)
+        w_per_material, _ = _energy_matrices(phi, extended.codes, conductor_codes)
 
     phi0, it_vac = _solve_set(
         extended, np.ones_like(er_field), ids, method=method, tol=tol, max_iter=max_iter
     )
-    _, w0 = _energy_matrices(phi0, extended.codes)
+    _, w0 = _energy_matrices(phi0, extended.codes, conductor_codes)
     c0 = EPS0 * w0
 
     warnings: list[SolverWarning] = []
