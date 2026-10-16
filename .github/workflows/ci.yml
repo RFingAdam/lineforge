@@ -22,6 +22,7 @@ env:
 jobs:
   python-lint:
     name: Python lint + type-check
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64, haven]
     steps:
       - uses: actions/checkout@v4
@@ -50,6 +51,7 @@ jobs:
 
   rust-lint:
     name: Rust lint
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
     runs-on: [self-hosted, Linux, X64, haven]
     steps:
       - uses: actions/checkout@v4
@@ -63,13 +65,14 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
   test:
-    name: Test (${{ matrix.os }} / py${{ matrix.python-version }})
+    name: Test (py${{ matrix.python-version }})
     needs: [python-lint, rust-lint]
     strategy:
       fail-fast: false
       matrix:
         python-version: ["3.11", "3.12", "3.13"]
-    [self-hosted, Linux, X64, haven]
+    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: [self-hosted, Linux, X64, haven]
     steps:
       - uses: actions/checkout@v4
 
@@ -106,7 +109,7 @@ jobs:
         run: pytest -v --cov=lineforge --cov-report=xml
 
       - name: Upload coverage
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+        if: matrix.python-version == '3.13'
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
