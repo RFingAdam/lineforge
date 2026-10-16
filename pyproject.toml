@@ -75,8 +75,8 @@ docs = [
     "mkdocs-material>=9.5",
     "mkdocstrings[python]>=0.25",
 ]
-# Web GUI (FastAPI + Next.js front-end). Install with `pip install lineforge[gui]`
-# then run `lineforge gui` to launch both servers. Frontend lives at
+# Web GUI (FastAPI + Next.js front-end). Install from a clone with
+# `pip install -e ".[gui]"`, then run `lineforge gui` to launch both servers. Frontend lives at
 # <repo>/frontend/ and needs `pnpm install` separately.
 gui = [
     "fastapi>=0.115",

@@ -908,7 +908,8 @@ def gui(
       - ``--prod``: ``pnpm build`` (on demand) then ``pnpm start``; no reload.
 
     Requirements:
-      - ``pip install 'lineforge\[gui]'`` (pulls fastapi, uvicorn, claude-agent-sdk…).
+      - ``pip install -e '.\[gui]'`` from a lineforge clone (pulls fastapi,
+        uvicorn, claude-agent-sdk…).
       - Node + pnpm on PATH (npm works but pnpm is preferred). The repo's
         ``frontend/`` directory must exist; ``pnpm install`` runs the first
         time. When installed from a wheel without the source tree, pass
@@ -926,7 +927,9 @@ def gui(
         import uvicorn  # noqa: F401
     except ImportError as err:
         err_console.print("uvicorn not installed.")
-        err_console.print(r"Install the GUI extras: [bold]pip install 'lineforge\[gui]'[/bold]")
+        err_console.print(
+            r"Install the GUI extras from your lineforge clone: [bold]pip install -e '.\[gui]'[/bold]"
+        )
         raise typer.Exit(code=2) from err
 
     # --no-reload implies --prod for the closest behavioural match.

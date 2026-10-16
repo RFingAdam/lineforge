@@ -4,12 +4,22 @@ Three-minute path from `pip install` to your first impedance answer.
 
 ## Install
 
+lineforge is not published on PyPI, so a `lineforge` package there is not
+this project. Install it from GitHub:
+
 ```bash
-pip install lineforge
+pip install "lineforge @ git+https://github.com/RFingAdam/lineforge.git"
 ```
 
-You'll need a Rust toolchain ([rustup.rs](https://rustup.rs/)) only if installing
-from source. The wheels on PyPI are pre-built.
+pip builds the Rust core during install, so you need a Rust toolchain
+([rustup.rs](https://rustup.rs/)) on your PATH. To work on lineforge or run
+the web GUI, install from a clone instead:
+
+```bash
+git clone https://github.com/RFingAdam/lineforge.git
+cd lineforge
+pip install -e ".[dev]"
+```
 
 ## Pick your surface
 
