@@ -68,20 +68,24 @@ values and openEMS 3D FDTD to within ±2 %.
 
 ### Install
 
+lineforge is not published on PyPI, so a `lineforge` package there is not
+this project. Install it from GitHub:
+
 ```bash
-pip install lineforge
+pip install "lineforge @ git+https://github.com/RFingAdam/lineforge.git"
 ```
 
-You'll need a [Rust toolchain](https://rustup.rs/) only if installing from
-source: the wheels on PyPI are pre-built for `cp311`/`cp312`/`cp313` ×
-{Linux x86_64/aarch64, macOS universal2, Windows amd64}.
+To work on lineforge or run the web GUI (which needs the repo's
+`frontend/`), install from a clone instead:
 
-> Pre-alpha: not yet on PyPI. Install from the repo:
-> ```bash
-> git clone https://github.com/RFingAdam/lineforge.git
-> cd lineforge
-> pip install -e ".[dev]"
-> ```
+```bash
+git clone https://github.com/RFingAdam/lineforge.git
+cd lineforge
+pip install -e ".[dev]"
+```
+
+Either way pip builds the Rust core during install, so you need a
+[Rust toolchain](https://rustup.rs/) on your PATH.
 
 ### Three surfaces, same answer
 
@@ -176,7 +180,7 @@ the solver, and renders V/E/D/T field plots live as you converse with it.
 </p>
 
 ```bash
-pip install 'lineforge[gui]'   # one-time install: fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
+pip install -e ".[gui]"        # one-time, from a clone: fastapi, uvicorn, claude-agent-sdk, scikit-rf, …
 lineforge gui                  # launch the local web GUI (dev mode, hot reload)
 lineforge gui --prod           # production-local mode (no hot reload, prebuilt frontend)
 lineforge gui --no-browser     # headless / SSH boxes: print the URL instead of opening it
@@ -477,9 +481,10 @@ maintains drop-in BMP/MoreColors/.txt script compatibility with Brian
 Beezley's atlc2 based on its publicly documented behavior at
 <http://www.hdtvprimer.com/kq6qv/atlc2.html>.
 
-If you used `atlc3 1.x` previously: the `atlc3` PyPI package is frozen at
-1.1.0. For new work, use `lineforge`. The Python API is unchanged in name
-shapes: just rename your `import atlc3` to `import lineforge`.
+If you used `atlc3 1.x` previously: atlc3 is frozen at the `v1.1.0` tag
+and was never published to PyPI. For new work, use `lineforge`. The
+Python API is unchanged in name shapes: just rename your `import atlc3`
+to `import lineforge`.
 
 ## License
 
