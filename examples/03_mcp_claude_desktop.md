@@ -5,8 +5,11 @@ the stdio transport and demonstrates the analytical-solver tools.
 
 ## 1. Install lineforge
 
+lineforge is not on PyPI; install it from GitHub (pip builds the Rust core,
+so you need a [Rust toolchain](https://rustup.rs/)):
+
 ```bash
-pip install lineforge
+pip install "lineforge @ git+https://github.com/RFingAdam/lineforge.git"
 ```
 
 Verify the CLI is on your PATH:

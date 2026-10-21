@@ -380,7 +380,7 @@ def solve_maxwell(
                 ),
             )
         )
-    if float(np.linalg.eigvalsh(c0).min()) <= 0.0:
+    if float(np.min(np.linalg.eigvalsh(c0))) <= 0.0:
         warnings.append(
             SolverWarning(
                 code="c0_not_positive_definite",

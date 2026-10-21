@@ -21,6 +21,7 @@ Phases 0-2 surface:
 from __future__ import annotations
 
 import json
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any
@@ -829,21 +830,17 @@ def _wait_for_backend(host: str, port: int, timeout_s: float = 15.0) -> bool:
     return False
 
 
-def _stream_with_color(proc: object, prefix: str, color: str) -> None:
+def _stream_with_color(proc: subprocess.Popen[str], prefix: str, color: str) -> None:
     """Stream a subprocess's stdout to the rich console with a colored prefix.
 
     Each line is emitted atomically as a single Rich `Text` so the two
     streamer threads can't interleave half-lines.
     """
-    import subprocess as _sub
-
     from rich.text import Text
 
-    popen = proc  # type: _sub.Popen[str]  # narrow only for type checkers
-    assert isinstance(popen, _sub.Popen)
-    if popen.stdout is None:
+    if proc.stdout is None:
         return
-    for raw in popen.stdout:
+    for raw in proc.stdout:
         line = raw.rstrip("\n")
         if not line:
             continue
@@ -908,7 +905,8 @@ def gui(
       - ``--prod``: ``pnpm build`` (on demand) then ``pnpm start``; no reload.
 
     Requirements:
-      - ``pip install 'lineforge\[gui]'`` (pulls fastapi, uvicorn, claude-agent-sdk…).
+      - ``pip install -e '.\[gui]'`` from a lineforge clone (pulls fastapi,
+        uvicorn, claude-agent-sdk…).
       - Node + pnpm on PATH (npm works but pnpm is preferred). The repo's
         ``frontend/`` directory must exist; ``pnpm install`` runs the first
         time. When installed from a wheel without the source tree, pass
@@ -926,7 +924,9 @@ def gui(
         import uvicorn  # noqa: F401
     except ImportError as err:
         err_console.print("uvicorn not installed.")
-        err_console.print(r"Install the GUI extras: [bold]pip install 'lineforge\[gui]'[/bold]")
+        err_console.print(
+            r"Install the GUI extras from your lineforge clone: [bold]pip install -e '.\[gui]'[/bold]"
+        )
         raise typer.Exit(code=2) from err
 
     # --no-reload implies --prod for the closest behavioural match.
