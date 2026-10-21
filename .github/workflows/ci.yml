@@ -1,7 +1,3 @@
-# The macOS and Windows lanes were dropped when CI moved to the homelab
-# runners: the pool is Linux x64 only. Whatever those lanes covered is
-# uncovered now -- said here rather than left silent. Restoring it needs a
-# Windows or macOS runner in the pool, not a change to this file.
 name: CI
 
 on:
@@ -22,8 +18,7 @@ env:
 jobs:
   python-lint:
     name: Python lint + type-check
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, Linux, X64, haven]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
 
@@ -51,8 +46,7 @@ jobs:
 
   rust-lint:
     name: Rust lint
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, Linux, X64, haven]
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - uses: dtolnay/rust-toolchain@stable
@@ -65,14 +59,14 @@ jobs:
         run: cargo clippy --all-targets -- -D warnings
 
   test:
-    name: Test (py${{ matrix.python-version }})
+    name: Test (${{ matrix.os }} / py${{ matrix.python-version }})
     needs: [python-lint, rust-lint]
     strategy:
       fail-fast: false
       matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
         python-version: ["3.11", "3.12", "3.13"]
-    if: github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository
-    runs-on: [self-hosted, Linux, X64, haven]
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
 
@@ -109,7 +103,7 @@ jobs:
         run: pytest -v --cov=lineforge --cov-report=xml
 
       - name: Upload coverage
-        if: matrix.python-version == '3.13'
+        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
         uses: codecov/codecov-action@v4
         with:
           files: ./coverage.xml
