@@ -206,12 +206,7 @@ def pad_capacitance(
     # HJ requires T > 0; use a very thin value if not specified.
     if T_m <= 0:
         T_m = 1e-9
-    g = Microstrip(
-        W=W_m,
-        T=T_m,
-        H=h_m,
-        er=eps_eff,
-    )
+    g = Microstrip(W=W_m, T=T_m, H=h_m, er=eps_eff)
     r = microstrip(g)
     # C per unit length: C/m = √εr_eff / (Z₀ · c)
     C_per_m = math.sqrt(r.eps_eff) / (r.z0 * 2.998e8)

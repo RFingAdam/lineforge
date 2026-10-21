@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 
 import lineforge.materials as atlc3_materials
 from lineforge.materials.morecolors import load_json_pack
+from lineforge.units import parse_length
 
 router = APIRouter(prefix="/api/materials", tags=["materials"])
 
@@ -50,7 +51,7 @@ def list_laminates() -> dict[str, Any]:
     if not pcb.exists():
         raise HTTPException(status_code=500, detail="pcb_extended.json not found")
     records = load_json_pack(pcb)
-    laminates: list[dict[str, Any]] = [
+    laminates = [
         {
             "name": rec.name,
             "er": rec.er,
@@ -58,10 +59,9 @@ def list_laminates() -> dict[str, Any]:
             "er_freq": rec.er_freq,
             "tan_freq": rec.tan_freq,
         }
-        for rec in records
+        for rec in sorted(records, key=lambda rec: rec.name)
         if rec.use == "insul" and rec.er > 1.0
     ]
-    laminates.sort(key=lambda r: r["name"])
     return {"laminates": laminates}
 
 
@@ -86,7 +86,12 @@ def series_reduce(req: SeriesReduceRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail="layers must not be empty")
 
     try:
-        dl = [DielectricLayer.model_validate(layer.model_dump()) for layer in req.layers]
+        dl = [
+            DielectricLayer(
+                h=parse_length(layer.h), er=layer.er, tan_delta=layer.tan_delta, name=layer.name
+            )
+            for layer in req.layers
+        ]
         h_total, er_eq, tan_eq = run_reduce(dl)
     except (ValueError, TypeError) as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc

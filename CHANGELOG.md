@@ -6,6 +6,11 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+- Install docs no longer claim lineforge or atlc3 is on PyPI; neither is
+  published there. README, quick start, MIGRATION.md, the MCP example,
+  and the `lineforge gui` missing-extras hint now install from GitHub.
+
 ## [2.2.0]: 2026-05-13
 
 ### Changed

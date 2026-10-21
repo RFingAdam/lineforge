@@ -803,8 +803,6 @@ def build_server() -> FastMCP:
                 return None
             if "C_fF" in p:
                 # Synthetic PadCapResult-like
-                from lineforge.analytical.pads import PadCapResult
-
                 return PadCapResult(
                     C_F=float(p["C_fF"]) * 1e-15,
                     method="pp",

@@ -1,35 +1,25 @@
 # Phase C example: chat-driven web GUI walkthrough
 
-The lineforge web GUI lives in a sibling repo, `lineforge-gui`. It bundles a
-FastAPI backend that wraps the lineforge library with a Next.js + React +
-Tailwind frontend. A chat panel runs on `claude-agent-sdk` against the
-user's Claude Max subscription, and the agent has tools that mutate the
-GUI's geometry form live as it works.
+The lineforge web GUI ships inside the lineforge repo: a FastAPI backend
+(`lineforge.web`, under `src/lineforge/web/`) that wraps the library, and a
+Next.js + React + Tailwind frontend under `frontend/`. A chat panel runs on
+`claude-agent-sdk` against the user's Claude Max subscription, and the agent
+has tools that mutate the GUI's geometry form live as it works.
 
 ## Prerequisites
 
-* `lineforge-gui` cloned next to `lineforge`:
+* A lineforge clone installed with the GUI extras (FastAPI, uvicorn,
+  claude-agent-sdk). pip builds the Rust core, so you need a Rust toolchain
+  on your PATH:
 
   ```bash
-  cd ..
-  git clone https://github.com/RFingAdam/lineforge-gui
+  git clone https://github.com/RFingAdam/lineforge.git
+  cd lineforge
+  pip install -e ".[gui]"
   ```
 
-* Backend venv with FastAPI + uvicorn + claude-agent-sdk:
-
-  ```bash
-  cd lineforge-gui/backend
-  python3 -m venv .venv
-  .venv/bin/pip install -e ../../lineforge fastapi 'uvicorn[standard]' \
-    websockets claude-agent-sdk pytest pytest-asyncio httpx
-  ```
-
-* Frontend deps:
-
-  ```bash
-  cd ../frontend
-  pnpm install     # or npm install
-  ```
+* Node.js and pnpm on your PATH (npm works as a fallback). `lineforge gui`
+  installs the frontend deps in `frontend/` on first run.
 
 * Claude credentials: either set `ANTHROPIC_API_KEY=…` in your shell, or
   run `claude /login` once to store a Max subscription token locally.
@@ -44,10 +34,12 @@ lineforge gui
 
 The CLI:
 
-1. Verifies the sibling `../lineforge-gui/` directory exists.
-2. Verifies the backend venv and frontend `node_modules` exist (prints setup
-   commands if not).
-3. Spawns `uvicorn app.main:app --port 8000` and `pnpm dev --port 3000`.
+1. Verifies the repo's `frontend/` directory exists (`--frontend-dir`
+   points it elsewhere).
+2. Checks for Node and pnpm, and installs the frontend `node_modules` if
+   they are missing.
+3. Spawns `uvicorn lineforge.web.app:app --port 8000 --reload` and
+   `pnpm dev` on port 3000 (either moves to a free port if busy).
 4. Opens `http://localhost:3000` in your default browser.
 5. Hands you a chat panel with the lineforge tool surface bound.
 

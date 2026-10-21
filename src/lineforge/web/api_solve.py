@@ -201,7 +201,7 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
         if usermap is None:
             raise HTTPException(status_code=404, detail=f"unknown usermap {req.usermap_uri!r}")
         try:
-            result = solve_cgp(
+            cgp_result = solve_cgp(
                 usermap,
                 frequency_hz=freq_hz,
                 method="sor",
@@ -212,8 +212,8 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
         except (RuntimeError, ValueError) as exc:
             raise HTTPException(status_code=500, detail=_sanitize_error(exc)) from exc
 
-        out = result.model_dump()
-        out["_kind"] = type(result).__name__
+        out = cgp_result.model_dump()
+        out["_kind"] = type(cgp_result).__name__
         out["usermap_uri"] = req.usermap_uri
         await update_state(geometry={"usermap_uri": req.usermap_uri}, last_result=out)
         return out
@@ -226,12 +226,12 @@ async def calculate(req: CalculateRequest) -> dict[str, Any]:
         raise HTTPException(status_code=400, detail=_sanitize_error(exc)) from exc
 
     try:
-        analytical_result = analytical_solve(geom, frequency_hz=freq_hz)
+        result = analytical_solve(geom, frequency_hz=freq_hz)
     except (NotImplementedError, ValueError, ValidationError) as exc:
         raise HTTPException(status_code=400, detail=_sanitize_error(exc)) from exc
 
-    out = analytical_result.model_dump()
-    out["_kind"] = type(analytical_result).__name__
+    out = result.model_dump()
+    out["_kind"] = type(result).__name__
     await update_state(geometry=cleaned, last_result=out)
     return out
 

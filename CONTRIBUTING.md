@@ -36,7 +36,7 @@ source .venv/bin/activate     # macOS/Linux
 # OR: .venv\Scripts\activate  # Windows PowerShell
 
 pip install --upgrade pip maturin
-pip install -e ".[dev,gui]"       # editable install with dev deps
+pip install -e ".[dev,gui]"   # editable install with dev + web GUI deps (CI checks both)
 ```
 
 This builds the Rust kernel (`lineforge._kernel`) in debug mode and links it into your

@@ -32,7 +32,7 @@ import json
 import re
 from dataclasses import dataclass
 from importlib import resources
-from typing import Any, cast
+from typing import Any
 
 from lineforge.materials.dispersion import material_at_frequency
 
@@ -110,7 +110,8 @@ def _load_pack() -> list[dict[str, Any]]:
     pack_path = resources.files("lineforge.materials.packs").joinpath("pcb_extended.json")
     with pack_path.open("r") as f:
         data = json.load(f)
-    return cast(list[dict[str, Any]], data.get("materials", []))
+    materials: list[dict[str, Any]] = data.get("materials", [])
+    return materials
 
 
 def _normalize(name: str) -> str:
