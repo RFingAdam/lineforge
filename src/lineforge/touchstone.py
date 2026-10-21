@@ -29,8 +29,9 @@ Example
 from __future__ import annotations
 
 import math
+from collections.abc import Sequence
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 import numpy as np
 
@@ -177,8 +178,130 @@ def to_touchstone(
     out = Path(path)
     if out.suffix.lower() != ".s2p":
         out = out.with_suffix(".s2p")
-    net.write_touchstone(str(out.with_suffix("")), form="ri")
+    # The full path, not out.with_suffix(""): scikit-rf keeps a filename that already carries
+    # an extension and appends one otherwise, while with_suffix("") would eat a dotted stem
+    # as well, turning "trace_v1.2.s2p" into "trace_v1.s2p".
+    net.write_touchstone(str(out), form="ri")
     return out
 
 
-__all__ = ["to_touchstone"]
+def to_touchstone_nport(
+    freqs_hz: np.ndarray,
+    s: np.ndarray,
+    path: str | Path,
+    *,
+    z_ref: float | Sequence[float] = 50.0,
+    port_names: Sequence[str] | None = None,
+    mixed_mode_order: Sequence[str] | None = None,
+    version: Literal[1, 2] = 1,
+    comment: str = "",
+) -> Path:
+    """Write an N-port S-parameter set as Touchstone 1.x (via scikit-rf) or 2.0 (native writer).
+
+    Port ``i`` of the file (1-based in the file, ``s[:, i, j]`` here) is the ``i``-th
+    conductor in ascending ``conductor_ids`` order, that is
+    ``MaxwellResult.conductor_ids[i]``. This is the same ordering the rows and columns of
+    :func:`lineforge.solvers.faraday.solve_impedance_matrix` carry, so an S-matrix built
+    from those matrices needs no permutation here.
+
+    Parameters
+    ----------
+    freqs_hz
+        Frequency points in Hz, shape ``(F,)``.
+    s
+        S-parameters, shape ``(F, P, P)``.
+    path
+        Output file path. The suffix is forced to ``.s{P}p`` for the given
+        port count ``P``, for both versions.
+    z_ref
+        Reference impedance: a scalar applied to every port, or one value
+        per port. Touchstone 1.x has a single ``R`` on its option line and no
+        way to record per-port references, so differing values are refused
+        there; pass ``version=2`` for those.
+    port_names
+        Optional per-port names. Written into the scikit-rf network (v1) or
+        as comment lines (v2).
+    mixed_mode_order
+        Optional mixed-mode port order labels (e.g. ``"D1,2"``, ``"C1,2"``),
+        written to the ``[Mixed-Mode Order]`` header (version 2 only).
+    version
+        ``1`` writes Touchstone 1.x via scikit-rf; ``2`` writes Touchstone
+        2.0 natively.
+    comment
+        Optional comment line written into the version 2 header.
+
+    Returns
+    -------
+    Path
+        The actual path written.
+
+    Raises
+    ------
+    ValueError
+        If ``s`` is not shaped ``(F, P, P)`` matching ``freqs_hz``, or
+        ``z_ref`` does not provide exactly one value per port, or
+        ``version == 1`` was asked for with per-port references that differ.
+    """
+    freqs = np.asarray(freqs_hz, dtype=np.float64)
+    s = np.asarray(s, dtype=np.complex128)
+    if s.ndim != 3 or s.shape[1] != s.shape[2] or s.shape[0] != len(freqs):
+        raise ValueError(
+            f"s must have shape (F, P, P) matching {len(freqs)} frequencies, got {s.shape}"
+        )
+    ports = s.shape[1]
+    zs = [float(z_ref)] * ports if isinstance(z_ref, (int, float)) else [float(z) for z in z_ref]
+    if len(zs) != ports:
+        raise ValueError("z_ref must be a scalar or one value per port")
+    out = Path(path)
+    if out.suffix.lower() != f".s{ports}p":
+        out = out.with_suffix(f".s{ports}p")
+    if version == 1:
+        if len(set(zs)) > 1:
+            raise ValueError(
+                "Touchstone 1.x carries one reference impedance on its option line, so the "
+                "per-port values would be silently reduced to the first one; pass "
+                "version=2 to keep per-port references"
+            )
+        import skrf
+
+        net = skrf.Network(
+            frequency=skrf.Frequency.from_f(freqs, unit="Hz"), s=s, z0=np.array(zs), name=out.stem
+        )
+        if port_names:
+            net.port_names = list(port_names)
+        # The full path, not out.with_suffix(""): scikit-rf keeps a filename that already
+        # carries an extension and appends one otherwise, while with_suffix("") would eat a
+        # dotted stem as well, turning "chan_v1.2.s4p" into "chan_v1.s4p".
+        net.write_touchstone(str(out), form="ri", write_z0=False)
+        return out
+    # Keyword order below is the one the 2.0 spec fixes: [Version], the option line, then
+    # [Number of Ports], [Two-Port Data Order] (two-ports only), [Number of Frequencies],
+    # [Reference], [Mixed-Mode Order], [Network Data], [End].
+    #
+    # zs[0] on the option line is only the nominal reference for legacy readers that pre-date
+    # per-port references; the actual per-port values are the ones in the [Reference] line.
+    lines = ["[Version] 2.0", f"# Hz S RI R {zs[0]:g}", f"[Number of Ports] {ports}"]
+    if ports == 2:
+        lines.append("[Two-Port Data Order] 12_21")
+    lines.append(f"[Number of Frequencies] {len(freqs)}")
+    lines.append("[Reference] " + " ".join(f"{z:g}" for z in zs))
+    if mixed_mode_order:
+        lines.append("[Mixed-Mode Order] " + " ".join(mixed_mode_order))
+    if comment:
+        lines.append(f"! {comment}")
+    if port_names:
+        lines.extend(f"! port {i + 1}: {name}" for i, name in enumerate(port_names))
+    lines.append("[Network Data]")
+    for fi, f in enumerate(freqs):
+        # One matrix row per line, the frequency leading the first of them.
+        for i in range(ports):
+            row = [f"{f:.9e}"] if i == 0 else []
+            for j in range(ports):
+                row.append(f"{s[fi, i, j].real:.9e} {s[fi, i, j].imag:.9e}")
+            lines.append(" ".join(row))
+    lines.append("[End]")
+    out.write_text("\n".join(lines) + "\n")
+    return out
+
+
+__all__ = ["to_touchstone", "to_touchstone_nport"]

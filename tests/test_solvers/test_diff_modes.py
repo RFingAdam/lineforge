@@ -21,6 +21,7 @@ import pytest
 
 from lineforge.geometry.usermap import Usermap, UsermapMetadata
 from lineforge.solvers import diff_modes
+from lineforge.solvers.mtl import rlgc_matrices, solve_maxwell
 
 
 @pytest.fixture(autouse=True)
@@ -68,6 +69,30 @@ def _make_asymmetric_diff_pair(*, n: int = 31) -> Usermap:
         red_box=(10, 15, 6, 11),
         blue_box=(16, 21, 20, 25),
     )
+
+
+def test_z_odd_matches_solve_maxwell_absolute_magnitude() -> None:
+    """`solve_modes`' Z_odd agrees in absolute magnitude with the independent
+    N-conductor Maxwell-matrix path, not just via the internal
+    Z_diff = 2*Z_odd identity.
+
+    `solve_modes` and `solve_maxwell` + `rlgc_matrices` compute C (and here,
+    with a vacuum cavity, L) from two independently normalized field
+    integrals. The pixel_width**2 / per-drive-normalisation bugs once fixed
+    in `diff_modes` left every internal identity (Z_diff = 2*Z_odd,
+    Z_common = Z_even/2, eps_eff ~= 1 in vacuum) intact, because those checks
+    are ratios that cancel a common wrong scale factor. Only a cross-check
+    against a second, independently normalized solver can catch a bug like
+    that; this is that check.
+    """
+    um = _make_symmetric_diff_pair()
+    modes = diff_modes.solve_modes(um)
+
+    res = solve_maxwell(um, method="sor", tol=1e-6, extend_grid=True)
+    C, _, L = rlgc_matrices(res, 1e9)
+    z_odd_from_maxwell = float(np.sqrt((L[0, 0] - L[0, 1]) / (C[0, 0] - C[0, 1])))
+
+    assert modes.z_odd == pytest.approx(z_odd_from_maxwell, rel=3e-3)
 
 
 class TestSolveModesValidation:
