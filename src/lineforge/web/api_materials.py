@@ -15,6 +15,7 @@ from pydantic import BaseModel, ConfigDict
 
 import lineforge.materials as atlc3_materials
 from lineforge.materials.morecolors import load_json_pack
+from lineforge.units import parse_length
 
 router = APIRouter(prefix="/api/materials", tags=["materials"])
 
@@ -58,10 +59,9 @@ def list_laminates() -> dict[str, Any]:
             "er_freq": rec.er_freq,
             "tan_freq": rec.tan_freq,
         }
-        for rec in records
+        for rec in sorted(records, key=lambda rec: rec.name)
         if rec.use == "insul" and rec.er > 1.0
     ]
-    laminates.sort(key=lambda r: r["name"])
     return {"laminates": laminates}
 
 
@@ -87,7 +87,9 @@ def series_reduce(req: SeriesReduceRequest) -> dict[str, Any]:
 
     try:
         dl = [
-            DielectricLayer(h=layer.h, er=layer.er, tan_delta=layer.tan_delta, name=layer.name)
+            DielectricLayer(
+                h=parse_length(layer.h), er=layer.er, tan_delta=layer.tan_delta, name=layer.name
+            )
             for layer in req.layers
         ]
         h_total, er_eq, tan_eq = run_reduce(dl)

@@ -123,7 +123,7 @@ def predict_v_field(
 
     # Loop-invariant scaling factor: hoisted out of the refinement loop so
     # we don't recompute (G @ G.T) on every iteration.
-    refine_denom = max(1.0, float(np.diag(G @ G.T).max()))
+    refine_denom = max(1.0, float(np.max(np.diag(G @ G.T))))
 
     # Apply ``iterations`` of damped refinement (capture the docstring contract)
     for _ in range(max(0, iterations - 1)):
