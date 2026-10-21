@@ -43,6 +43,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ### Fixed
 
+- `src/lineforge/solvers/mtl.py`: `solve_maxwell` booked a one-pixel rim of
+  dielectric field energy on conductor pixels at vacuum permittivity, so a
+  homogeneous fill's `L C / (mu0 eps0)` sat below er by the conductor
+  perimeter-to-area ratio. Conductor-pixel energy is now attributed to the
+  dielectric the pixel faces, and a conductor cell that touches an insulator
+  is painted with that insulator's er so the arithmetic-mean edge coefficient
+  on a PEC face equals the dielectric. A homogeneous fill returns `C = er C0`
+  to 1e-6 and the conductor share of W is below 1e-9. `solve_cgp` and
+  `diff_modes.solve_modes` are unchanged.
 - `src/lineforge/touchstone.py`: `to_touchstone_nport` refused nothing when
   asked for Touchstone 1.x with per-port reference impedances that differ,
   and quietly wrote only the first one; that combination now raises. The
