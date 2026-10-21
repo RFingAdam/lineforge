@@ -90,9 +90,10 @@ jobs:
           key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock', 'Cargo.toml', 'crates/**/Cargo.toml') }}
 
       - name: Install package + dev deps
+        # tests/test_web imports fastapi and claude_agent_sdk from the gui extra.
         run: |
           python -m pip install --upgrade pip maturin
-          pip install -e ".[dev]"
+          pip install -e ".[dev,gui]"
 
       - name: cargo test
         # Don't use --all-features: that enables `pyo3/extension-module`,
