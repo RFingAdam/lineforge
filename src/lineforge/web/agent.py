@@ -340,6 +340,9 @@ async def _translate_message(msg: Any) -> AsyncIterator[dict[str, Any]]:
 
     if isinstance(msg, UserMessage):
         # Tool results show up as UserMessage(content=[ToolResultBlock(...)]).
+        # Plain-string content carries none.
+        if isinstance(msg.content, str):
+            return
         for block in msg.content:
             if isinstance(block, ToolResultBlock):
                 output: Any = block.content
