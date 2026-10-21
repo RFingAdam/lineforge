@@ -282,7 +282,9 @@ def _homogeneous_pair(pixel_width_m: float, *, scale: int = 1) -> Usermap:
         (50.0e-6 / 3.0, 3),
     ],
 )
-def test_homogeneous_fill_books_no_energy_on_the_conductor(pixel_width_m: float, scale: int) -> None:
+def test_homogeneous_fill_books_no_energy_on_the_conductor(
+    pixel_width_m: float, scale: int
+) -> None:
     """A uniform fill returns C = er C0, so L C / (mu0 eps0) is er and W on copper is empty."""
     um = _homogeneous_pair(pixel_width_m, scale=scale)
     res = solve_maxwell(um, method="sor", tol=1e-7, extend_grid=False)

@@ -249,12 +249,12 @@ def _energy_matrices(
     for d in diel_nbr:
         n_diel += d != missing
 
-    per_material: dict[int, np.ndarray] = {
-        int(c): np.zeros((n, n)) for c in np.unique(codes)
-    }
+    per_material: dict[int, np.ndarray] = {int(c): np.zeros((n, n)) for c in np.unique(codes)}
     total = np.zeros((n, n))
 
-    def _add(key: int, mask: np.ndarray, scale: np.ndarray, e_jk: np.ndarray, j: int, k: int) -> None:
+    def _add(
+        key: int, mask: np.ndarray, scale: np.ndarray, e_jk: np.ndarray, j: int, k: int
+    ) -> None:
         if not mask.any():
             return
         val = float((e_jk[mask] * scale[mask]).sum())
