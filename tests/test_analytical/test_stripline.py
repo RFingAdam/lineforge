@@ -193,3 +193,46 @@ class TestStriplineAsymmetricSplitEr:
         # split run should have LOWER loss than the unweighted-avg run, because
         # the high-loss core (td_above) gets weighted DOWN by 1/H1 (larger H).
         assert result.dielectric_loss_db_per_in < ref.dielectric_loss_db_per_in
+
+
+class TestAsymmetricStriplineValidityRange:
+    """The IPC-2141A log form goes unphysical once the strip outgrows the cavity.
+
+    Regression: ``ln(8*H_eff / (0.67*pi*(0.8W+T)))`` turns negative when its
+    argument drops below 1, which produced a negative Z0 and, downstream,
+    negative L_per_m and C_per_m. TLineResult's validators rejected those, so
+    callers saw an opaque ValidationError rather than "the strip is too wide".
+    """
+
+    def test_wide_strip_raises_instead_of_negative_z0(self) -> None:
+        from lineforge.analytical.wadell import stripline_asymmetric
+        from lineforge.geometry.types import StriplineAsymmetric
+
+        with pytest.raises(ValueError, match="outside the IPC-2141A validity range"):
+            stripline_asymmetric(
+                StriplineAsymmetric(W="80mil", T="1.4mil", H1="4mil", H2="5mil", er=4.2)
+            )
+
+    def test_in_range_geometry_still_solves_positive(self) -> None:
+        from lineforge.analytical.wadell import stripline_asymmetric
+        from lineforge.geometry.types import StriplineAsymmetric
+
+        r = stripline_asymmetric(
+            StriplineAsymmetric(W="4mil", T="1.4mil", H1="4mil", H2="5mil", er=4.2)
+        )
+        assert r.z0 > 0
+        assert r.L_per_m > 0
+        assert r.C_per_m > 0
+
+    def test_error_message_is_ascii_printable(self) -> None:
+        """The message must survive a cp1252 console; it is raised on paths
+        that get printed. A typographic dot or pi would raise
+        UnicodeEncodeError while reporting the original error."""
+        from lineforge.analytical.wadell import stripline_asymmetric
+        from lineforge.geometry.types import StriplineAsymmetric
+
+        with pytest.raises(ValueError) as exc:
+            stripline_asymmetric(
+                StriplineAsymmetric(W="80mil", T="1.4mil", H1="4mil", H2="5mil", er=4.2)
+            )
+        str(exc.value).encode("cp1252")

@@ -616,13 +616,23 @@ def build_server() -> FastMCP:
             )
         except (KeyError, ValueError) as exc:
             return {"error": str(exc)}
+        # Report whichever impedance metric was actually driven. Differential
+        # geometries converge on ``z_diff`` and have no ``z0`` at all, so
+        # reading ``z0`` alone returned a null achieved-value next to
+        # ``success: true`` -- the number the caller asked for, dropped on the
+        # floor. ``metric_achieved`` names the field so the result is
+        # self-describing; ``z0_achieved`` stays for backwards compatibility.
+        metric_name = next(iter(result.metric), "z0")
+        achieved = result.metric.get(metric_name)
         return {
             "geometry": (
                 result.geometry.model_dump()
                 if hasattr(result.geometry, "model_dump")
                 else dict(result.geometry)
             ),
-            "z0_achieved": result.metric.get("z0"),
+            "metric": metric_name,
+            "metric_achieved": achieved,
+            "z0_achieved": result.metric.get("z0", achieved),
             "cost": result.cost,
             "iterations": result.iterations,
             "success": result.success,
