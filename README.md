@@ -321,7 +321,7 @@ Full theory in [`docs/theory/`](docs/theory/).
 │  • Open-boundary grid extension for unshielded geometries        │
 │  • Result post-processing, field rendering, sweep / optimize     │
 │  • atlc2 .txt script-file interpreter                            │
-│  • Disk-cached results (diskcache, ATLC3_NO_CACHE=1 to disable)  │
+│  • Disk-cached results (JSON, ATLC3_NO_CACHE=1 to disable)       │
 └──────────────────────────────────────────────────────────────────┘
                               │
 ┌──────────────────────────────────────────────────────────────────┐

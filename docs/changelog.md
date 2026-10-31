@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Security
+- Replaced the diskcache/pickle result cache with a JSON on-disk format so a
+  planted cache file cannot execute code on load (#46). Leftover pickle
+  entries are treated as misses.
+
 ### Phase 4: Polish + 1.0.0 prep
 - Added geometry optimizer (`lineforge.optimize_for`): wrap scipy.optimize for
   finding dimensions that hit Z0 / Zdiff / εeff targets.
