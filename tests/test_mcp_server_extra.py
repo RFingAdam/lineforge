@@ -17,16 +17,16 @@ from typing import Any
 
 import numpy as np
 import pytest
+from mcp.types import CallToolResult
 from PIL import Image
 
 from lineforge.mcp_server.server import build_server
 
 
-def _structured(call_result: tuple[Any, Any]) -> dict[str, Any]:
-    content, structured = call_result
-    if structured:
-        return structured  # type: ignore[no-any-return]
-    return json.loads(content[0].text)  # type: ignore[no-any-return]
+def _structured(call_result: CallToolResult) -> dict[str, Any]:
+    if call_result.structured_content:
+        return call_result.structured_content
+    return json.loads(call_result.content[0].text)  # type: ignore[union-attr,no-any-return]
 
 
 # ---------------------------------------------------------------------------
