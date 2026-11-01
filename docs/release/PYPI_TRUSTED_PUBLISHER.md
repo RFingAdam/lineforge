@@ -1,111 +1,50 @@
-# PyPI / TestPyPI Trusted Publisher Setup
+# Publishing to PyPI
 
-Once-only browser config to enable OIDC-based publishing from this repo's
-release workflow.
+`.github/workflows/release.yml` publishes lineforge from a `v*` tag on `main`. PyPI accepts the
+upload through a trusted publisher, so the repository holds no API token.
 
-## Why trusted publishers
+## One-time setup
 
-GitHub Actions signs each workflow run with a short-lived OIDC token.
-PyPI / TestPyPI verifies the token's claims (`repository`, `workflow`,
-`environment`) against a pre-registered list of trusted publishers and
-accepts the upload if they match. No long-lived API tokens in GitHub
-secrets, no rotation, much smaller blast radius if compromised.
+1. Sign in at <https://pypi.org/manage/account/publishing/>.
+2. Under **Add a new pending publisher**, choose GitHub and enter:
 
-The downside: a one-time browser configuration per index (TestPyPI + PyPI)
-is required before the workflow can publish.
+   | Field | Value |
+   | --- | --- |
+   | PyPI project name | `lineforge` |
+   | Owner | `RFingAdam` |
+   | Repository name | `lineforge` |
+   | Workflow name | `release.yml` |
+   | Environment name | `pypi` |
 
-## TestPyPI setup
+A pending publisher does not reserve the name. It becomes a normal publisher on the first upload,
+and it stops working if someone else takes `lineforge` first.
 
-1. Go to https://test.pypi.org/manage/account/publishing/
-2. Click **Add a new pending publisher**
-3. Fill in:
-   - **PyPI Project Name**: `lineforge`
-   - **Owner**: `RFingAdam`
-   - **Repository name**: `lineforge`  (or `atlc3` until the GitHub repo rename completes)
-   - **Workflow filename**: `release.yml`
-   - **Environment name**: `testpypi`
-4. Submit.
+The repository side is already in place: the `pypi` environment accepts only `v*` tags, and the
+"Release tags" ruleset limits who can create, move, or delete them.
 
-The publisher is now "pending" until the first publish succeeds. After
-that it auto-promotes to a real publisher.
+## Releasing
 
-## PyPI (production) setup
+1. Set the version in `Cargo.toml` and `src/lineforge/version.py`, refresh `Cargo.lock`, and move
+   the changelog entry out of `[Unreleased]`.
+2. Merge to `main`.
+3. Tag that commit:
 
-Same flow as TestPyPI, on the real index:
-
-1. Go to https://pypi.org/manage/account/publishing/
-2. Click **Add a new pending publisher**
-3. Same fields as above, but:
-   - **Environment name**: `pypi`  (matches the `environment.name` in `publish-pypi` job)
-
-## Triggering a release
-
-After both publishers are registered:
-
-```bash
-# TestPyPI happens automatically on tag push
-git tag v2.0.1
-git push origin v2.0.1
-
-# Real PyPI is gated behind workflow_dispatch with target=pypi (manual approval)
-gh workflow run release.yml -f target=pypi
-```
-
-## What if you don't want trusted publishers
-
-The fallback is a long-lived API token. Steps:
-
-1. Create token at https://pypi.org/manage/account/token/ (scoped to the
-   `lineforge` project)
-2. Add as a GitHub secret: `PYPI_API_TOKEN`
-3. Edit `.github/workflows/release.yml` to use it:
-
-   ```yaml
-   - name: Publish to PyPI
-     uses: pypa/gh-action-pypi-publish@release/v1
-     with:
-       password: ${{ secrets.PYPI_API_TOKEN }}
+   ```bash
+   gh api repos/RFingAdam/lineforge/git/refs -f ref=refs/tags/vX.Y.Z \
+     -f sha="$(gh api repos/RFingAdam/lineforge/commits/main --jq .sha)"
    ```
 
-   And remove the `permissions: id-token: write` block and the
-   `environment:` section.
+The tag builds the sdist and a wheel for each target, installs each wheel on its own platform,
+checks that the kernel loads and solves a line, publishes, and creates the GitHub release. A pull
+request that touches the release path runs everything except the last two steps.
 
-We recommend trusted publishers. They're more secure and ergonomic.
+A PyPI version can never be reused. If a release is wrong, fix it and tag the next version.
 
 ## Troubleshooting
 
-**Error: `invalid-publisher: valid token, but no corresponding publisher`**
+**`invalid-publisher: valid token, but no corresponding publisher`**: the registration does not
+match this run. Compare the owner, repository, workflow file name, and environment with the table
+above; the match is exact.
 
-The publisher isn't registered for this exact (repo, workflow, environment)
-triple. Check that your registration on test.pypi.org / pypi.org matches:
-
-- The repo owner exactly (`RFingAdam` not `rfingadam`)
-- The repo name exactly (after the GitHub rename, this is `lineforge`)
-- The workflow filename exactly (`release.yml`)
-- The environment name exactly (`testpypi` or `pypi`)
-
-If you're publishing during the GitHub repo rename transition:
-- The OIDC claim uses the *current* repo name at the time of the workflow run
-- Pre-register publishers under BOTH `RFingAdam/atlc3` AND `RFingAdam/lineforge`
-  if you want a smooth handover (or just delete the atlc3 one once renamed)
-
-**Error: `403 Forbidden. The user 'X' isn't allowed to upload to project Y`**
-
-Usually means the project already exists on PyPI under a different owner,
-or you need to claim the name first by uploading a stub package via API
-token before trusted publishing works.
-
-## Current state
-
-As of v2.0.0 (2026-05-11):
-
-- ✗ TestPyPI trusted publisher NOT yet registered
-- ✗ PyPI trusted publisher NOT yet registered
-- ✓ `release.yml` workflow correctly configured for both targets
-- ✓ `publish-testpypi` job set to `continue-on-error: true` so the
-  failure-to-publish doesn't fail the whole release
-- ✓ Wheels build successfully on Linux x86_64/aarch64 + macOS + Windows
-- ✓ sdist builds successfully
-
-Once you register both publishers, no code changes needed: just re-run
-the release workflow (or push a new tag).
+**`403 Forbidden`, the user isn't allowed to upload**: the project exists on PyPI under another
+owner, so the pending publisher no longer applies.
