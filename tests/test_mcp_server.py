@@ -1,8 +1,7 @@
 """MCP server tests covering Phase 0 (ping) and Phase 1 (analytical tools, material resource).
 
-FastMCP 1.27's ``call_tool`` returns a 2-tuple of (content_list,
-structured_content). Tests below use the structured-content path which is
-already a parsed dict. No JSON re-parsing needed.
+``call_tool`` returns a ``CallToolResult``. Tests below use its structured
+content, which is already a parsed dict, and fall back to the text block.
 """
 
 from __future__ import annotations
@@ -10,6 +9,7 @@ from __future__ import annotations
 from typing import Any
 
 import pytest
+from mcp.types import CallToolResult
 
 from lineforge.mcp_server.server import build_server
 from lineforge.version import __version__
@@ -17,6 +17,10 @@ from lineforge.version import __version__
 
 def test_server_builds() -> None:
     assert build_server() is not None
+
+
+def test_server_reports_the_package_version() -> None:
+    assert build_server().version == __version__
 
 
 @pytest.mark.asyncio
@@ -33,15 +37,14 @@ async def test_phase1_tools_registered() -> None:
     } <= names
 
 
-def _structured(call_result: tuple[Any, Any]) -> dict[str, Any]:
-    """Extract the structured-content dict from FastMCP's call_tool result."""
-    content, structured = call_result
-    if structured:
-        return structured  # type: ignore[no-any-return]
+def _structured(call_result: CallToolResult) -> dict[str, Any]:
+    """Extract the structured-content dict from a call_tool result."""
+    if call_result.structured_content:
+        return call_result.structured_content
     # Fallback: parse the JSON text from the first content block
     import json
 
-    return json.loads(content[0].text)  # type: ignore[no-any-return]
+    return json.loads(call_result.content[0].text)  # type: ignore[union-attr,no-any-return]
 
 
 @pytest.mark.asyncio

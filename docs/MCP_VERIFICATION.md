@@ -6,7 +6,7 @@ This is the manual verification procedure that closes AUDIT.md item #6
 ## What's already automated
 
 `tests/test_mcp_server.py` exercises the server programmatically. It builds
-the FastMCP instance and calls `server.call_tool(...)` directly. That covers:
+the MCPServer instance and calls `server.call_tool(...)` directly. That covers:
 
 - All 14 tools register correctly
 - `ping` returns ``{"status": "ok"}``

@@ -15,7 +15,6 @@ crate-type = ["cdylib", "rlib"]
 
 [dependencies]
 pyo3.workspace = true
-numpy.workspace = true
 ndarray.workspace = true
 rayon.workspace = true
 sprs.workspace = true
