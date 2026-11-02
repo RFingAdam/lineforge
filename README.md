@@ -1,12 +1,12 @@
 <div align="center">
 
-<img src="assets/logo-banner.svg" alt="lineforge: open-source MCP-enabled transmission line calculator" width="100%"/>
+<img src="https://raw.githubusercontent.com/RFingAdam/lineforge/main/assets/logo-banner.svg" alt="lineforge: open-source MCP-enabled transmission line calculator" width="100%"/>
 
 <br/>
 
 [![CI](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml)
 [![Docs](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml)
-[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-1E40AF.svg)](LICENSE)
+[![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-1E40AF.svg)](https://github.com/RFingAdam/lineforge/blob/main/LICENSE)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB.svg)](https://www.python.org/downloads/)
 [![Rust](https://img.shields.io/badge/rust-stable-DEA584.svg)](https://www.rust-lang.org/)
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-00BCD4.svg)](https://mypy.readthedocs.io/)
@@ -163,7 +163,7 @@ the result. For arbitrary cross-sections, ask it to upload a bitmap
 (`import_usermap`) and run `solve_cgp` (returns immediately with a
 `taskId`; polled via `tasks_get` per [SEP-1686](https://modelcontextprotocol.io/seps/1686-tasks.md)).
 
-See [`docs/MCP_VERIFICATION.md`](docs/MCP_VERIFICATION.md) for the full
+See [`docs/MCP_VERIFICATION.md`](https://github.com/RFingAdam/lineforge/blob/main/docs/MCP_VERIFICATION.md) for the full
 end-to-end verification procedure.
 
 </td>
@@ -177,7 +177,7 @@ backed by `claude-agent-sdk`. The agent fills in your geometry form, runs
 the solver, and renders V/E/D/T field plots live as you converse with it.
 
 <p align="center">
-  <img src="assets/screenshots/gui-desktop-microstrip-result.png" alt="lineforge GUI showing a microstrip Calculate Z₀ result with hero impedance card, grouped distributed-parameter sections, and an E-field plot" width="100%"/>
+  <img src="https://raw.githubusercontent.com/RFingAdam/lineforge/main/assets/screenshots/gui-desktop-microstrip-result.png" alt="lineforge GUI showing a microstrip Calculate Z₀ result with hero impedance card, grouped distributed-parameter sections, and an E-field plot" width="100%"/>
 </p>
 
 ```bash
@@ -296,7 +296,7 @@ For L and Rs at finite frequency, lineforge builds a 2D PEEC sparse system
 depth") blackens conductor pixels deeper than 3δ from the surface,
 collapsing the equation count at high frequency.
 
-Full theory in [`docs/theory/`](docs/theory/).
+Full theory in [`docs/theory/`](https://github.com/RFingAdam/lineforge/tree/main/docs/theory/).
 
 ---
 
@@ -307,7 +307,7 @@ Full theory in [`docs/theory/`](docs/theory/).
 │  Layer 3: User-facing surfaces (all polished day 1)              │
 │  ┌────────────────┐  ┌──────────────────┐  ┌──────────────────┐ │
 │  │  MCP server    │  │  CLI: lineforge      │  │  Python API:     │ │
-│  │  (FastMCP,     │  │  (Typer + Rich,  │  │  import lineforge    │ │
+│  │  (MCP SDK,     │  │  (Typer + Rich,  │  │  import lineforge    │ │
 │  │   SEP-1686     │  │   batch + serve) │  │  Pydantic models │ │
 │  │   Tasks)       │  │                  │  │                  │ │
 │  └────────────────┘  └──────────────────┘  └──────────────────┘ │
@@ -373,22 +373,22 @@ each tagged with its phase milestone.
 
 ## Documentation
 
-- **[Quick Start](docs/quickstart.md)**. Three-minute path from
+- **[Quick Start](https://github.com/RFingAdam/lineforge/blob/main/docs/quickstart.md)**. Three-minute path from
   `pip install` to your first impedance answer.
-- **[Python API tutorial](docs/tutorials/python.md)**
-- **[CLI tutorial](docs/tutorials/cli.md)**
-- **[MCP server tutorial](docs/tutorials/mcp.md)** +
-  [verification procedure](docs/MCP_VERIFICATION.md)
-- **[Geometry reference](docs/reference/geometries.md)**. Every
+- **[Python API tutorial](https://github.com/RFingAdam/lineforge/blob/main/docs/tutorials/python.md)**
+- **[CLI tutorial](https://github.com/RFingAdam/lineforge/blob/main/docs/tutorials/cli.md)**
+- **[MCP server tutorial](https://github.com/RFingAdam/lineforge/blob/main/docs/tutorials/mcp.md)** +
+  [verification procedure](https://github.com/RFingAdam/lineforge/blob/main/docs/MCP_VERIFICATION.md)
+- **[Geometry reference](https://github.com/RFingAdam/lineforge/blob/main/docs/reference/geometries.md)**. Every
   supported geometry with its dimensional fields and JSON Schema.
 - **Theory pages**:
-  [analytical formulas](docs/theory/analytical.md) ·
-  [Laplace solver](docs/theory/laplace_solver.md) ·
-  [Faraday solver](docs/theory/faraday_solver.md) ·
-  [skin effect](docs/theory/skin_effect.md) ·
-  [3-wire decomposition](docs/theory/three_wire.md)
-- **[Implementation plan](docs/plan.md)** + **[audit report](AUDIT.md)**: what shipped vs what remains.
-- **[Changelog](CHANGELOG.md)**
+  [analytical formulas](https://github.com/RFingAdam/lineforge/blob/main/docs/theory/analytical.md) ·
+  [Laplace solver](https://github.com/RFingAdam/lineforge/blob/main/docs/theory/laplace_solver.md) ·
+  [Faraday solver](https://github.com/RFingAdam/lineforge/blob/main/docs/theory/faraday_solver.md) ·
+  [skin effect](https://github.com/RFingAdam/lineforge/blob/main/docs/theory/skin_effect.md) ·
+  [3-wire decomposition](https://github.com/RFingAdam/lineforge/blob/main/docs/theory/three_wire.md)
+- **[Implementation plan](https://github.com/RFingAdam/lineforge/blob/main/docs/plan.md)** + **[audit report](https://github.com/RFingAdam/lineforge/blob/main/AUDIT.md)**: what shipped vs what remains.
+- **[Changelog](https://github.com/RFingAdam/lineforge/blob/main/CHANGELOG.md)**
 
 Built with [mkdocs-material](https://squidfunk.github.io/mkdocs-material/);
 deploys to GitHub Pages on every push to `main`.
@@ -411,8 +411,8 @@ Contributions are welcome and follow a phase-driven workflow.
    ```
 4. **Open a PR**: link the issue, tick AC checkboxes, request review.
 
-Full contributor guide in [`CONTRIBUTING.md`](CONTRIBUTING.md). Participation
-is governed by the [Contributor Covenant 2.1](CODE_OF_CONDUCT.md).
+Full contributor guide in [`CONTRIBUTING.md`](https://github.com/RFingAdam/lineforge/blob/main/CONTRIBUTING.md). Participation
+is governed by the [Contributor Covenant 2.1](https://github.com/RFingAdam/lineforge/blob/main/CODE_OF_CONDUCT.md).
 
 ### Where the bar is
 
@@ -489,7 +489,7 @@ to `import lineforge`.
 
 ## License
 
-[AGPLv3](LICENSE). Relicensed from GPLv3 in v2.2.0 to close the
+[AGPLv3](https://github.com/RFingAdam/lineforge/blob/main/LICENSE). Relicensed from GPLv3 in v2.2.0 to close the
 "wrap as a paid SaaS without contributing back" gap; the atlc / atlc2
 lineage is preserved and the GPL -> AGPL move is explicitly permitted
 by GPL-3.0 section 13.
@@ -508,7 +508,7 @@ the origin of the work.
 - **[scikit-rf](https://scikit-rf.readthedocs.io)**, **[PyAMG](https://pyamg.readthedocs.io/)**,
   **[scipy.sparse](https://docs.scipy.org/doc/scipy/reference/sparse.linalg.html)**.
   The open-source numerical libraries that make this possible.
-- **[FastMCP](https://github.com/jlowin/fastmcp)**, **[Typer](https://typer.tiangolo.com/)**,
+- **[MCP Python SDK](https://github.com/modelcontextprotocol/python-sdk)**, **[Typer](https://typer.tiangolo.com/)**,
   **[Pydantic](https://docs.pydantic.dev/)**, **[maturin](https://www.maturin.rs/)**.
   The modern Python toolchain underneath the three user surfaces.
 - **[openEMS](https://openems.de/)**: independent 3D FDTD reference used to

@@ -46,11 +46,11 @@ dependencies = [
     "scipy>=1.13",
     "pyamg>=5.1",
     "pydantic>=2.7",
-    "pillow>=10.3",
+    "pillow>=13.0",
     "pint>=0.24",
     "typer>=0.12",
     "rich>=13.7",
-    "mcp>=1.0,<2",
+    "mcp>=2.2,<3",
     "anyio>=4.4",
 ]
 

@@ -6,6 +6,8 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+## [2.3.0]: 2026-11-01
+
 ### Added
 
 - `Usermap.from_labels`, integer `conductor_ids` (`-1` non-conductor, `0`
@@ -94,6 +96,16 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 - Install docs no longer claim lineforge or atlc3 is on PyPI; neither is
   published there. README, quick start, MIGRATION.md, the MCP example,
   and the `lineforge gui` missing-extras hint now install from GitHub.
+- The MCP server now runs on the `mcp` 2 SDK (`mcp>=2.2,<3`), which clears the
+  advisories in the `mcp` 1 line. Its tools and arguments are unchanged. The tools
+  that start or cancel background tasks are async, because the SDK now runs sync
+  tools in a worker thread and those tasks live on the event loop.
+- `pyo3` moves from 0.22 to 0.29 and `crossbeam-epoch` to 0.9.21, clearing the
+  RustSec advisories against both, and the unused `numpy` crate is gone. The
+  minimum supported Rust version is now 1.83.
+- The release workflow publishes to PyPI from a `v*` tag on `main` through a
+  trusted publisher, after building and smoke-testing the wheel for every target.
+  TestPyPI and the manual dispatch are gone.
 
 ## [2.2.0]: 2026-05-13
 

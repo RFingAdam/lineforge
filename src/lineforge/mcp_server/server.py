@@ -34,7 +34,7 @@ import base64
 import json
 from typing import Any
 
-from mcp.server.fastmcp import FastMCP
+from mcp.server.mcpserver import MCPServer
 
 from lineforge.analytical import solve as analytical_solve
 from lineforge.geometry import GEOMETRY_TYPES, export_jsonschema, from_dict
@@ -74,10 +74,11 @@ class _UsermapStore:
 # ---------------------------------------------------------------------------
 
 
-def build_server() -> FastMCP:
-    """Construct the FastMCP server with all currently-implemented tools/resources."""
-    server = FastMCP(
+def build_server() -> MCPServer:
+    """Construct the MCP server with all currently-implemented tools/resources."""
+    server = MCPServer(
         name="lineforge",
+        version=__version__,
         instructions=(
             "lineforge: open-source transmission line calculator. "
             "Use `calculate_impedance` for fast closed-form solves on standard "
@@ -234,8 +235,10 @@ def build_server() -> FastMCP:
             "pixel_width_m": usermap.pixel_width_m,
         }
 
+    # Tools that touch the task registry are async on purpose. The SDK runs sync tools in a worker
+    # thread, and the registry's asyncio tasks can only be started or cancelled on the event loop.
     @server.tool()
-    def solve_cgp(
+    async def solve_cgp(
         geometry: dict[str, Any] | None = None,
         usermap_uri: str | None = None,
         frequency: float | str | None = None,
@@ -334,13 +337,13 @@ def build_server() -> FastMCP:
         return out
 
     @server.tool()
-    def tasks_cancel(task_id: str) -> dict[str, Any]:
+    async def tasks_cancel(task_id: str) -> dict[str, Any]:
         """Request cancellation of a running task."""
         ok = task_registry.cancel(task_id)
         return {"cancelled": ok}
 
     @server.tool()
-    def solve_lrs(
+    async def solve_lrs(
         geometry: dict[str, Any] | None = None,
         usermap_uri: str | None = None,
         frequency: float | str = 1e9,
@@ -392,7 +395,7 @@ def build_server() -> FastMCP:
         return {"taskId": task.id, "status": task.status}
 
     @server.tool()
-    def solve_full(
+    async def solve_full(
         geometry: dict[str, Any] | None = None,
         usermap_uri: str | None = None,
         frequency: float | str = 1e9,
@@ -433,7 +436,7 @@ def build_server() -> FastMCP:
         return {"taskId": task.id, "status": task.status}
 
     @server.tool()
-    def sweep(
+    async def sweep(
         geometry: dict[str, Any],
         parameter: str,
         values: list[float],
