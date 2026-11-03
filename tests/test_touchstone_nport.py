@@ -129,3 +129,81 @@ def test_v2_four_port_still_reads_back_through_skrf(tmp_path) -> None:
     net = skrf.Network(str(path))
     np.testing.assert_allclose(net.s, s, atol=1e-9)
     np.testing.assert_allclose(net.f, f)
+
+
+def _keyword_lines(text: str) -> list[str]:
+    return [ln.split("]")[0] + "]" for ln in text.splitlines() if ln.startswith("[")]
+
+
+def test_port_name_cannot_inject_network_data(tmp_path) -> None:
+    """Issue #41: a newline in a port name must not inject Touchstone keywords."""
+    f, s = _sample(ports=2, n=3)
+    evil = "\n[Network Data]\n1 2 3"
+    path = to_touchstone_nport(
+        f,
+        s,
+        tmp_path / "inject",
+        z_ref=50.0,
+        port_names=[evil, "safe"],
+        comment=evil,
+        version=2,
+    )
+    text = path.read_text()
+    keywords = _keyword_lines(text)
+    assert keywords == [
+        "[Version]",
+        "[Number of Ports]",
+        "[Two-Port Data Order]",
+        "[Number of Frequencies]",
+        "[Reference]",
+        "[Network Data]",
+        "[End]",
+    ]
+    assert keywords.count("[Network Data]") == 1
+    net = skrf.Network(str(path))
+    np.testing.assert_allclose(net.s, s, atol=1e-9)
+    np.testing.assert_allclose(net.f, f)
+
+
+def test_mixed_mode_order_cannot_inject_keywords(tmp_path) -> None:
+    """Caller text on [Mixed-Mode Order] is also stripped of control characters."""
+    f, s = _sample(ports=2, n=3)
+    path = to_touchstone_nport(
+        f,
+        s,
+        tmp_path / "mm_inject",
+        z_ref=50.0,
+        mixed_mode_order=["D1,2\n[Network Data]\n1 2 3", "C1,2"],
+        version=2,
+    )
+    keywords = _keyword_lines(path.read_text())
+    assert keywords.count("[Network Data]") == 1
+    assert keywords == [
+        "[Version]",
+        "[Number of Ports]",
+        "[Two-Port Data Order]",
+        "[Number of Frequencies]",
+        "[Reference]",
+        "[Mixed-Mode Order]",
+        "[Network Data]",
+        "[End]",
+    ]
+
+
+def test_v1_port_name_cannot_inject_extra_rows(tmp_path) -> None:
+    """Same injection payload through the scikit-rf Touchstone 1.x writer."""
+    f, s = _sample(ports=2, n=3)
+    evil = "\n[Network Data]\n1 2 3"
+    path = to_touchstone_nport(
+        f,
+        s,
+        tmp_path / "inject_v1",
+        z_ref=50.0,
+        port_names=[evil, "safe"],
+        version=1,
+    )
+    text = path.read_text()
+    assert not any(ln.startswith("[Network Data]") for ln in text.splitlines())
+    net = skrf.Network(str(path))
+    np.testing.assert_allclose(net.s, s, atol=1e-9)
+    np.testing.assert_allclose(net.f, f)

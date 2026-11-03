@@ -29,6 +29,7 @@ Example
 from __future__ import annotations
 
 import math
+import unicodedata
 from collections.abc import Sequence
 from pathlib import Path
 from typing import Any, Literal
@@ -40,6 +41,21 @@ from lineforge.units import parse_length
 
 INCH_M = 0.0254
 DB_PER_NEPER = 8.685889638065035  # 20 / ln(10)
+
+# Control chars, format chars, and Unicode line/paragraph separators. A newline
+# in a port name or comment would start a new Touchstone keyword or data row.
+_UNSAFE_HEADER_CATS = frozenset({"Cc", "Cf", "Zl", "Zp"})
+
+
+def _sanitize_header_text(value: str) -> str:
+    """Strip control characters so caller text cannot inject header lines."""
+    return "".join(ch for ch in str(value) if unicodedata.category(ch) not in _UNSAFE_HEADER_CATS)
+
+
+def _sanitize_header_texts(values: Sequence[str] | None) -> list[str] | None:
+    if values is None:
+        return None
+    return [_sanitize_header_text(v) for v in values]
 
 
 def _alpha_neper_per_m(result: Any) -> float:
@@ -220,10 +236,12 @@ def to_touchstone_nport(
         there; pass ``version=2`` for those.
     port_names
         Optional per-port names. Written into the scikit-rf network (v1) or
-        as comment lines (v2).
+        as comment lines (v2). Control characters (including newlines) are
+        stripped so a name cannot inject extra keyword or data lines.
     mixed_mode_order
         Optional mixed-mode port order labels (e.g. ``"D1,2"``, ``"C1,2"``),
         written to the ``[Mixed-Mode Order]`` header (version 2 only).
+        Control characters are stripped, same as ``port_names``.
     version
         ``1`` writes Touchstone 1.x via scikit-rf; ``2`` writes Touchstone
         2.0 natively.
@@ -268,7 +286,7 @@ def to_touchstone_nport(
             frequency=skrf.Frequency.from_f(freqs, unit="Hz"), s=s, z0=np.array(zs), name=out.stem
         )
         if port_names:
-            net.port_names = list(port_names)
+            net.port_names = [_sanitize_header_text(name) for name in port_names]
         # The full path, not out.with_suffix(""): scikit-rf keeps a filename that already
         # carries an extension and appends one otherwise, while with_suffix("") would eat a
         # dotted stem as well, turning "chan_v1.2.s4p" into "chan_v1.s4p".
@@ -280,17 +298,20 @@ def to_touchstone_nport(
     #
     # zs[0] on the option line is only the nominal reference for legacy readers that pre-date
     # per-port references; the actual per-port values are the ones in the [Reference] line.
+    safe_comment = _sanitize_header_text(comment)
+    safe_port_names = _sanitize_header_texts(port_names)
+    safe_mixed_mode = _sanitize_header_texts(mixed_mode_order)
     lines = ["[Version] 2.0", f"# Hz S RI R {zs[0]:g}", f"[Number of Ports] {ports}"]
     if ports == 2:
         lines.append("[Two-Port Data Order] 12_21")
     lines.append(f"[Number of Frequencies] {len(freqs)}")
     lines.append("[Reference] " + " ".join(f"{z:g}" for z in zs))
-    if mixed_mode_order:
-        lines.append("[Mixed-Mode Order] " + " ".join(mixed_mode_order))
-    if comment:
-        lines.append(f"! {comment}")
-    if port_names:
-        lines.extend(f"! port {i + 1}: {name}" for i, name in enumerate(port_names))
+    if safe_mixed_mode:
+        lines.append("[Mixed-Mode Order] " + " ".join(safe_mixed_mode))
+    if safe_comment:
+        lines.append(f"! {safe_comment}")
+    if safe_port_names:
+        lines.extend(f"! port {i + 1}: {name}" for i, name in enumerate(safe_port_names))
     lines.append("[Network Data]")
     for fi, f in enumerate(freqs):
         # One matrix row per line, the frequency leading the first of them.

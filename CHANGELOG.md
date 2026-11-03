@@ -6,6 +6,15 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Security
+
+- `to_touchstone_nport` strips control characters from port names, comments,
+  and mixed-mode labels before writing them into Touchstone comments or
+  keywords, so a newline can no longer inject `[Network Data]` or forged
+  rows (#41).
+- The JSON result cache refuses a planted pickle (or other non-JSON) entry
+  without unpickling it (#46).
+
 ## [2.3.0]: 2026-11-01
 
 ### Added
