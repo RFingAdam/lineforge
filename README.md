@@ -7,6 +7,7 @@
 [![CI](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/ci.yml)
 [![Docs](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml/badge.svg)](https://github.com/RFingAdam/lineforge/actions/workflows/docs.yml)
 [![License: AGPL v3](https://img.shields.io/badge/License-AGPLv3-1E40AF.svg)](https://github.com/RFingAdam/lineforge/blob/main/LICENSE)
+[![PyPI](https://img.shields.io/pypi/v/lineforge.svg)](https://pypi.org/project/lineforge/)
 [![Python 3.11+](https://img.shields.io/badge/python-3.11%20%7C%203.12%20%7C%203.13-3776AB.svg)](https://www.python.org/downloads/)
 [![Rust](https://img.shields.io/badge/rust-stable-DEA584.svg)](https://www.rust-lang.org/)
 [![mypy: strict](https://img.shields.io/badge/mypy-strict-00BCD4.svg)](https://mypy.readthedocs.io/)
@@ -68,15 +69,24 @@ See the validation examples and tests for the cases checked.
 
 ### Install
 
-lineforge is not published on PyPI, so a `lineforge` package there is not
-this project. Install it from GitHub (Python 3.11 or newer):
+Python 3.11 or newer:
 
 ```bash
-pip install "lineforge @ git+https://github.com/RFingAdam/lineforge.git"
+pip install lineforge
+```
+
+Wheels include the compiled Rust core, so a Rust toolchain is not required
+for a normal install. Optional extras:
+
+```bash
+pip install "lineforge[gui]"   # FastAPI / uvicorn web GUI backend
+pip install "lineforge[dev]"   # tests, linters, type-checker
 ```
 
 To work on lineforge or run the web GUI (which needs the repo's
-`frontend/`), install from a clone instead:
+`frontend/`), install from a clone instead. That path builds the Rust
+core from source, so you need a [Rust toolchain](https://rustup.rs/)
+on your PATH:
 
 ```bash
 git clone https://github.com/RFingAdam/lineforge.git
@@ -85,8 +95,6 @@ pip install -e ".[dev,gui]"
 ```
 
 The GUI extra is required for the web interface and the complete test suite.
-Either way pip builds the Rust core during install, so you need a
-[Rust toolchain](https://rustup.rs/) on your PATH.
 
 ### Three surfaces, same answer
 
@@ -389,6 +397,9 @@ each tagged with its phase milestone.
   [3-wire decomposition](https://github.com/RFingAdam/lineforge/blob/main/docs/theory/three_wire.md)
 - **[Implementation plan](https://github.com/RFingAdam/lineforge/blob/main/docs/plan.md)** + **[audit report](https://github.com/RFingAdam/lineforge/blob/main/AUDIT.md)**: what shipped vs what remains.
 - **[Changelog](https://github.com/RFingAdam/lineforge/blob/main/CHANGELOG.md)**
+- **[Releasing](https://github.com/RFingAdam/lineforge/blob/main/docs/release/PYPI_TRUSTED_PUBLISHER.md)**.
+  Tag a `v*` commit on `main`; GitHub Actions publishes to PyPI through
+  a trusted publisher (OIDC, no API token).
 
 Built with [mkdocs-material](https://squidfunk.github.io/mkdocs-material/);
 deploys to GitHub Pages on every push to `main`.

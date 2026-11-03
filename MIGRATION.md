@@ -107,15 +107,14 @@ hardcoded URLs in your scripts, CI config, or documentation.
 ## If you have atlc3 1.x in production
 
 You don't have to migrate right away. atlc3 is **frozen at the `v1.1.0`
-tag** as legacy. Neither atlc3 nor lineforge is published on PyPI, so a
-package under either name there is not this project. You can:
+tag** as legacy and was never published to PyPI. You can:
 
 1. **Pin to atlc3 1.1.0** by git tag in your `requirements.txt` /
    `pyproject.toml`:
    `atlc3 @ git+https://github.com/RFingAdam/lineforge.git@v1.1.0`.
    Keep using `import atlc3`.
 2. **Migrate to lineforge**:
-   `pip install "lineforge @ git+https://github.com/RFingAdam/lineforge.git"`,
+   `pip install lineforge`,
    do the three find/replaces above, get all future updates.
 
 We recommend (2) for new projects and any project that's getting active

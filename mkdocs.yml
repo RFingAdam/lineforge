@@ -75,4 +75,5 @@ nav:
       - Skin effect: theory/skin_effect.md
       - 3-wire decomposition: theory/three_wire.md
   - Changelog: changelog.md
+  - Releasing: release/PYPI_TRUSTED_PUBLISHER.md
   - Plan: plan.md

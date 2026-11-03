@@ -34,12 +34,23 @@ user-drawn bitmaps.
 
 ## Get started
 
+```bash
+pip install lineforge
+```
+
 - [Quick Start](quickstart.md): first answer in three minutes
 - [Python API tutorial](tutorials/python.md)
 - [CLI tutorial](tutorials/cli.md)
 - [MCP server tutorial](tutorials/mcp.md)
 - [Geometry reference](reference/geometries.md)
 - [Analytical formulas (theory)](theory/analytical.md)
+
+## Releasing
+
+Tagged `v*` commits on `main` publish to
+[PyPI](https://pypi.org/project/lineforge/) through a trusted publisher
+(OIDC, no API token). See
+[Publishing to PyPI](release/PYPI_TRUSTED_PUBLISHER.md).
 
 ## Acknowledgments
 
