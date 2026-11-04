@@ -196,8 +196,16 @@ def test_planted_pickle_is_not_executed(
     def _forbid_pickle(*_args: object, **_kwargs: object) -> None:
         raise AssertionError("cache must not unpickle data")
 
+    class _ForbidUnpickler(pickle.Unpickler):
+        def load(self) -> object:  # type: ignore[override]
+            raise AssertionError("cache must not unpickle data")
+
+        def find_class(self, module: str, name: str) -> object:  # type: ignore[override]
+            raise AssertionError("cache must not unpickle data")
+
     monkeypatch.setattr(pickle, "loads", _forbid_pickle)
     monkeypatch.setattr(pickle, "load", _forbid_pickle)
+    monkeypatch.setattr(pickle, "Unpickler", _ForbidUnpickler)
 
     call_count = 0
 
@@ -210,9 +218,11 @@ def test_planted_pickle_is_not_executed(
     key = f"rce:{_hash_args((7,), {})}"
     planted = pickle.dumps(_MaliciousPayload())
     isolated_cache.mkdir(parents=True, exist_ok=True)
-    get_cache()._entry_path(key).write_bytes(planted)
+    entry = get_cache()._entry_path(key)
+    entry.write_bytes(planted)
     (isolated_cache / "planted.pkl").write_bytes(planted)
 
+    assert get_cache().get(key) is _MISS
     assert f(7) == 21
     assert f(7) == 21
     assert call_count == 1

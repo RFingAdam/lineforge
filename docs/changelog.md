@@ -15,6 +15,8 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 - Replaced the diskcache/pickle result cache with a JSON on-disk format so a
   planted cache file cannot execute code on load (#46). Leftover pickle
   entries are treated as misses.
+- `to_touchstone_nport` strips control characters from port names, comments,
+  and mixed-mode labels so a newline cannot inject Touchstone keywords (#41).
 
 ### Phase 4: Polish + 1.0.0 prep
 - Added geometry optimizer (`lineforge.optimize_for`): wrap scipy.optimize for
