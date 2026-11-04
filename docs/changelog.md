@@ -6,6 +6,11 @@ adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## [Unreleased]
 
+### Changed
+
+- Install docs now use `pip install lineforge` from PyPI. A PyPI version
+  badge and a Releasing page document the trusted-publisher release path.
+
 ### Security
 - Replaced the diskcache/pickle result cache with a JSON on-disk format so a
   planted cache file cannot execute code on load (#46). Leftover pickle

@@ -6,6 +6,14 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Changed
+
+- Install docs now use `pip install lineforge` from PyPI (package name
+  `lineforge`, first published as 2.3.0). README, Quick Start, the MCP
+  example, and MIGRATION.md no longer say the current package is unpublished.
+  A PyPI version badge and a short Releasing section point at the trusted
+  publisher notes.
+
 ### Security
 
 - `to_touchstone_nport` strips control characters from port names, comments,
