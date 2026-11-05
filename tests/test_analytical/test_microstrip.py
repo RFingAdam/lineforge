@@ -89,9 +89,9 @@ class TestMicrostripGolden:
         assert z0_from_lc == pytest.approx(result.z0, rel=1e-6)
 
     def test_out_of_range_warns(self) -> None:
-        # W/H = 50 / 4 = 12.5 ... still in range. Try 200/4 = 50:
+        # HJ 1980 is stated for 0.01 <= W/H <= 100; 800/4 = 200 is outside.
         with pytest.warns(UserWarning, match="W/H"):
-            r = microstrip(_ms(200.0, 4.0, 1.4, 4.4))
+            r = microstrip(_ms(800.0, 4.0, 1.4, 4.4))
         assert any(w.code == "out_of_range" for w in r.warnings)
 
 
@@ -139,10 +139,12 @@ class TestEmbeddedMicrostrip:
             )
         )
 
-        # Thin coating should match bare microstrip closely
-        assert thin.z0 == pytest.approx(bare.z0, rel=0.05)
-        # Thick coating with the same er should approach the stripline-like limit (lower Z0)
-        assert thick.z0 < bare.z0
+        # Even a 0.1 mil cover fills the strip's own layer with er2, so it is
+        # not bare microstrip: the graded-mesh field solve gives 43.97 ohm
+        # (bare: 46.9 ohm).
+        assert thin.z0 == pytest.approx(43.97, rel=0.03)
+        # Thicker cover with the same er lowers Z0 further.
+        assert thick.z0 < thin.z0 < bare.z0
 
 
 class TestSkrfCrossCheck:

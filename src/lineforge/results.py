@@ -72,6 +72,13 @@ class TLineResult(BaseModel):
 
     # --- metadata -------------------------------------------------------------
     method: str = Field(..., description="Which solver produced this result.")
+    model_accuracy: str | None = Field(
+        None,
+        description=(
+            "Stated accuracy of the closed-form model inside its validity domain. "
+            "Inputs outside that domain add an ``out_of_range`` warning."
+        ),
+    )
     frequency_hz: float | None = Field(
         None, description="Solve frequency [Hz]. None for frequency-independent analytical.", gt=0
     )
@@ -93,6 +100,9 @@ class DiffResult(BaseModel):
     vp_even: float = Field(..., description="Even-mode phase velocity [m/s].", gt=0)
 
     method: str = Field(..., description="Which solver produced this result.")
+    model_accuracy: str | None = Field(
+        None, description="Stated accuracy of the closed-form model inside its validity domain."
+    )
     frequency_hz: float | None = Field(None, gt=0)
     warnings: list[SolverWarning] = Field(default_factory=list)
 

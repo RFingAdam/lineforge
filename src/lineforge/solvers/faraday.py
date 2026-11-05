@@ -39,7 +39,6 @@ from __future__ import annotations
 from dataclasses import dataclass
 
 import numpy as np
-import scipy.sparse as sp
 import scipy.sparse.linalg as spla
 
 from lineforge.analytical._constants import MU0
@@ -131,15 +130,25 @@ def _partial_inductance(
     h, w = field_shape[0], field_shape[1]
     d_ref = float(max(h, w)) * px
 
-    yy = ys[:, None].astype(np.float64) * px
-    xx = xs[:, None].astype(np.float64) * px
-    yy_t = yy.T
-    xx_t = xx.T
-    r2 = (yy - yy_t) ** 2 + (xx - xx_t) ** 2
-    np.fill_diagonal(r2, (px * 0.5) ** 2)
-    L_partial = (MU0 / (2.0 * np.pi)) * np.log(d_ref / np.sqrt(r2))
-    np.fill_diagonal(L_partial, _self_inductance_per_m(px))
-    return L_partial
+    # Built in place: one N x N float64 work array plus one row-difference
+    # temporary, instead of the half-dozen N x N temporaries of the naive
+    # expression. At the pixel budget this is the difference between ~1 GB
+    # and ~3 GB of transient memory.
+    yf = ys.astype(np.float64) * px
+    xf = xs.astype(np.float64) * px
+    r = np.subtract.outer(yf, yf)
+    np.square(r, out=r)
+    dx = np.subtract.outer(xf, xf)
+    np.square(dx, out=dx)
+    r += dx
+    del dx
+    np.fill_diagonal(r, (px * 0.5) ** 2)
+    np.sqrt(r, out=r)
+    np.divide(d_ref, r, out=r)
+    np.log(r, out=r)
+    r *= MU0 / (2.0 * np.pi)
+    np.fill_diagonal(r, _self_inductance_per_m(px))
+    return r
 
 
 def _assemble_impedance(
@@ -167,8 +176,11 @@ def _assemble_impedance(
     R_diag = rho_field[ys, xs] / (px * px)  # Ω/m per pixel
 
     # ---- Top-left block: R_diag + jω·L_partial -----------------------------
-    Z[:N, :N] = 1j * omega * _partial_inductance(ys, xs, rho_field.shape, px)
-    np.fill_diagonal(Z[:N, :N], np.diag(Z[:N, :N]) + R_diag)
+    lp = _partial_inductance(ys, xs, rho_field.shape, px)
+    np.multiply(lp, 1j * omega, out=Z[:N, :N])
+    del lp
+    idx = np.arange(N)
+    Z[idx, idx] += R_diag
 
     # Voltage columns: each pixel n in conductor c subtracts V_c from its row
     # so the equation is: Σ_k Z[n,k]·i_k − V_{c(n)} = 0
@@ -216,24 +228,32 @@ def _build_system(
 
 
 def _solve_dense(Z: np.ndarray, b: np.ndarray) -> np.ndarray:
-    """Direct dense complex solve via numpy."""
-    return np.linalg.solve(Z, b)
+    """Direct dense complex solve (LU in place: no second N x N copy)."""
+    from scipy.linalg import solve as _lin_solve
+
+    x: np.ndarray = _lin_solve(Z, b, overwrite_a=True, check_finite=False)
+    return x
 
 
 def _solve_bicgstab_with_ilu(Z: np.ndarray, b: np.ndarray, tol: float = 1e-8) -> np.ndarray:
-    """BiCGSTAB with ILU(0) preconditioner via SciPy. Falls back to dense if Z is small."""
+    """Iterative solve of the dense PEEC system, falling back to dense LU.
+
+    The matrix is dense, so it is applied as a :class:`LinearOperator` with a
+    Jacobi preconditioner. It used to be converted with ``sp.csr_matrix(Z)``
+    for an ILU, which materialises ``N^2`` int64 column indices on top of the
+    ``N^2`` complex values: an 18k-pixel cross-section asked for a 2.6 GB
+    index array and died with MemoryError. A dense matrix gains nothing from
+    a sparse ILU anyway.
+    """
     n = Z.shape[0]
     if n < 500:
         return _solve_dense(Z, b)
-    Z_sp = sp.csr_matrix(Z)
-    try:
-        ilu = spla.spilu(Z_sp, fill_factor=10, drop_tol=1e-4)
-        M = spla.LinearOperator((n, n), matvec=ilu.solve)
-    except Exception:
-        M = None
-    x, info = spla.bicgstab(Z_sp, b, M=M, rtol=tol, atol=tol, maxiter=500)
+    d = np.diag(Z).copy()
+    d[np.abs(d) == 0] = 1.0
+    A = spla.LinearOperator((n, n), matvec=lambda v: Z @ v, dtype=np.complex128)
+    M = spla.LinearOperator((n, n), matvec=lambda v: v / d, dtype=np.complex128)
+    x, info = spla.bicgstab(A, b, M=M, rtol=tol, atol=tol, maxiter=500)
     if info != 0:
-        # Fall back to dense
         return _solve_dense(Z, b)
     x_arr: np.ndarray = np.asarray(x)
     return x_arr
@@ -308,6 +328,10 @@ def _check_rs_geometry(
     return False, None
 
 
+class SolverBudgetExceeded(ValueError):  # noqa: N818  name is part of the public solver API
+    """The dense PEEC system would exceed the configured pixel budget."""
+
+
 @cached("solve_lrs_faraday")
 def solve_lrs(
     usermap: Usermap,
@@ -315,6 +339,7 @@ def solve_lrs(
     frequency_hz: float,
     method: str = "auto",
     tol: float = 1e-8,
+    max_pixels: int = 8000,
 ) -> FaradayResult:
     """Solve for L and Rs at a given frequency via the 2D Faraday/PEEC system.
 
@@ -329,6 +354,11 @@ def solve_lrs(
         N ≥ 500 conductor pixels, dense otherwise.
     tol
         Krylov convergence tolerance.
+    max_pixels
+        Refusal threshold on the conductor pixel count. The PEEC matrix is
+        dense, ``(N + n_c)^2`` complex entries plus float64 temporaries of the
+        same size, so this keeps a fine-pixel cross-section from allocating
+        tens of gigabytes; :class:`SolverBudgetExceeded` is raised instead.
 
     Returns
     -------
@@ -374,6 +404,14 @@ def solve_lrs(
     # Re-extract pixel indices using the (possibly remapped) cid array
     ys, xs = np.where(cid >= 0)
     N = len(ys)
+    if N > max_pixels:
+        gb = 3 * 16 * (N + n_cond) ** 2 / 1e9
+        raise SolverBudgetExceeded(
+            f"{N} conductor pixels exceed the dense PEEC budget of {max_pixels} "
+            f"(the system would need ~{gb:.1f} GB). Coarsen the grid, enable "
+            "restrict_to_skin_depth, raise max_pixels, or use solve_full's default "
+            "graded/perturbational path, which has no dense matrix."
+        )
 
     Z, b = _build_system(ys, xs, cid, rho_field, px, omega, n_cond, drive)
 
@@ -404,10 +442,6 @@ def solve_lrs(
         rs_low_confidence=rs_warn,
         rs_warning=rs_msg,
     )
-
-
-class SolverBudgetExceeded(ValueError):  # noqa: N818  name is part of the public solver API
-    """The dense PEEC system would exceed the configured pixel budget."""
 
 
 def solve_impedance_matrix(
