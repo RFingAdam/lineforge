@@ -1,4 +1,4 @@
-"""Phase 1.2 AC: CPWG (coplanar waveguide with ground) tests via Wen elliptic-integral formula."""
+"""Phase 1.2 AC: CPWG (coplanar waveguide with ground): microstrip + coplanar-increment model."""
 
 from __future__ import annotations
 
@@ -12,14 +12,13 @@ class TestCPWG:
     @pytest.mark.parametrize(
         ("W_mil", "S_mil", "H_mil", "T_mil", "er", "z0_expected", "tol"),
         [
-            # CPWG closed-form (Wen 1969) is ±15-20% accurate vs empirical
-            # fits (Polar SI9000, Saturn). Tight-tolerance work should use
-            # the bitmap solver. Expected values below come from the Wen
-            # formula published values.
-            (5.0, 4.0, 4.0, 1.4, 4.4, 60.0, 0.15),
-            (5.0, 8.0, 4.0, 1.4, 4.4, 65.0, 0.15),
-            (15.0, 8.0, 4.0, 1.4, 4.4, 32.0, 0.20),
-            (5.0, 20.0, 4.0, 1.4, 4.4, 68.0, 0.15),
+            # Expected values are graded-mesh field solves (lineforge.solvers.graded)
+            # of the same cross-section. The former pure Wen formula read 60/65/32/68
+            # ohm here, above the microstrip limit for the wider gaps.
+            (5.0, 4.0, 4.0, 1.4, 4.4, 52.89, 0.03),
+            (5.0, 8.0, 4.0, 1.4, 4.4, 56.96, 0.03),
+            (15.0, 8.0, 4.0, 1.4, 4.4, 30.09, 0.03),
+            (5.0, 20.0, 4.0, 1.4, 4.4, 58.27, 0.03),
         ],
     )
     def test_golden(

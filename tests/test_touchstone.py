@@ -62,7 +62,10 @@ class TestTouchstoneRoundTrip:
             alpha_np_per_m = (cond_db_in + diel_db_in) / INCH_M / DB_PER_NEPER
             expected_dissipated = 1.0 - np.exp(-2.0 * alpha_np_per_m * INCH_M)
             measured_dissipated = 1.0 - abs(net.s[i, 0, 0]) ** 2 - abs(net.s[i, 1, 0]) ** 2
-            assert measured_dissipated == pytest.approx(expected_dissipated, abs=1e-4), (
+            # rel 1 %: the line is not exactly z_ref, so a little power is lost to
+            # multiple reflections rather than alpha (visible now that the
+            # conductor loss is the real skin-effect value, not ~0).
+            assert measured_dissipated == pytest.approx(expected_dissipated, rel=0.01), (
                 f"At f={net.f[i]:.2e}: expected dissipation {expected_dissipated:.6f}, "
                 f"got {measured_dissipated:.6f}"
             )

@@ -21,6 +21,7 @@ from typing import Annotated, Any, Literal, Union
 from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
 from lineforge.geometry.dielectric import DielectricLayer, series_reduce
+from lineforge.materials.database import RoughnessSpec
 from lineforge.units import parse_length
 
 
@@ -67,6 +68,22 @@ class Microstrip(_BaseGeometry):
     er: float = Field(..., description="Relative permittivity of the dielectric.", ge=1)
     tan_delta: float = Field(0.0, description="Loss tangent of the dielectric.", ge=0)
     rho: float = Field(COPPER_RHO, description="Conductor resistivity [Ω·m].", gt=0)
+    mask_thickness: Length | None = Field(
+        None,
+        description=(
+            "Optional solder-mask (conformal coating) thickness, applied over the "
+            "substrate surface and around the trace(s). None = bare (uncoated)."
+        ),
+    )
+    mask_er: float = Field(3.5, description="Solder-mask relative permittivity.", ge=1)
+    mask_tan_delta: float = Field(0.02, description="Solder-mask loss tangent.", ge=0)
+    roughness: RoughnessSpec | None = Field(
+        None,
+        description=(
+            "Optional conductor surface roughness (Hammerstad rms, Groisse or Huray "
+            "snowball) applied as a multiplier on the skin-effect conductor loss."
+        ),
+    )
 
 
 class EmbeddedMicrostrip(_BaseGeometry):
@@ -91,8 +108,22 @@ class EmbeddedMicrostrip(_BaseGeometry):
     er: float = Field(..., description="Substrate relative permittivity.", ge=1)
     er2: float = Field(..., description="Coating relative permittivity.", ge=1)
     tan_delta: float = Field(0.0, ge=0)
-    tan_delta_2: float = Field(0.0, ge=0)
+    tan_delta_2: float | None = Field(
+        None,
+        description=(
+            "Coating loss tangent. None (default) = same as the substrate's tan_delta; "
+            "it used to default to 0, which silently halved the dielectric loss."
+        ),
+        ge=0,
+    )
     rho: float = Field(COPPER_RHO, gt=0)
+    roughness: RoughnessSpec | None = Field(
+        None,
+        description=(
+            "Optional conductor surface roughness (Hammerstad rms, Groisse or Huray "
+            "snowball) applied as a multiplier on the skin-effect conductor loss."
+        ),
+    )
 
 
 class StriplineSymmetric(_BaseGeometry):
@@ -287,6 +318,15 @@ class EdgeCoupledDiffMicrostrip(_BaseGeometry):
     er: float = Field(..., ge=1)
     tan_delta: float = Field(0.0, ge=0)
     rho: float = Field(COPPER_RHO, gt=0)
+    mask_thickness: Length | None = Field(
+        None,
+        description=(
+            "Optional solder-mask (conformal coating) thickness, applied over the "
+            "substrate surface and around the trace(s). None = bare (uncoated)."
+        ),
+    )
+    mask_er: float = Field(3.5, description="Solder-mask relative permittivity.", ge=1)
+    mask_tan_delta: float = Field(0.02, description="Solder-mask loss tangent.", ge=0)
 
 
 class EdgeCoupledDiffStripline(_BaseGeometry):

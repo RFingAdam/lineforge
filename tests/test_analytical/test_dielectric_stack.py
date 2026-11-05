@@ -10,7 +10,7 @@ code path. So we test:
    layer with their summed thickness.
 4. The L3 SIG1 void-L4 stackup from the planning session reproduces
    Z₀ ≈ 52.06 Ω, εr_eff ≈ 4.11.
-5. Method tag flips to ``ipc2141-stripline-asymmetric-multilayer-stack`` when
+5. Method tag flips to ``wheeler-parallel-stripline-asymmetric-multilayer-stack`` when
    stacks are used.
 6. Validator rejects ambiguous input (stack + explicit H/εr for the same side).
 """
@@ -160,8 +160,10 @@ class TestStriplineAsymmetricStackSolve:
     def test_void_l4_l3_sig1_z0(self) -> None:
         """L3 SIG1 with L4 voided: prep+voided+core below = 10.2 mil eq.
 
-        Hand calculation from the planning session: Z₀ ≈ 52.06 Ω,
-        εr_eff ≈ 4.11. This test locks that result in.
+        The planning session's IPC-2141A hand calculation gave 52.06 Ω /
+        εr_eff 4.11; the graded-mesh field solve of the actual stratified
+        stack gives 54.19 Ω / 3.997. The Wheeler parallel-combination model
+        on the series-reduced stack must land within 3 % of the field solve.
         """
         geom = StriplineAsymmetric(
             W="3.4mil",
@@ -177,9 +179,9 @@ class TestStriplineAsymmetricStackSolve:
             ],
         )
         result = stripline_asymmetric(geom, frequency_hz=1e9)
-        assert result.z0 == pytest.approx(52.06, abs=0.05)
-        assert result.eps_eff == pytest.approx(4.113, abs=1e-3)
-        assert result.method == "ipc2141-stripline-asymmetric-multilayer-stack"
+        assert result.z0 == pytest.approx(54.19, rel=0.03)
+        assert result.eps_eff == pytest.approx(3.997, rel=0.03)
+        assert result.method == "wheeler-parallel-stripline-asymmetric-multilayer-stack"
         assert result.dielectric_loss_db_per_in is not None
         assert result.dielectric_loss_db_per_in > 0
 
@@ -200,8 +202,8 @@ class TestStriplineAsymmetricStackSolve:
                 ],
             )
         )
-        assert bulk.method == "ipc2141-stripline-asymmetric"
-        assert with_stack.method == "ipc2141-stripline-asymmetric-multilayer-stack"
+        assert bulk.method == "wheeler-parallel-stripline-asymmetric"
+        assert with_stack.method == "wheeler-parallel-stripline-asymmetric-multilayer-stack"
 
     def test_stack_of_identical_layers_matches_single_layer(self) -> None:
         """Three identical Core layers (each 2 mil, εr=4.2) summed to 6 mil

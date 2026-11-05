@@ -329,17 +329,24 @@ def solve_full(
     pixel_width: float | str | None = None,
     restrict_to_skin_depth: bool = True,
 ) -> RLGCResult:
-    """Solve the full RLGC characterization at one frequency (Phase 3).
+    """Solve the full RLGC characterization at one frequency.
 
-    Combines the Phase 2 C/Gp Laplace solve with the Phase 3 Faraday L/Rs
-    solve. Returns :class:`RLGCResult` with L, C, R, G, Z0, εeff, vp, α, β.
+    Graded-mesh electrostatic solve for C, Gp and L, perturbational
+    (surface-impedance) R. Without ``pixel_width`` a parameterized geometry
+    is rasterized at :func:`lineforge.geometry.builders.auto_pixel_width`.
+    Returns :class:`RLGCResult` with L, C, R, G, Z0, εeff, vp, α, β.
     """
     if isinstance(geometry, dict):
         geometry = from_dict(geometry)
     freq = parse_frequency(frequency) if isinstance(frequency, str) else frequency
     px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
 
-    usermap = geometry if isinstance(geometry, Usermap) else rasterize(geometry, pixel_width=px)
+    if isinstance(geometry, Usermap):
+        usermap = geometry
+    else:
+        from lineforge.geometry.builders import auto_pixel_width
+
+        usermap = rasterize(geometry, pixel_width=px or auto_pixel_width(geometry))
     return _solve_full(
         usermap,
         frequency_hz=float(freq),

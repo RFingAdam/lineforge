@@ -6,6 +6,35 @@ and the project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.
 
 ## [Unreleased]
 
+### Fixed
+
+- `solve_full` uses a new graded-mesh sparse field solver
+  (`lineforge.solvers.graded`) for C/Gp/L and a perturbational
+  (surface-impedance) R. A 0.1 mm microstrip at 5 um pixels now solves in
+  ~0.2 s instead of minutes, with bounded memory (cell budget, auto-coarsen
+  or `MeshBudgetExceeded`); the dense PEEC path refuses oversized inputs with
+  `SolverBudgetExceeded` instead of raising MemoryError. The MCP tool picks
+  the pixel size automatically (`auto_pixel_width`) and accepts `roughness`.
+- Edge-coupled microstrip uses Kirschning-Jansen with per-mode thickness
+  correction: separate odd/even eps_eff (they were identical).
+- Microstrip and edge-coupled microstrip take an optional solder mask
+  (`mask_thickness`, `mask_er`, `mask_tan_delta`).
+- Stripline uses Wheeler's 1978 finite-thickness formula; asymmetric stripline
+  the parallel combination of two Wheeler halves. Results carry
+  `model_accuracy` and out-of-range / offset warnings; `calculate_impedance`
+  also returns `validity_warnings`.
+- CPWG never reads above the microstrip limit and rises monotonically with
+  the gap (microstrip + coplanar-increment model).
+- Microstrip conductor loss uses the skin-effect surface resistance (Pucel),
+  with optional roughness; it used the DC sheet resistance.
+- Microstrip eps_eff uses Hammerstad-Jensen's thickness correction (it rose
+  with copper thickness instead of falling).
+- Dielectric loss uses filling factors consistently; embedded microstrip no
+  longer averages er/tan_delta, and `tan_delta_2` defaults to the substrate's.
+- Rasterizers keep the exact er / tan_delta instead of snapping to the
+  nearest atlc2 palette colour (er 4.2 became PVC at 4.5).
+- The result cache key includes the usermap's resolved materials.
+
 ### Changed
 
 - Install docs now use `pip install lineforge` from PyPI (package name

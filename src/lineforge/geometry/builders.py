@@ -113,9 +113,73 @@ def _make_synth_dielectric(
     return rgb, record
 
 
+def _exact_dielectric(
+    er: float,
+    tan_delta: float,
+    role: str,
+    pool: list[MaterialRecord],
+) -> tuple[int, int, int]:
+    """RGB for a dielectric carrying *exactly* ``er`` / ``tan_delta``.
+
+    An atlc2 palette colour is reused only when it matches both values; any
+    other dielectric gets a synthesized colour whose :class:`MaterialRecord`
+    is appended to ``pool`` (pass ``build_lookup([pool])`` to the Usermap).
+    Snapping to the nearest palette entry, which the rasterizers used to do,
+    silently solved a different board: εr = 4.2 became PVC at εr = 4.5 with
+    tanδ = 0.011.
+    """
+    from lineforge.materials.database import ATLC2_DEFAULTS
+
+    for m in ATLC2_DEFAULTS:
+        if m.is_insulator and abs(m.er - er) < 1e-12 and abs(m.tan_delta - tan_delta) < 1e-15:
+            return m.rgb
+    for m in pool:
+        if abs(m.er - er) < 1e-12 and abs(m.tan_delta - tan_delta) < 1e-15:
+            return m.rgb
+    taken = {m.rgb for m in pool}
+    rgb, record = _make_synth_dielectric(
+        er, tan_delta, role=role, label=f"custom εr={er:.4g} tanδ={tan_delta:.3g} ({role})"
+    )
+    bump = 0
+    while rgb in taken:
+        bump += 1
+        rgb = (rgb[0], rgb[1], (rgb[2] + 7 * bump) % 256)
+    if bump:
+        record = record.model_copy(update={"rgb": rgb})
+    pool.append(record)
+    return rgb
+
+
+def _lookup(pool: list[MaterialRecord]) -> dict[tuple[int, int, int], MaterialRecord] | None:
+    return build_lookup([pool]) if pool else None
+
+
 def _pick_pixel_width(min_feature_m: float, target_pixels: int = 8) -> float:
     """Choose a pixel width such that the smallest feature spans ``target_pixels``."""
     return min_feature_m / target_pixels
+
+
+def auto_pixel_width(geometry: GeometryUnion) -> float:
+    """Pixel size for a full (RLGC) field solve of ``geometry``.
+
+    Resolves the copper thickness with ~6 pixels and the smallest of the
+    widths, gaps and dielectric heights with at least ~16, but never finer
+    than 1/60 of that smallest dimension, so a thin plating layer does not
+    blow the mesh up. With the graded open-boundary mesh this keeps typical
+    PCB cross-sections to 10^3-10^5 cells and within ~1-2 % of the converged
+    impedance.
+    """
+    names = ("W", "S", "H", "H1", "H2", "B", "H_between")
+    dims = [float(getattr(geometry, n)) for n in names if getattr(geometry, n, None)]
+    feature = min(dims)
+    t = float(getattr(geometry, "T", 0.0) or 0.0)
+    mask = getattr(geometry, "mask_thickness", None)
+    if mask:
+        feature = min(feature, 3.0 * float(mask))
+    px = feature / 16.0
+    if t > 0:
+        px = min(px, t / 6.0)
+    return max(px, feature / 60.0)
 
 
 def _fill_rect(
@@ -137,6 +201,28 @@ def _fill_rect(
 # ---------------------------------------------------------------------------
 
 
+def _paint_mask(
+    rgb: np.ndarray,
+    surface_y: int,
+    strips: Sequence[tuple[int, int]],
+    strip_top: int,
+    mask_px: int,
+    color: tuple[int, int, int],
+) -> None:
+    """Paint a conformal solder-mask coating ``mask_px`` thick.
+
+    The coat covers the substrate surface (rows just above ``surface_y``) and
+    wraps each strip (its sides and top). Strips are painted afterwards so they
+    stay on top of the coating colour.
+    """
+    if mask_px <= 0:
+        return
+    _, total_w, _ = rgb.shape
+    _fill_rect(rgb, surface_y - mask_px, surface_y, 0, total_w, color)
+    for x0, x1 in strips:
+        _fill_rect(rgb, strip_top - mask_px, surface_y, x0 - mask_px, x1 + mask_px, color)
+
+
 def rasterize_microstrip(
     geom: Microstrip,
     *,
@@ -147,19 +233,23 @@ def rasterize_microstrip(
 
     Layout (top-to-bottom):
         - ``margin_pixels`` of vacuum (air above the strip).
-        - The strip (red, ``W`` wide × ``T`` thick), centered horizontally.
-        - The dielectric (FR4-colored, ``H`` thick).
+        - The optional solder-mask coating (``mask_thickness``) over the
+          substrate and around the strip.
+        - The strip (red, ``W`` wide x ``T`` thick), centered horizontally.
+        - The dielectric (``H`` thick) with the exact εr / tanδ requested.
         - 1-pixel ground plane (green) at the bottom, then ``margin_pixels`` of vacuum.
     """
     px = pixel_width or _pick_pixel_width(min(geom.H, geom.T, geom.W))
-    air_above_px = margin_pixels
+    pool: list[MaterialRecord] = []
+    mask_px = round(geom.mask_thickness / px) if geom.mask_thickness else 0
+    air_above_px = margin_pixels + mask_px
     strip_t_px = max(1, round(geom.T / px))
     sub_h_px = max(2, round(geom.H / px))
     ground_px = 1
     air_below_px = margin_pixels
 
     strip_w_px = max(2, round(geom.W / px))
-    horizontal_margin = max(margin_pixels, strip_w_px)
+    horizontal_margin = max(margin_pixels, strip_w_px) + mask_px
     total_w = strip_w_px + 2 * horizontal_margin
 
     total_h = air_above_px + strip_t_px + sub_h_px + ground_px + air_below_px
@@ -169,15 +259,19 @@ def rasterize_microstrip(
     # Substrate
     sub_y0 = air_above_px + strip_t_px
     sub_y1 = sub_y0 + sub_h_px
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    diel = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
     _fill_rect(rgb, sub_y0, sub_y1, 0, total_w, diel)
 
     # Ground plane
     _fill_rect(rgb, sub_y1, sub_y1 + ground_px, 0, total_w, GREEN_GROUND)
 
-    # Strip
     strip_x0 = horizontal_margin
     strip_x1 = strip_x0 + strip_w_px
+    if mask_px:
+        coat = _exact_dielectric(geom.mask_er, geom.mask_tan_delta, "above", pool)
+        _paint_mask(rgb, sub_y0, [(strip_x0, strip_x1)], air_above_px, mask_px, coat)
+
+    # Strip
     _fill_rect(rgb, air_above_px, air_above_px + strip_t_px, strip_x0, strip_x1, RED_PLUS_ONE)
 
     return Usermap(
@@ -187,6 +281,7 @@ def rasterize_microstrip(
             name=f"microstrip-W{geom.W * 1e6:.1f}um",
             source="lineforge.geometry.builders.rasterize_microstrip",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -196,8 +291,13 @@ def rasterize_embedded_microstrip(
     pixel_width: float | None = None,
     margin_pixels: int = 8,
 ) -> Usermap:
-    """Like rasterize_microstrip but with a coating dielectric covering the strip."""
+    """Embedded microstrip: the coating fills the strip's row and covers it by ``H2``.
+
+    The coating dielectric surrounds the strip on both sides (the strip row is
+    filled, not left as air) and extends ``H2`` above the strip's top face.
+    """
     px = pixel_width or _pick_pixel_width(min(geom.H, geom.H2, geom.T, geom.W))
+    pool: list[MaterialRecord] = []
     coat_t_px = max(1, round(geom.H2 / px))
     air_above_px = margin_pixels
     strip_t_px = max(1, round(geom.T / px))
@@ -217,10 +317,11 @@ def rasterize_embedded_microstrip(
     sub_y0 = strip_y0 + strip_t_px
     sub_y1 = sub_y0 + sub_h_px
 
-    coat_color = _dielectric_rgb_for_er(geom.er2, geom.tan_delta_2)
-    sub_color = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    tan2 = geom.tan_delta if geom.tan_delta_2 is None else geom.tan_delta_2
+    coat_color = _exact_dielectric(geom.er2, tan2, "above", pool)
+    sub_color = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
 
-    _fill_rect(rgb, coat_y0, strip_y0, 0, total_w, coat_color)
+    _fill_rect(rgb, coat_y0, sub_y0, 0, total_w, coat_color)
     _fill_rect(rgb, sub_y0, sub_y1, 0, total_w, sub_color)
     _fill_rect(rgb, sub_y1, sub_y1 + ground_px, 0, total_w, GREEN_GROUND)
 
@@ -235,6 +336,7 @@ def rasterize_embedded_microstrip(
             name="embedded_microstrip",
             source="lineforge.geometry.builders.rasterize_embedded_microstrip",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -262,7 +364,8 @@ def rasterize_stripline_symmetric(
     # Top ground plane
     _fill_rect(rgb, 0, ground_px, 0, total_w, GREEN_GROUND)
     # Cavity (dielectric)
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    pool: list[MaterialRecord] = []
+    diel = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
     _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
     # Bottom ground plane
     _fill_rect(rgb, ground_px + cavity_px, total_h, 0, total_w, GREEN_GROUND)
@@ -281,6 +384,7 @@ def rasterize_stripline_symmetric(
             name="stripline_symmetric",
             source="lineforge.geometry.builders.rasterize_stripline_symmetric",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -445,8 +549,10 @@ def rasterize_stripline_asymmetric(
 
         custom_lookup = build_lookup([synthetic_pool])
     else:
-        diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+        bulk_pool: list[MaterialRecord] = []
+        diel = _exact_dielectric(geom.er, geom.tan_delta, "below", bulk_pool)
         _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
+        custom_lookup = _lookup(bulk_pool)
 
     _fill_rect(rgb, ground_px + cavity_px, total_h, 0, total_w, GREEN_GROUND)
 
@@ -493,7 +599,8 @@ def rasterize_cpwg(
 
     sub_y0 = air_above_px + cond_t_px
     sub_y1 = sub_y0 + sub_h_px
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    pool: list[MaterialRecord] = []
+    diel = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
     _fill_rect(rgb, sub_y0, sub_y1, 0, total_w, diel)
     _fill_rect(rgb, sub_y1, sub_y1 + bottom_ground_px, 0, total_w, GREEN_GROUND)
 
@@ -508,8 +615,11 @@ def rasterize_cpwg(
     left_x0 = left_x1 - side_gnd_px
     right_x0 = sig_x1 + gap_px
     right_x1 = right_x0 + side_gnd_px
-    _fill_rect(rgb, air_above_px, air_above_px + cond_t_px, left_x0, left_x1, GREEN_GROUND)
-    _fill_rect(rgb, air_above_px, air_above_px + cond_t_px, right_x0, right_x1, GREEN_GROUND)
+    # The coplanar grounds run to the bitmap edge so open-boundary extension
+    # (edge replication) makes them semi-infinite, as the closed-form models assume.
+    del left_x0, right_x1
+    _fill_rect(rgb, air_above_px, air_above_px + cond_t_px, 0, left_x1, GREEN_GROUND)
+    _fill_rect(rgb, air_above_px, air_above_px + cond_t_px, right_x0, total_w, GREEN_GROUND)
 
     return Usermap(
         rgb,
@@ -518,6 +628,7 @@ def rasterize_cpwg(
             name="cpwg",
             source="lineforge.geometry.builders.rasterize_cpwg",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -528,7 +639,9 @@ def rasterize_edge_coupled_diff_microstrip(
     margin_pixels: int = 16,
 ) -> Usermap:
     px = pixel_width or _pick_pixel_width(min(geom.H, geom.T, geom.S, geom.W))
-    air_above_px = margin_pixels
+    pool: list[MaterialRecord] = []
+    mask_px = round(geom.mask_thickness / px) if geom.mask_thickness else 0
+    air_above_px = margin_pixels + mask_px
     strip_t_px = max(1, round(geom.T / px))
     sub_h_px = max(2, round(geom.H / px))
     ground_px = 1
@@ -536,25 +649,28 @@ def rasterize_edge_coupled_diff_microstrip(
 
     strip_w_px = max(2, round(geom.W / px))
     gap_px = max(2, round(geom.S / px))
-    horizontal_margin = max(margin_pixels, strip_w_px * 2)
+    horizontal_margin = max(margin_pixels, strip_w_px * 2) + mask_px
     total_w = 2 * strip_w_px + gap_px + 2 * horizontal_margin
     total_h = air_above_px + strip_t_px + sub_h_px + ground_px + air_below_px
 
     rgb = np.full((total_h, total_w, 3), WHITE_VACUUM, dtype=np.uint8)
     sub_y0 = air_above_px + strip_t_px
     sub_y1 = sub_y0 + sub_h_px
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    diel = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
     _fill_rect(rgb, sub_y0, sub_y1, 0, total_w, diel)
     _fill_rect(rgb, sub_y1, sub_y1 + ground_px, 0, total_w, GREEN_GROUND)
 
-    # Two strips (red = +1, blue = -1)
+    # Two strips (red = +1, blue = -1), exactly gap_px apart.
     cx = total_w // 2
     s1_x0 = cx - gap_px // 2 - strip_w_px
     s1_x1 = s1_x0 + strip_w_px
-    s2_x0 = cx + gap_px // 2
+    s2_x0 = s1_x1 + gap_px
     s2_x1 = s2_x0 + strip_w_px
     sy0 = air_above_px
     sy1 = air_above_px + strip_t_px
+    if mask_px:
+        coat = _exact_dielectric(geom.mask_er, geom.mask_tan_delta, "above", pool)
+        _paint_mask(rgb, sub_y0, [(s1_x0, s1_x1), (s2_x0, s2_x1)], sy0, mask_px, coat)
     _fill_rect(rgb, sy0, sy1, s1_x0, s1_x1, RED_PLUS_ONE)
     _fill_rect(rgb, sy0, sy1, s2_x0, s2_x1, BLUE_MINUS_ONE)
 
@@ -565,6 +681,7 @@ def rasterize_edge_coupled_diff_microstrip(
             name="edge_coupled_diff_microstrip",
             source="lineforge.geometry.builders.rasterize_edge_coupled_diff_microstrip",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -589,7 +706,8 @@ def rasterize_edge_coupled_diff_stripline(
 
     rgb = np.full((total_h, total_w, 3), WHITE_VACUUM, dtype=np.uint8)
     _fill_rect(rgb, 0, ground_px, 0, total_w, GREEN_GROUND)
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    pool: list[MaterialRecord] = []
+    diel = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
     _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
     _fill_rect(rgb, ground_px + cavity_px, total_h, 0, total_w, GREEN_GROUND)
 
@@ -610,6 +728,7 @@ def rasterize_edge_coupled_diff_stripline(
             name="edge_coupled_diff_stripline",
             source="lineforge.geometry.builders.rasterize_edge_coupled_diff_stripline",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -633,7 +752,8 @@ def rasterize_broadside_coupled_diff_stripline(
 
     rgb = np.full((total_h, total_w, 3), WHITE_VACUUM, dtype=np.uint8)
     _fill_rect(rgb, 0, ground_px, 0, total_w, GREEN_GROUND)
-    diel = _dielectric_rgb_for_er(geom.er, geom.tan_delta)
+    pool: list[MaterialRecord] = []
+    diel = _exact_dielectric(geom.er, geom.tan_delta, "below", pool)
     _fill_rect(rgb, ground_px, ground_px + cavity_px, 0, total_w, diel)
     _fill_rect(rgb, ground_px + cavity_px, total_h, 0, total_w, GREEN_GROUND)
 
@@ -653,6 +773,7 @@ def rasterize_broadside_coupled_diff_stripline(
             name="broadside_coupled_diff_stripline",
             source="lineforge.geometry.builders.rasterize_broadside_coupled_diff_stripline",
         ),
+        material_lookup=_lookup(pool),
     )
 
 
@@ -698,6 +819,7 @@ def rasterize(
 
 
 __all__ = [
+    "auto_pixel_width",
     "rasterize",
     "rasterize_broadside_coupled_diff_stripline",
     "rasterize_cpwg",

@@ -157,6 +157,13 @@ def build_server() -> MCPServer:
 
         out = result.model_dump()
         out["_kind"] = "DiffResult" if isinstance(result, DiffResult) else "TLineResult"
+        # Surface the model-validity warnings on their own so a caller cannot
+        # miss that the closed form was used outside its stated range.
+        out["validity_warnings"] = [
+            w["message"]
+            for w in out.get("warnings", [])
+            if w.get("code", "").startswith(("out_of_range", "er_out_of_range", "validity"))
+        ]
         return out
 
     # ============================================================== Phase 2
@@ -401,8 +408,22 @@ def build_server() -> MCPServer:
         frequency: float | str = 1e9,
         pixel_width: str | float | None = None,
         restrict_to_skin_depth: bool = True,
+        roughness: dict[str, Any] | None = None,
+        max_cells: int | None = None,
     ) -> dict[str, Any]:
-        """Solve full RLGC (combined C/Gp + L/Rs) asynchronously."""
+        """Solve full RLGC (C/Gp/L field solve + surface-impedance R) asynchronously.
+
+        Uses a graded open-boundary mesh solved sparse (bounded memory: the
+        mesh is capped at ``max_cells``, default 1.5M, and larger usermaps are
+        auto-coarsened with an ``auto_coarsened`` warning). When ``geometry``
+        is given without ``pixel_width`` the pixel size is chosen
+        automatically (``auto_pixel_width``). ``roughness`` takes a
+        RoughnessSpec dict, e.g. ``{"model": "hammerstad", "rms_um": 1.0}``.
+        """
+        from lineforge.geometry.builders import auto_pixel_width
+        from lineforge.materials.database import RoughnessSpec
+        from lineforge.solvers.graded import DEFAULT_MAX_CELLS
+
         if usermap_uri is not None:
             uid = usermap_uri.split("/")[-1]
             usermap = usermap_store.get(uid)
@@ -414,9 +435,14 @@ def build_server() -> MCPServer:
             except (KeyError, ValueError) as exc:
                 return {"error": str(exc)}
             px = parse_length(pixel_width) if isinstance(pixel_width, str) else pixel_width
-            usermap = rasterize_geom(geom, pixel_width=px)
+            usermap = rasterize_geom(geom, pixel_width=px or auto_pixel_width(geom))
         else:
             return {"error": "either `geometry` or `usermap_uri` is required"}
+
+        try:
+            rough = RoughnessSpec(**roughness) if roughness else None
+        except ValueError as exc:
+            return {"error": f"bad roughness: {exc}"}
 
         freq_hz = parse_frequency(frequency) if isinstance(frequency, str) else frequency
 
@@ -427,6 +453,8 @@ def build_server() -> MCPServer:
                 usermap,
                 frequency_hz=float(freq_hz),
                 restrict_to_skin_depth=restrict_to_skin_depth,
+                roughness=rough,
+                max_cells=max_cells or DEFAULT_MAX_CELLS,
             )
             out = result.model_dump()
             out["_kind"] = "RLGCResult"

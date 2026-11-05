@@ -19,7 +19,7 @@ import math
 
 from scipy.special import ellipk
 
-from lineforge.analytical._constants import C0, ETA0, INCH_M
+from lineforge.analytical._constants import C0, EPS0, ETA0, INCH_M
 from lineforge.geometry.types import (
     CPWG,
     BroadsideCoupledDiffStripline,
@@ -35,31 +35,73 @@ from lineforge.results import DiffResult, SolverWarning, TLineResult
 # ---------------------------------------------------------------------------
 
 
+def wheeler_stripline_z0(W: float, T: float, B: float, er: float) -> float:
+    """Wheeler (1978) symmetric stripline impedance with finite thickness.
+
+    ``Z0 = 30/sqrt(er) ln{1 + (4/pi) (b-t)/W' [(8/pi)(b-t)/W'
+    + sqrt(((8/pi)(b-t)/W')^2 + 6.27)]}``, with the thickness-corrected width
+    ``W' = W + dW``,
+    ``dW/(b-t) = x/(pi (1-x)) {1 - 0.5 ln[(x/(2-x))^2
+    + (0.0796 x/(W/b + 1.1 x))^m]}``, ``m = 2/(1 + (2/3) x/(1-x))``,
+    ``x = t/b``. Wheeler states 0.5 % accuracy for ``W'/(b-t) < 10``; it is
+    within 0.3 % of the graded-mesh field solver over the PCB range.
+    """
+    b, t = B, T
+    if t > 0:
+        x = t / b
+        m = 2.0 / (1.0 + (2.0 / 3.0) * x / (1.0 - x))
+        dW = (
+            (x / (math.pi * (1.0 - x)))
+            * (1.0 - 0.5 * math.log((x / (2.0 - x)) ** 2 + (0.0796 * x / (W / b + 1.1 * x)) ** m))
+            * (b - t)
+        )
+    else:
+        dW = 0.0
+    a = (4.0 / math.pi) * (b - t) / (W + dW)
+    return float(
+        (30.0 / math.sqrt(er)) * math.log(1.0 + a * (2.0 * a + math.sqrt((2.0 * a) ** 2 + 6.27)))
+    )
+
+
 def _stripline_z0_narrow(W: float, T: float, B: float, er: float) -> float:
-    """IPC-2141A narrow-strip stripline (eq. 4-15).
+    """IPC-2141A narrow-strip stripline (kept for reference; not used by the solvers).
 
-    Z0 = (60/√εr) · ln(4·B / (0.67·π·(0.8·W + T)))
-
-    Valid for W/(B-T) ≤ ~0.35 and T < 0.25·B. Accurate to ±2% within the range.
+    Z0 = (60/sqrt(er)) * ln(4 B / (0.67 pi (0.8 W + T))). Only valid for
+    narrow strips; it reads 16.5 ohm instead of ~20 ohm for a 0.3 mm strip in
+    a 0.24 mm cavity.
     """
     d = 0.8 * W + T
     return (60.0 / math.sqrt(er)) * math.log(4.0 * B / (0.67 * math.pi * d))
 
 
-def _stripline_z0_wide(W: float, T: float, B: float, er: float) -> float:
-    """Cohn wide-strip stripline with Wadell finite-thickness correction.
-
-    Valid for W/(B-T) > 0.35. From Wadell §3.4.1 / IPC-2141A eq. (4-16).
-    """
-    if T <= 0 or B <= T:
-        m = 0.0
-        cf_prime = 0.0
-    else:
-        m = 2.0 * B / (B - T)
-        cf_prime = (B / (math.pi * (B - T))) * (
-            (m * math.log((m + 1.0) / (m - 1.0))) - math.log((m * m - 1.0) / 4.0)
+def _stripline_validity(W: float, T: float, B: float) -> list[SolverWarning]:
+    out: list[SolverWarning] = []
+    if B <= T:
+        raise ValueError(
+            f"stripline: plate separation B={B:.6g} m must exceed strip thickness T={T:.6g} m"
         )
-    return ETA0 / (math.sqrt(er) * 4.0 * (W / (B - T) + cf_prime / math.pi))
+    if T / B > 0.25:
+        out.append(
+            SolverWarning(
+                code="out_of_range",
+                message=(
+                    f"T/B = {T / B:.3g} > 0.25 is outside the validated range of Wheeler's "
+                    "thickness correction; use solve_full"
+                ),
+            )
+        )
+    a = W / (B - T)
+    if a > 10.0:
+        out.append(
+            SolverWarning(
+                code="out_of_range",
+                message=(
+                    f"W/(B-T) = {a:.3g} > 10 is outside Wheeler's stated 0.5 % range; "
+                    "use solve_full"
+                ),
+            )
+        )
+    return out
 
 
 def stripline_symmetric(
@@ -67,24 +109,15 @@ def stripline_symmetric(
     *,
     frequency_hz: float | None = None,
 ) -> TLineResult:
-    """Solve a symmetric stripline.
+    """Solve a symmetric stripline with Wheeler's (1978) finite-thickness formula.
 
-    Dispatches between IPC-2141A narrow-strip (W/(B-T) ≤ 0.35) and Cohn /
-    Wadell wide-strip (W/(B-T) > 0.35) formulas. Both are accurate to ±2%
-    within their validity ranges.
+    Replaces the IPC-2141A narrow-strip formula, which was used for every
+    width and is only valid for narrow strips: it read 16.5 ohm instead of
+    ~20 ohm for W = 0.3 mm in a 0.24 mm cavity.
     """
     W, T, B, er = geometry.W, geometry.T, geometry.B, geometry.er
-
-    issues: list[SolverWarning] = []
-    if T > 0.25 * B:
-        msg = "Stripline T > 0.25·B is outside published validity"
-        issues.append(SolverWarning(code="thick_strip", message=msg))
-
-    # IPC-2141A's symmetric-stripline formula is accurate over the full
-    # practical W/(B-T) range (typically 0–1.5). Cohn wide-strip is only
-    # better for truly wide strips W/(B-T) > 2: very rare in PCB design.
-    z0 = _stripline_z0_narrow(W, T, B, er)
-    method = "ipc2141-stripline"
+    issues = _stripline_validity(W, T, B)
+    z0 = wheeler_stripline_z0(W, T, B, er)
 
     eps_eff = er  # stripline is fully embedded. No air dispersion
     vp = C0 / math.sqrt(eps_eff)
@@ -99,10 +132,22 @@ def stripline_symmetric(
         C_per_m=1.0 / (z0 * vp),
         conductor_loss_db_per_in=None,
         dielectric_loss_db_per_in=_dielectric_loss(er, geometry.tan_delta, frequency_hz),
-        method=method,
+        method="wheeler-1978-stripline",
+        model_accuracy="±0.5% (Wheeler 1978, W'/(B-T)<10, T/B<=0.25)",
         frequency_hz=frequency_hz,
         warnings=issues,
     )
+
+
+def _offset_error_pct(ratio: float) -> float:
+    """Typical overestimate of the parallel-combination model vs a field solve.
+
+    From graded-mesh solves across W/h_near = 0.5-15 (largest at narrow W):
+    <=1.5 % at h_far/h_near <= 2, ~3 % at 3, ~5 % at 5, ~9 % at 10.
+    """
+    if ratio <= 2.0:
+        return 1.5
+    return min(1.5 + 0.95 * (ratio - 2.0), 15.0)
 
 
 def stripline_asymmetric(
@@ -110,32 +155,21 @@ def stripline_asymmetric(
     *,
     frequency_hz: float | None = None,
 ) -> TLineResult:
-    """Solve an asymmetric (offset) stripline via IPC-2141A's harmonic-mean-H formula.
+    """Solve an asymmetric (offset) stripline by the parallel-combination model.
 
-    For a strip at offset H1 from one ground plane and H2 from the other,
-    define the effective ground separation:
+    The strip at distance H1 from one plane and H2 from the other is split at
+    its mid-plane into two symmetric striplines of plate spacing
+    ``b_i = 2 H_i + T``, each solved with Wheeler's formula; their
+    capacitances add, so ``1/Z0 = (1/Z_1 + 1/Z_2)/2`` (Cohn / Wadell 3.5.2).
+    Within 1.5 % of a field solve while the larger dielectric is at most
+    twice the smaller; the error grows with the offset and a
+    ``validity_offset`` warning states the expected size.
 
-        H_eff = 2·H1·H2 / (H1 + H2)
-
-    Then:
-
-        Z₀ = (60/√εr) · ln(8·H_eff / (0.67π·(0.8W + T)))
-
-    In the symmetric limit H1 = H2 = h, H_eff = h and the formula reduces to
-    the symmetric IPC-2141A formula with B = 2h (good when T << h).
-
-    When the geometry supplies ``er_above`` / ``er_below`` (different dielectric
-    above and below the strip: common when an inner signal layer sits
-    between a plane on Core and a plane on Prepreg), the formula uses a
-    capacitance-weighted effective permittivity:
-
-        εr_eff = (εr_above/H1 + εr_below/H2) / (1/H1 + 1/H2)
-
-    Each half-cavity acts like a parallel-plate capacitor (Cohn parallel-plate
-    decomposition); the strip's total parallel-plate capacitance is the sum,
-    so the εr that produces the correct C is the C-weighted average.
-
-    References: IPC-2141A eq. (4-19), Wadell §3.5.2.
+    With ``er_above`` / ``er_below`` (or ``stack_above`` / ``stack_below``,
+    series-reduced to those) each half keeps its own er, so
+    ``eps_eff = (er_a / Z_1,air + er_b / Z_2,air) / (1/Z_1,air + 1/Z_2,air)``:
+    each dielectric is weighted by its half's capacitance rather than by
+    1/H alone.
     """
     W, T, H1, H2 = geometry.W, geometry.T, geometry.H1, geometry.H2
 
@@ -148,42 +182,33 @@ def stripline_asymmetric(
         geometry.tan_delta_below if geometry.tan_delta_below is not None else geometry.tan_delta
     )
 
-    # Capacitance-weighted (Cohn parallel-plate decomposition). Each half-cavity
-    # acts like a parallel-plate cap with C ∝ ε / H; series-combine inversely.
-    er_eff = (er_above / H1 + er_below / H2) / (1.0 / H1 + 1.0 / H2)
-    # Loss tangent: weight by the same C contributions.
-    c_above_norm = er_above / H1
-    c_below_norm = er_below / H2
-    tan_eff = (tan_above * c_above_norm + tan_below * c_below_norm) / (c_above_norm + c_below_norm)
+    b1, b2 = 2.0 * H1 + T, 2.0 * H2 + T
+    issues = _stripline_validity(W, T, b1)
+    for w in _stripline_validity(W, T, b2):
+        if all(w.message != x.message for x in issues):
+            issues.append(w)
+    z1 = wheeler_stripline_z0(W, T, b1, 1.0)
+    z2 = wheeler_stripline_z0(W, T, b2, 1.0)
+    y1, y2 = 1.0 / z1, 1.0 / z2
+    z_air = 2.0 / (y1 + y2)
+    q_above, q_below = y1 / (y1 + y2), y2 / (y1 + y2)
+    er_eff = q_above * er_above + q_below * er_below
+    z0 = z_air / math.sqrt(er_eff)
 
-    H_eff = 2.0 * H1 * H2 / (H1 + H2)
-    d = 0.8 * W + T
-
-    # The IPC-2141A logarithmic form only holds while its argument exceeds 1.
-    # Past that point ln() turns negative and the formula reports a negative
-    # Z0 -- and, downstream, negative L_per_m and C_per_m. Those are not
-    # merely inaccurate, they are unphysical, so refuse rather than return
-    # them: TLineResult's validators would reject the result anyway, and the
-    # bare ValidationError gives no hint that the strip is simply too wide for
-    # the cavity. Optimizers that sweep W across a wide bound (see
-    # lineforge.optimize.optimize_for) land here routinely and rely on a
-    # catchable exception to steer back.
-    log_arg = 8.0 * H_eff / (0.67 * math.pi * d)
-    if log_arg <= 1.0:
-        w_max = (8.0 * H_eff / (0.67 * math.pi) - T) / 0.8
-        # ASCII only: this message is raised on paths that get printed to
-        # consoles (Windows cp1252 among them), and a message carrying the
-        # usual typographic dot/pi would itself die with UnicodeEncodeError.
-        raise ValueError(
-            "stripline_asymmetric: geometry is outside the IPC-2141A validity "
-            "range. The formula needs 8*H_eff/(0.67*pi*(0.8W+T)) > 1, but "
-            f"W={W:.6g} m with H_eff={H_eff:.6g} m gives {log_arg:.4g}. "
-            "The strip is too wide for this cavity: W must be below "
-            f"~{w_max:.6g} m for these H1/H2/T. Use the bitmap kernel "
-            "(solver='cgp') for wide-strip geometries."
+    ratio = max(H1, H2) / min(H1, H2)
+    err = _offset_error_pct(ratio)
+    accuracy = f"±{err:.2g}% (Wheeler 1978 halves in parallel; h_far/h_near={ratio:.2g})"
+    if ratio > 2.0:
+        issues.append(
+            SolverWarning(
+                code="validity_offset",
+                message=(
+                    f"strip offset h_far/h_near = {ratio:.3g} > 2: the parallel-combination "
+                    f"model reads high by up to ~{err:.0f}% (most for narrow strips); "
+                    "use solve_full for a field-solved value"
+                ),
+            )
         )
-
-    z0 = (60.0 / math.sqrt(er_eff)) * math.log(log_arg)
 
     vp = C0 / math.sqrt(er_eff)
     td_per_in = INCH_M / vp
@@ -191,11 +216,20 @@ def stripline_asymmetric(
     has_stack = geometry.stack_above is not None or geometry.stack_below is not None
     has_split = geometry.er_above is not None or geometry.er_below is not None
     if has_stack:
-        method = "ipc2141-stripline-asymmetric-multilayer-stack"
+        method = "wheeler-parallel-stripline-asymmetric-multilayer-stack"
     elif has_split:
-        method = "ipc2141-stripline-asymmetric-split-er"
+        method = "wheeler-parallel-stripline-asymmetric-split-er"
     else:
-        method = "ipc2141-stripline-asymmetric"
+        method = "wheeler-parallel-stripline-asymmetric"
+
+    diel = None
+    if frequency_hz:
+        alpha = (
+            (math.pi * frequency_hz / C0)
+            * (q_above * er_above * tan_above + q_below * er_below * tan_below)
+            / math.sqrt(er_eff)
+        )
+        diel = alpha * 8.6858896 * INCH_M if alpha > 0 else None
 
     return TLineResult(
         z0=z0,
@@ -204,9 +238,11 @@ def stripline_asymmetric(
         td_per_inch=td_per_in,
         L_per_m=z0 / vp,
         C_per_m=1.0 / (z0 * vp),
-        dielectric_loss_db_per_in=_dielectric_loss(er_eff, tan_eff, frequency_hz),
+        dielectric_loss_db_per_in=diel,
         method=method,
+        model_accuracy=accuracy,
         frequency_hz=frequency_hz,
+        warnings=issues,
     )
 
 
@@ -230,52 +266,92 @@ def _kk(k: float) -> float:
     return float(ellipk(k * k) / ellipk(_kp(k) ** 2))
 
 
+# Coplanar-increment fit (graded-mesh field solves, er 2.2 and 4.2, W 50-300 um,
+# H 69-200 um, T 18-35 um, S 25-400 um): Z0 rms 0.9 %, worst 2.8 % (the worst
+# cases are the Hammerstad-Jensen microstrip base itself at T/W = 0.7).
+_CPWG_LOW, _CPWG_UP_B, _CPWG_UP_C = 0.99402, 1.83221, 0.52901
+_CPWG_SIDE, _CPWG_SIDE_DECAY, _CPWG_UP_ER = 0.98981, 0.82377, -0.13764
+
+
 def cpwg(
     geometry: CPWG,
     *,
     frequency_hz: float | None = None,
 ) -> TLineResult:
-    """Solve a coplanar waveguide with ground plane (CPWG).
+    """Solve a grounded coplanar waveguide (CPWG / conductor-backed CPW).
 
-    Uses Wen's elliptic-integral formula (Wadell §3.6.4 / IPC-2141A):
+    Capacitance model: the finite-thickness Hammerstad-Jensen microstrip
+    (the ``S -> infinity`` limit) plus the extra capacitance the coplanar
+    grounds add,
 
-        εeff = (1 + εr · K(k')/K(k) · K(k1)/K(k1')) / (1 + K(k')/K(k) · K(k1)/K(k1'))
-        Z0   = (60π / sqrt(εeff)) / (K(k)/K(k') + K(k1)/K(k1'))
+        C = C_ms + 2 eps0 [ a er dK_low + K_up(k) e^{-b (S/H)^c} (1 + g (er - 1))
+                            + s (T/S) e^{-d S/H} ]
 
-    where:
-        k  = W / (W + 2S)
-        k1 = tanh(πW / 4H) / tanh(π(W + 2S) / 4H)
+    where ``dK_low = K(k1)/K(k1') - K(k1inf)/K(k1inf')`` is the Ghione-Naldi /
+    Wen conformal-mapping increment of the substrate region
+    (``k1 = tanh(pi W/4H) / tanh(pi (W+2S)/4H)``), ``K_up(k) = K(k)/K(k')``
+    with ``k = W/(W+2S)`` is the coplanar air term, and the last term is the
+    side-wall capacitance of the strip thickness across the gaps. The vacuum
+    capacitance uses the same expression with er = 1. Every increment is
+    non-negative and shrinks as S grows, so Z0 rises monotonically to the
+    microstrip value and never exceeds it.
 
-    Validity: W/H ≥ 0.05, conductor thickness T ignored (good if T ≪ W,S).
+    The previous pure Wen formula ignored the strip-to-ground fringing that
+    a microstrip has, so it read *above* microstrip for wide gaps (61.7 ohm
+    vs 52 ohm for W = 0.104 mm, S = 0.26 mm, H = 69 um).
     """
-    W, S, H, er = geometry.W, geometry.S, geometry.H, geometry.er
+    from lineforge.analytical.hammerstad import hj_static
+
+    W, S, H, T, er = geometry.W, geometry.S, geometry.H, geometry.T, geometry.er
 
     issues: list[SolverWarning] = []
-    if geometry.T > 0.1 * min(W, S):
+    for name, val, lo, hi in (("W/H", W / H, 0.2, 5.0), ("S/H", S / H, 0.1, 8.0)):
+        if not lo <= val <= hi:
+            issues.append(
+                SolverWarning(
+                    code="out_of_range",
+                    message=(
+                        f"{name} = {val:.3g} is outside the fitted CPWG range ({lo}-{hi}); "
+                        "use solve_full"
+                    ),
+                )
+            )
+    if er > 6.0 or T / H > 0.5:
         issues.append(
             SolverWarning(
-                code="thick_conductor",
+                code="out_of_range",
                 message=(
-                    "T > 0.1·min(W,S): closed-form CPWG ignores T; "
-                    "consider the bitmap kernel for accuracy"
+                    f"er = {er:.3g}, T/H = {T / H:.3g}: the CPWG coplanar-increment fit "
+                    "covers er <= 6 and T/H <= 0.5; use solve_full"
                 ),
-                severity="info",
             )
         )
 
+    z_ms, eps_ms = hj_static(W, H, T, er)
+    cv_ms = 1.0 / (C0 * z_ms * math.sqrt(eps_ms))
+    c_ms = eps_ms * cv_ms
+
     k = W / (W + 2.0 * S)
-    a = math.tanh(math.pi * W / (4.0 * H))
-    b = math.tanh(math.pi * (W + 2.0 * S) / (4.0 * H))
-    k1 = a / b
+    k1_inf = math.tanh(math.pi * W / (4.0 * H))
+    k1 = k1_inf / math.tanh(math.pi * (W + 2.0 * S) / (4.0 * H))
+    d_low = max(_kk(k1) - _kk(k1_inf), 0.0)
+    x = S / H
+    up = _kk(k) * math.exp(-_CPWG_UP_B * x**_CPWG_UP_C)
+    side = _CPWG_SIDE * (T / S) * math.exp(-_CPWG_SIDE_DECAY * x) if T > 0 else 0.0
+    up_er = max(1.0 + _CPWG_UP_ER * (er - 1.0), 0.0)
 
-    kk_ratio = _kk(k)
-    kk1_ratio = _kk(k1)
-
-    eps_eff = (1.0 + er * (1.0 / kk_ratio) * kk1_ratio) / (1.0 + (1.0 / kk_ratio) * kk1_ratio)
-    z0 = (60.0 * math.pi / math.sqrt(eps_eff)) / (kk_ratio + kk1_ratio)
+    cv = cv_ms + 2.0 * EPS0 * (_CPWG_LOW * d_low + up + side)
+    c = c_ms + 2.0 * EPS0 * (_CPWG_LOW * er * d_low + up * up_er + side)
+    z0 = 1.0 / (C0 * math.sqrt(c * cv))
+    eps_eff = c / cv
 
     vp = C0 / math.sqrt(eps_eff)
     td_per_in = INCH_M / vp
+    q = (eps_eff - 1.0) / (er - 1.0) if er > 1.0 else 0.0
+    diel = None
+    if frequency_hz and geometry.tan_delta:
+        alpha = (math.pi * frequency_hz / C0) * q * er * geometry.tan_delta / math.sqrt(eps_eff)
+        diel = alpha * 8.6858896 * INCH_M
 
     return TLineResult(
         z0=z0,
@@ -284,8 +360,9 @@ def cpwg(
         td_per_inch=td_per_in,
         L_per_m=z0 / vp,
         C_per_m=1.0 / (z0 * vp),
-        dielectric_loss_db_per_in=_dielectric_loss(eps_eff, geometry.tan_delta, frequency_hz),
-        method="wen-cpwg",
+        dielectric_loss_db_per_in=diel,
+        method="hj-microstrip+coplanar-increment-cpwg",
+        model_accuracy="±3% vs field solve (er<=6, 0.2<=W/H<=5, 0.1<=S/H<=8, T/H<=0.5)",
         frequency_hz=frequency_hz,
         warnings=issues,
     )
@@ -301,43 +378,15 @@ def edge_coupled_diff_microstrip(
     *,
     frequency_hz: float | None = None,
 ) -> DiffResult:
-    """Edge-coupled differential pair (microstrip), Wadell §6.3 / IPC-2141A.
+    """Edge-coupled microstrip pair: Kirschning-Jansen, see
+    :func:`lineforge.analytical.hammerstad.edge_coupled_diff_microstrip`.
 
-    Approach: compute Z0 of each individual trace via Hammerstad-Jensen, then
-    apply the IPC-2141A coupling correction:
-        Zodd  = Z0 · (1 − 0.48·exp(−0.96·S/H))
-        Zeven = Z0 · (1 + 0.48·exp(−0.96·S/H))
+    The previous IPC-2141A exponential coupling factor scaled one single-line
+    Z0 and reported the single line's eps_eff for both modes.
     """
-    from lineforge.analytical.hammerstad import microstrip
-    from lineforge.geometry.types import Microstrip
+    from lineforge.analytical.hammerstad import edge_coupled_diff_microstrip as _kj
 
-    single = Microstrip(
-        W=geometry.W,
-        H=geometry.H,
-        T=geometry.T,
-        er=geometry.er,
-        tan_delta=geometry.tan_delta,
-        rho=geometry.rho,
-    )
-    base = microstrip(single, frequency_hz=frequency_hz)
-    sH = geometry.S / geometry.H
-    coupling = 0.48 * math.exp(-0.96 * sH)
-
-    z_odd = base.z0 * (1.0 - coupling)
-    z_even = base.z0 * (1.0 + coupling)
-
-    return DiffResult(
-        z_odd=z_odd,
-        z_even=z_even,
-        z_diff=2.0 * z_odd,
-        z_common=z_even / 2.0,
-        eps_eff_odd=base.eps_eff,
-        eps_eff_even=base.eps_eff,
-        vp_odd=base.vp,
-        vp_even=base.vp,
-        method="ipc2141-edge-coupled-diff-microstrip",
-        frequency_hz=frequency_hz,
-    )
+    return _kj(geometry, frequency_hz=frequency_hz)
 
 
 def edge_coupled_diff_stripline(
