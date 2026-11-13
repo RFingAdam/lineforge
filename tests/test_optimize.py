@@ -54,7 +54,9 @@ class TestTargetZ0:
     def test_l3_sig1_void_l4_recovers_3p18mil(self) -> None:
         """The session benchmark: solve W to land Z0=48Ω on the L3 SIG1 stackup
         (Core εr=4.2 above 3.5mil, Prepreg εr=3.7 below 5.3mil, T=0.689mil).
-        Expected W ≈ 3.18 mil."""
+        Expected W ≈ 3.69 mil. (The planning session's 3.18 mil came from the
+        IPC-2141A formula; a graded-mesh field solve puts 3.18 mil at 50.9 ohm
+        and 3.69 mil at 47.9 ohm.)"""
         from lineforge.optimize import target_z0
 
         result = target_z0(
@@ -72,10 +74,9 @@ class TestTargetZ0:
             bounds=("1mil", "10mil"),
         )
         assert result.success
-        # The brentq solution from the planning session was 3.182 mil; tighten
-        # the optimizer must converge to within 0.005 mil.
+        # The optimizer must converge to within 0.005 mil of the model's root.
         W_mil = result.geometry.W * 39370.0787
-        assert W_mil == pytest.approx(3.182, abs=0.005)
+        assert W_mil == pytest.approx(3.6895, abs=0.005)
         assert result.metric["z0"] == pytest.approx(48.0, abs=0.001)
 
     def test_default_bounds_when_none(self) -> None:

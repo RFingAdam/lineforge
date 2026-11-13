@@ -119,14 +119,17 @@ class TestStriplineAsymmetricSplitEr:
                 W="5mil", T="1.4mil", H1="3mil", H2="9mil", er=4.4, er_above=4.5, er_below=3.7
             )
         )
-        assert bulk.method == "ipc2141-stripline-asymmetric"
-        assert split.method == "ipc2141-stripline-asymmetric-split-er"
+        assert bulk.method == "wheeler-parallel-stripline-asymmetric"
+        assert split.method == "wheeler-parallel-stripline-asymmetric-split-er"
 
     def test_eps_eff_capacitance_weighted_50ohm_core_prepreg(self) -> None:
-        """εr_eff = (εr_above/H1 + εr_below/H2) / (1/H1 + 1/H2).
+        """εr_eff weights each dielectric by its half-cavity's capacitance.
 
         Geometry is a real 50Ω inner-layer trace: 4mil/0.7mil (½-oz Cu)
         between an 8mil Core (εr=4.2) above and 4mil Prepreg (εr=3.7) below.
+        The graded-mesh field solve of this split-εr cavity gives
+        Z0 = 52.68 Ω, εr_eff = 3.886; the former 1/H weighting (3.867) and the
+        Wheeler-halves weighting (3.907) bracket it.
         """
         H1_mil, H2_mil = 8.0, 4.0
         er_above, er_below = 4.2, 3.7  # Core / Prepreg
@@ -142,9 +145,8 @@ class TestStriplineAsymmetricSplitEr:
             )
         )
         # Z0 should land in the 50Ω neighborhood (designed-for-50Ω trace).
-        assert result.z0 == pytest.approx(50.0, abs=2.0)
-        expected_eps_eff = (er_above / H1_mil + er_below / H2_mil) / (1.0 / H1_mil + 1.0 / H2_mil)
-        assert result.eps_eff == pytest.approx(expected_eps_eff, rel=1e-9)
+        assert result.z0 == pytest.approx(52.68, rel=0.02)
+        assert result.eps_eff == pytest.approx(3.886, rel=0.01)
         # The closer (smaller-H) dielectric must dominate.
         assert result.eps_eff < (er_above + er_below) / 2  # H2 < H1 → er_below pulls harder
 
@@ -174,7 +176,7 @@ class TestStriplineAsymmetricSplitEr:
             ),
             frequency_hz=1e9,
         )
-        assert result.z0 == pytest.approx(50.0, abs=2.0)
+        assert result.z0 == pytest.approx(52.68, rel=0.02)  # field solve, see above
         unweighted_avg = (td_above + td_below) / 2
         assert result.dielectric_loss_db_per_in is not None
         # Compare against a bulk-only run with the unweighted average:
@@ -196,22 +198,30 @@ class TestStriplineAsymmetricSplitEr:
 
 
 class TestAsymmetricStriplineValidityRange:
-    """The IPC-2141A log form goes unphysical once the strip outgrows the cavity.
+    """Wide strips used to break the IPC-2141A log form.
 
-    Regression: ``ln(8*H_eff / (0.67*pi*(0.8W+T)))`` turns negative when its
-    argument drops below 1, which produced a negative Z0 and, downstream,
-    negative L_per_m and C_per_m. TLineResult's validators rejected those, so
-    callers saw an opaque ValidationError rather than "the strip is too wide".
+    Regression history: ``ln(8*H_eff / (0.67*pi*(0.8W+T)))`` turned negative
+    once the strip outgrew the cavity, so the old model raised ValueError for
+    those widths. Wheeler's formula is valid for wide strips (it tends to the
+    parallel-plate limit), so a wide strip now solves to a physical Z0, with an
+    ``out_of_range`` warning beyond Wheeler's stated W'/(b-t) < 10.
     """
 
-    def test_wide_strip_raises_instead_of_negative_z0(self) -> None:
+    def test_wide_strip_solves_positive_and_warns(self) -> None:
         from lineforge.analytical.wadell import stripline_asymmetric
         from lineforge.geometry.types import StriplineAsymmetric
 
-        with pytest.raises(ValueError, match="outside the IPC-2141A validity range"):
-            stripline_asymmetric(
-                StriplineAsymmetric(W="80mil", T="1.4mil", H1="4mil", H2="5mil", er=4.2)
-            )
+        r = stripline_asymmetric(
+            StriplineAsymmetric(W="120mil", T="1.4mil", H1="4mil", H2="5mil", er=4.2)
+        )
+        assert r.z0 > 0
+        assert r.L_per_m > 0
+        assert r.C_per_m > 0
+        assert any(w.code == "out_of_range" for w in r.warnings)
+        # Parallel-plate limit: two plates at 4 and 5 mil, eta0/sqrt(er) * h_par / W.
+        h_par = 1.0 / (1.0 / 4.0 + 1.0 / 5.0)
+        z_pp = 376.73 / 4.2**0.5 * h_par / 120.0
+        assert r.z0 == pytest.approx(z_pp, rel=0.15)
 
     def test_in_range_geometry_still_solves_positive(self) -> None:
         from lineforge.analytical.wadell import stripline_asymmetric
@@ -223,16 +233,16 @@ class TestAsymmetricStriplineValidityRange:
         assert r.z0 > 0
         assert r.L_per_m > 0
         assert r.C_per_m > 0
+        assert not r.warnings
 
-    def test_error_message_is_ascii_printable(self) -> None:
-        """The message must survive a cp1252 console; it is raised on paths
-        that get printed. A typographic dot or pi would raise
-        UnicodeEncodeError while reporting the original error."""
+    def test_warning_messages_are_ascii_printable(self) -> None:
+        """Warnings are printed to cp1252 consoles; they must encode cleanly."""
         from lineforge.analytical.wadell import stripline_asymmetric
         from lineforge.geometry.types import StriplineAsymmetric
 
-        with pytest.raises(ValueError) as exc:
-            stripline_asymmetric(
-                StriplineAsymmetric(W="80mil", T="1.4mil", H1="4mil", H2="5mil", er=4.2)
-            )
-        str(exc.value).encode("cp1252")
+        r = stripline_asymmetric(
+            StriplineAsymmetric(W="120mil", T="1.4mil", H1="4mil", H2="40mil", er=4.2)
+        )
+        assert r.warnings
+        for w in r.warnings:
+            w.message.encode("cp1252")

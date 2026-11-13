@@ -260,8 +260,11 @@ def _hash_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
     """
 
     def coerce(v: Any) -> Any:
-        # Usermap: we hash the immutable RGB + metadata. Materials are derived
-        # from RGB so they're implicitly covered.
+        # Usermap: hash the RGB, the metadata *and* the resolved materials.
+        # Materials are not implied by the RGB: a per-usermap material lookup
+        # (synthesized dielectrics, MoreColors packs, label-built maps) maps
+        # the same colour to different er/tan_delta, and two such maps must
+        # not share a cache entry.
         try:
             from lineforge.geometry.usermap import Usermap
 
@@ -271,6 +274,9 @@ def _hash_args(args: tuple[Any, ...], kwargs: dict[str, Any]) -> str:
                     v.rgb.shape,
                     hashlib.sha1(v.rgb.tobytes()).hexdigest(),
                     v.meta.model_dump_json(),
+                    [m.model_dump_json() for m in v.materials],
+                    hashlib.sha1(np.ascontiguousarray(v.codes).tobytes()).hexdigest(),
+                    hashlib.sha1(np.ascontiguousarray(v.conductor_ids).tobytes()).hexdigest(),
                 )
         except ImportError:
             pass
